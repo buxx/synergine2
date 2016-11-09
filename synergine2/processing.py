@@ -22,8 +22,6 @@ class ProcessManager(object):
             chunks = self._chunk_manager.make_chunks(data)
             results = manager.dict()
 
-            # TODO: retrouver tests pour savoir si
-            # les keeped alive sont mieux
             for process_number in range(self._process_count):
                 processes.append(Process(
                     target=self._job_maker_wrapper,
