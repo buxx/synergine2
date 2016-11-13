@@ -11,7 +11,7 @@ class PrintTerminal(Terminal):
         print(package.value)
         sys.stdout.flush()
 
-    def daemon(self):
+    def run(self):
         while self.read():
             print('Hello world')
             sys.stdout.flush()
@@ -19,6 +19,7 @@ class PrintTerminal(Terminal):
 
 
 terminals_manager = TerminalManager(terminals=[PrintTerminal()])
+terminals_manager.start()
 for i in range(3):
     time.sleep(2)
     terminals_manager.send(TerminalPackage('Just print me'))
