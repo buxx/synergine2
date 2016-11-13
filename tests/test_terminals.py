@@ -22,8 +22,13 @@ class TestTerminals(BaseTest):
         terminals_manager.start()
         terminals_manager.send(TerminalPackage(42))
 
-        time.sleep(2)  # TODO: Replace by lock
-        packages = terminals_manager.receive()
+        # We wait max 2s (see time.sleep) to consider
+        # process have finished. If not, it will fail
+        for i in range(200):
+            packages = terminals_manager.receive()
+            if packages:
+                break
+            time.sleep(0.01)
 
         assert 2 == len(packages)
         values = [p.value for p in packages]
