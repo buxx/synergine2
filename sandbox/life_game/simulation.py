@@ -18,7 +18,9 @@ class CellDieBehaviour(Behaviour):
         around_count = len(data[CellProximityMechanism])
         if around_count in [2, 3]:
             return False
-        return True  # If we return around_count, when around_count is 0
+        # If we return around_count, when around_count is 0,
+        # cycle manager will consider as False
+        return True
 
     def action(self, data):
         new_empty = Empty(
