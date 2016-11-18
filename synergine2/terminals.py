@@ -4,17 +4,19 @@ from multiprocessing import Process
 from queue import Empty
 
 import time
+from synergine2.simulation import Simulation, Subject
 
 STOP_SIGNAL = '__STOP_SIGNAL__'
 
 
 class TerminalPackage(object):
-    def __init__(self, value):
-        self._value = value
-
-    @property
-    def value(self):
-        return self._value
+    def __init__(
+            self,
+            subjects: [Subject]=None,
+            actions: ['TODO']=None,
+    ):
+        self.subjects = subjects
+        self.actions = actions or {}
 
 
 class Terminal(object):
@@ -36,8 +38,11 @@ class Terminal(object):
         """
         Override this method to create your daemon terminal
         """
-        while self.read():
-            time.sleep(self.DEFAULT_SLEEP)
+        try:
+            while self.read():
+                time.sleep(self.DEFAULT_SLEEP)
+        except KeyboardInterrupt:
+            pass
 
     def read(self):
         while True:
@@ -51,11 +56,11 @@ class Terminal(object):
             except Empty:
                 return True  # Finished to read Queue
 
-    def receive(self, package: TerminalPackage):
+    def receive(self, value):
         raise NotImplementedError()
 
-    def send(self, package: TerminalPackage):
-        self._output_queue.put(package)
+    def send(self, value):
+        self._output_queue.put(value)
 
 
 class TerminalManager(object):
@@ -82,17 +87,17 @@ class TerminalManager(object):
         for output_queue in self._outputs_queues:
             output_queue.put(STOP_SIGNAL)
 
-    def send(self, package: TerminalPackage):
+    def send(self, value):
         for output_queue in self._outputs_queues:
-            output_queue.put(package)
+            output_queue.put(value)
 
     def receive(self) -> []:
-        packages = []
+        values = []
         for input_queue in self._inputs_queues:
             try:
                 while True:
-                    packages.append(input_queue.get(block=False, timeout=None))
+                    values.append(input_queue.get(block=False, timeout=None))
             except Empty:
                 pass  # Queue is empty
 
-        return packages
+        return values

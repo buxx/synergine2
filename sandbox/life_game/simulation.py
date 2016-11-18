@@ -29,6 +29,7 @@ class CellDieBehaviour(Behaviour):
         )
         self.simulation.subjects.remove(self.subject)
         self.simulation.subjects.append(new_empty)
+        return new_empty
 
 
 class CellBornBehaviour(Behaviour):
@@ -47,6 +48,7 @@ class CellBornBehaviour(Behaviour):
         )
         self.simulation.subjects.remove(self.subject)
         self.simulation.subjects.append(new_cell)
+        return new_cell
 
 
 class Cell(XYZSubjectMixin, Subject):

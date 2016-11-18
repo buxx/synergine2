@@ -82,8 +82,9 @@ class Behaviour(object):
         """
         raise NotImplementedError()
 
-    def action(self, data):
+    def action(self, data) -> object:
         """
         Method called in main process
+        Return value will be give to terminals
         """
         raise NotImplementedError()

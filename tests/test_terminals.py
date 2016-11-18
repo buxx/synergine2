@@ -1,21 +1,20 @@
 import time
 
 from synergine2.terminals import Terminal
-from synergine2.terminals import TerminalPackage
 from synergine2.terminals import TerminalManager
 from tests import BaseTest
 
 
 class MultiplyTerminal(Terminal):
-    def receive(self, package: TerminalPackage):
-        self.send(TerminalPackage(package.value * 2))
-        self.send(TerminalPackage(package.value * 4))
+    def receive(self, value):
+        self.send(value * 2)
+        self.send(value * 4)
 
 
 class DivideTerminal(Terminal):
-    def receive(self, package: TerminalPackage):
-        self.send(TerminalPackage(package.value / 2))
-        self.send(TerminalPackage(package.value / 4))
+    def receive(self, value):
+        self.send(value / 2)
+        self.send(value / 4)
 
 
 class TestTerminals(BaseTest):
@@ -26,19 +25,19 @@ class TestTerminals(BaseTest):
             ]
         )
         terminals_manager.start()
-        terminals_manager.send(TerminalPackage(42))
+        terminals_manager.send(42)
 
         # We wait max 2s (see time.sleep) to consider
         # process have finished. If not, it will fail
-        packages = []
+        values = []
         for i in range(200):
-            packages.extend(terminals_manager.receive())
-            if len(packages) == 2:
+            values.extend(terminals_manager.receive())
+            if len(values) == 2:
                 break
             time.sleep(0.01)
 
-        assert 2 == len(packages)
-        values = [p.value for p in packages]
+        assert 2 == len(values)
+        values = [v for v in values]
         assert 84 in values
         assert 168 in values
 
@@ -52,19 +51,19 @@ class TestTerminals(BaseTest):
             ]
         )
         terminals_manager.start()
-        terminals_manager.send(TerminalPackage(42))
+        terminals_manager.send(42)
 
         # We wait max 2s (see time.sleep) to consider
         # process have finished. If not, it will fail
-        packages = []
+        values = []
         for i in range(200):
-            packages.extend(terminals_manager.receive())
-            if len(packages) == 4:
+            values.extend(terminals_manager.receive())
+            if len(values) == 4:
                 break
             time.sleep(0.01)
 
-        assert 4 == len(packages)
-        values = [p.value for p in packages]
+        assert 4 == len(values)
+        values = [v for v in values]
         assert 84 in values
         assert 168 in values
         assert 21 in values

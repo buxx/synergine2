@@ -1,4 +1,5 @@
 import multiprocessing
+import collections
 
 from synergine2.processing import ProcessManager
 from synergine2.simulation import Subject, Behaviour, Mechanism
@@ -19,19 +20,23 @@ class CycleManager(object):
             )
 
         self.subjects = subjects
-        self._process_manager = process_manager
-        self._current_cycle = 0
+        self.process_manager = process_manager
+        self.current_cycle = 0
 
     def next(self):
         results = {}
-        results_by_processes = self._process_manager.execute_jobs(self.subjects)
+        results_by_processes = self.process_manager.execute_jobs(self.subjects)
+        actions = collections.defaultdict(dict)
         for process_results in results_by_processes:
             results.update(process_results)
         for subject in self.subjects[:]:  # Duplicate list to prevent conflicts with behaviours subjects manipulations
             for behaviour_class in results[subject.id]:
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
                 # TODO: les behaviour_class ont le même uniqueid apres le process ?
-                subject.behaviours[behaviour_class].action(results[subject.id][behaviour_class])
+                action_result = subject.behaviours[behaviour_class].action(results[subject.id][behaviour_class])
+                actions[subject.id][behaviour_class] = action_result
+
+        return actions
 
     def computing(self, subjects):
         # compute mechanisms (prepare check to not compute slienced or not used mechanisms)

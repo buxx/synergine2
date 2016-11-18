@@ -48,6 +48,7 @@ def get_str_representation_from_positions(
     tabulation='',
     start_with='',
     end_with='',
+    force_items_as=None,
 ) -> str:
     positions = []
     for item_positions in items_positions.values():
@@ -76,7 +77,14 @@ def get_str_representation_from_positions(
         if position[2] != current_z:
             str_representation += '----' + "\n" + tabulation
 
-        added_value = item
+        str_item = item
+        if force_items_as:
+            for force_item_as in force_items_as:
+                if force_item_as[0] == item:
+                    str_item = force_item_as[1]
+                    break
+
+        added_value = str_item
         if position[0] != start_x:
             added_value = separator + added_value
 
