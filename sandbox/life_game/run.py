@@ -1,5 +1,6 @@
 import sys
 import collections
+from sandbox.life_game.ui import CocosTerminal
 from sandbox.life_game.simulation import CellBornBehaviour, CellDieBehaviour, Cell, Empty
 
 from sandbox.life_game.utils import get_subjects_from_str_representation
@@ -75,7 +76,7 @@ def main():
     core = Core(
         simulation=simulation,
         cycle_manager=CycleManager(subjects=subjects),
-        terminal_manager=TerminalManager([SimplePrintTerminal()]),
+        terminal_manager=TerminalManager([CocosTerminal()]),
     )
     core.run()
 

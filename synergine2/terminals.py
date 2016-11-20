@@ -4,7 +4,7 @@ from multiprocessing import Process
 from queue import Empty
 
 import time
-from synergine2.simulation import Simulation, Subject
+from synergine2.simulation import Subject
 
 STOP_SIGNAL = '__STOP_SIGNAL__'
 
@@ -47,12 +47,12 @@ class Terminal(object):
     def read(self):
         while True:
             try:
-                package = self._input_queue.get(block=False, timeout=None)
-                if package == STOP_SIGNAL:
+                value = self._input_queue.get(block=False, timeout=None)
+                if value == STOP_SIGNAL:
                     self._stop_required = True
                     return False
 
-                self.receive(package)
+                self.receive(value)
             except Empty:
                 return True  # Finished to read Queue
 
