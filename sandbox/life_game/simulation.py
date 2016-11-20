@@ -1,9 +1,22 @@
 from synergine2.simulation import Subject
+from synergine2.simulation import Event
 from synergine2.simulation import Behaviour
 from synergine2.xyz import ProximityMechanism
 from synergine2.xyz import XYZSubjectMixin
 
 COLLECTION_CELL = 'COLLECTION_CELL'  # Collections of Cell type
+
+
+class CellDieEvent(Event):
+    def __init__(self, subject_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subject_id = subject_id
+
+
+class CellBornEvent(Event):
+    def __init__(self, subject_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subject_id = subject_id
 
 
 class CellProximityMechanism(ProximityMechanism):
@@ -29,7 +42,7 @@ class CellDieBehaviour(Behaviour):
         )
         self.simulation.subjects.remove(self.subject)
         self.simulation.subjects.append(new_empty)
-        return new_empty
+        return [CellDieEvent(self.subject.id)]
 
 
 class CellBornBehaviour(Behaviour):
@@ -48,7 +61,7 @@ class CellBornBehaviour(Behaviour):
         )
         self.simulation.subjects.remove(self.subject)
         self.simulation.subjects.append(new_cell)
-        return new_cell
+        return [CellBornEvent(new_cell.id)]
 
 
 class Cell(XYZSubjectMixin, Subject):

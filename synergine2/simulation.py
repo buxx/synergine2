@@ -39,14 +39,32 @@ class Subject(object):
 
 
 class Subjects(list):
+    """
+    TODO: Manage other list methods
+    """
     def __init__(self, *args, **kwargs):
         self.simulation = kwargs.pop('simulation')
+        self.removes = []
+        self.adds = []
+        self.track_changes = False
         super().__init__(*args, **kwargs)
 
     def remove(self, value: Subject):
+        # Remove from subjects list
         super().remove(value)
+        # Remove from collections
         for collection_name in value.collections:
             self.simulation.collections[collection_name].remove(value)
+        # Add to removed listing
+        if self.track_changes:
+            self.removes.append(value)
+
+    def append(self, p_object):
+        # Add to subjects list
+        super().append(p_object)
+        # Add to adds list
+        if self.track_changes:
+            self.adds.append(p_object)
 
 
 class Mechanism(object):
@@ -60,6 +78,11 @@ class Mechanism(object):
 
     def run(self):
         raise NotImplementedError()
+
+
+class Event(object):
+    def __init__(self, *args, **kwargs):
+        pass
 
 
 class Behaviour(object):
@@ -82,7 +105,7 @@ class Behaviour(object):
         """
         raise NotImplementedError()
 
-    def action(self, data) -> object:
+    def action(self, data) -> [Event]:
         """
         Method called in main process
         Return value will be give to terminals

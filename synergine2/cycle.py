@@ -1,15 +1,18 @@
 import multiprocessing
-import collections
 
 from synergine2.processing import ProcessManager
-from synergine2.simulation import Subject, Behaviour, Mechanism
+from synergine2.simulation import Subject
+from synergine2.simulation import Behaviour
+from synergine2.simulation import Mechanism
+from synergine2.simulation import Event
+from synergine2.simulation import Subjects
 from synergine2.utils import ChunkManager
 
 
 class CycleManager(object):
     def __init__(
             self,
-            subjects: list,
+            subjects: Subjects,
             process_manager: ProcessManager=None,
     ):
         if process_manager is None:
@@ -22,21 +25,27 @@ class CycleManager(object):
         self.subjects = subjects
         self.process_manager = process_manager
         self.current_cycle = 0
+        self.first_cycle = True
 
-    def next(self):
+    def next(self) -> [Event]:
+        if self.first_cycle:
+            # To dispatch subjects add/removes, enable track on them
+            self.subjects.track_changes = True
+            self.first_cycle = False
+
         results = {}
         results_by_processes = self.process_manager.execute_jobs(self.subjects)
-        actions = collections.defaultdict(dict)
+        events = []
         for process_results in results_by_processes:
             results.update(process_results)
         for subject in self.subjects[:]:  # Duplicate list to prevent conflicts with behaviours subjects manipulations
             for behaviour_class in results[subject.id]:
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
-                # TODO: les behaviour_class ont le même uniqueid apres le process ?
-                action_result = subject.behaviours[behaviour_class].action(results[subject.id][behaviour_class])
-                actions[subject.id][behaviour_class] = action_result
+                # (genre se cacher et fuir son pas compatibles)
+                actions_events = subject.behaviours[behaviour_class].action(results[subject.id][behaviour_class])
+                events.extend(actions_events)
 
-        return actions
+        return events
 
     def computing(self, subjects):
         # compute mechanisms (prepare check to not compute slienced or not used mechanisms)

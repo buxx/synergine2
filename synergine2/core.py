@@ -25,9 +25,18 @@ class Core(object):
 
             while True:
                 # TODO: receive from terminals
-                actions = self.cycle_manager.next()
-                cycle_package = TerminalPackage(actions=actions)
+                events = self.cycle_manager.next()
+                cycle_package = TerminalPackage(
+                    events=events,
+                    add_subjects=self.simulation.subjects.adds,
+                    remove_subjects=self.simulation.subjects.removes,
+                )
                 self.terminal_manager.send(cycle_package)
+
+                # Reinitialize these list for next cycle
+                self.simulation.subjects.adds = []
+                self.simulation.subjects.removes = []
+
                 import time
                 time.sleep(1)  # TODO: tick control
         except KeyboardInterrupt:
