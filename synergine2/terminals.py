@@ -19,6 +19,7 @@ class TerminalPackage(object):
             add_subjects: [Subject]=None,
             remove_subjects: [Subject]=None,
             events: [Event]=None,
+            is_cycle: bool=True,
             *args,
             **kwargs
     ):
@@ -26,6 +27,7 @@ class TerminalPackage(object):
         self.add_subjects = add_subjects or []
         self.remove_subjects = remove_subjects or []
         self.events = events or []
+        self.is_cycle = is_cycle
 
 
 class Terminal(object):

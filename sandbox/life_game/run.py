@@ -1,9 +1,9 @@
 import collections
+
 from sandbox.life_game.simulation import Cell
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.simulation import CellDieEvent
 from sandbox.life_game.simulation import CellBornEvent
-
 from sandbox.life_game.utils import get_subjects_from_str_representation
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
@@ -62,6 +62,28 @@ class SimplePrintTerminal(Terminal):
         print()
 
 
+class CocosTerminal(Terminal):
+    subscribed_events = [
+        CellDieEvent,
+        CellBornEvent,
+    ]
+
+    def __init__(self):
+        super().__init__()
+        self.subjects = None
+        self.gui = None
+
+    def receive(self, package: TerminalPackage):
+        self.gui.before_received(package)
+        super().receive(package)
+        self.gui.after_received(package)
+
+    def run(self):
+        from sandbox.life_game import gui
+        self.gui = gui.Gui(self)
+        self.gui.run()
+
+
 def main():
     start_str_representation = """
         0 0 0 0 0 0 0 0 0 0 0
@@ -86,7 +108,7 @@ def main():
     core = Core(
         simulation=simulation,
         cycle_manager=CycleManager(subjects=subjects),
-        terminal_manager=TerminalManager([SimplePrintTerminal()]),
+        terminal_manager=TerminalManager([CocosTerminal(), SimplePrintTerminal()]),
     )
     core.run()
 
