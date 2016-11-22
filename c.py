@@ -3,17 +3,21 @@ from multiprocessing import Process
 from queue import Empty
 
 import time
+from pyglet.clock import schedule
 
 
 def start_cocos(input_queue: Queue):
+    ######
+    # CODE INSIDE SUBPROCESS
     import cocos
-    import pyglet
-    from pyglet.event import EVENT_HANDLED
     from cocos.actions import Repeat, ScaleBy, Reverse
-    from pyglet.app.xlib import NotificationDevice
-
 
     class HelloWorld(cocos.layer.Layer):
+        is_event_handler = True
+
+        def tick(self):
+            self.dispatch_event('on_update')
+
         def __init__(self):
             super().__init__()
 
@@ -25,79 +29,35 @@ def start_cocos(input_queue: Queue):
             )
             self.label.position = 320, 240
             scale = ScaleBy(3, duration=5)
-            self.label.do( Repeat( scale + Reverse( scale) ) )
+            self.label.do(Repeat(scale + Reverse(scale)))
             self.add(self.label)
-
-    # class FakeEvent(pyglet.event.EventDispatcher):
-    #     pass
-    #
-    # # following lines register the events that Bunker instances can emit
-    # FakeEvent.register_event_type('on_data_received')
-    # fake_event = FakeEvent()
-    #
-    # class Foo(object):
-    #     def __init__(self):
-    #         fake_event.push_handlers(self)
-    #
-    #     def on_data_received(self, new_label_text):
-    #         hello_layer.label.element.text = new_label_text
-    #         return EVENT_HANDLED
 
     cocos.director.director.init()
     hello_layer = HelloWorld()
-    # foo = Foo()
 
-    def loop_hook(director):
+    def read_queue():
         while True:
             try:
                 print('hook ' + str(time.time()))
                 new_label_text = input_queue.get(block=False, timeout=None)
                 hello_layer.label.element.text = new_label_text
-                # fake_event.dispatch_event('on_data_received', new_label_text)
                 pass
             except Empty:
                 return  # Finished to read Queue
 
-    # from pyglet.app import EventLoop
-    # old_idle = EventLoop.idle
-    #
-    # def idle(self):
-    #     old_idle(self)
-    #     loop_hook(None)
-    # EventLoop.idle = idle
-
-    class MyFakeNotif(NotificationDevice):
-        def __init__(self, wait_interval=0.100):
-            """
-
-            :param wait_interval: MUST BE INFERIOR TO SIMULATION TICK
-            :return:
-            """
-            super().__init__()
-            self.wait_interval = wait_interval
-            self.last_check = None
-
-        def poll(self):
-            if self.last_check is None:
-                self.last_check = time.time()
-                return True
-
-            elapsed_from_last_check = time.time() - self.last_check
-            if elapsed_from_last_check >= self.wait_interval:
-                self.last_check = time.time()
-                return True
-
-            return False
-
-        def select(self):
-            loop_hook(None)
-
-    # Monkey patching
-    from pyglet.app import platform_event_loop
-    platform_event_loop._select_devices.add(MyFakeNotif())
-
     main_scene = cocos.scene.Scene(hello_layer)
+
+    # TODO: Ecrire un code de demo sans la queue/process
+    # qui doit effectuer un truc toutes les secondes (changer texte de pyglet)
+    # Et demader si c la bonne marche a suivre)
+
+    def toto(ts, *args, **kwargs):
+        read_queue()
+    schedule(toto)
+
     cocos.director.director.run(main_scene)
+    # END OF SUBPROCESS CODE
+    ###########
 
 
 output_queue = Queue()
@@ -106,6 +66,6 @@ process = Process(target=start_cocos, kwargs=dict(
 ))
 process.start()
 
-for i in range(20):
+for i in range(40):
     time.sleep(1)
     output_queue.put(str(i))
