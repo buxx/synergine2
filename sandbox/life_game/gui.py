@@ -62,7 +62,7 @@ class MainLayer(ScrollableLayer):
     def __init__(self):
         super().__init__()
 
-        self.scroll_step = 20
+        self.scroll_step = 100
 
         self.background = Sprite('resources/banner-1711735_640.jpg')
         self.background.position = 0, 0
@@ -94,6 +94,14 @@ class MainLayer(ScrollableLayer):
 
         if key == wkey.DOWN:
             self.position = (self.position[0], self.position[1] + self.scroll_step)
+
+        if key == wkey.A:
+            if self.scale >= 0.3:
+                self.scale -= 0.2
+
+        if key == wkey.Z:
+            if self.scale <= 4:
+                self.scale += 0.2
 
 
 class LifeGameGui(Gui):
