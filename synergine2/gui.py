@@ -2,6 +2,7 @@ import cocos
 import pyglet
 
 from synergine2.terminals import Terminal
+from synergine2.terminals import TerminalPackage
 
 
 class Gui(object):
@@ -23,3 +24,9 @@ class Gui(object):
 
     def get_main_scene(self) -> cocos.cocosnode.CocosNode:
         raise NotImplementedError()
+
+    def before_received(self, package: TerminalPackage):
+        pass
+
+    def after_received(self, package: TerminalPackage):
+        pass
