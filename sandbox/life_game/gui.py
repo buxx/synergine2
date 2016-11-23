@@ -68,6 +68,9 @@ class Cells(Layer):
         self.grid_manager = GridManager(self, 32, border=2)
 
     def born(self, grid_position):
+        if grid_position in self.cells:
+            return  # cell can be added by gui
+
         cell = Sprite('resources/cells_l.png')
         cell.rotation = randint(0, 360)
         self.grid_manager.scale_sprite(cell)
@@ -78,8 +81,11 @@ class Cells(Layer):
         self.add(cell)
 
     def die(self, grid_position):
-        self.remove(self.cells[grid_position])
-        del self.cells[grid_position]
+        try:
+            self.remove(self.cells[grid_position])
+            del self.cells[grid_position]
+        except KeyError:
+            pass  # Cell can be removed by gui
 
 
 class MainLayer(ScrollableLayer):
