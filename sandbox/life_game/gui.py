@@ -16,15 +16,36 @@ cell_scale = ScaleBy(1.1, duration=0.25)
 cell_rotate = RotateBy(360, duration=30)
 
 
+class GridManager(object):
+    def __init__(self, square_width: int, border: int=0):
+        self.square_width = square_width
+        self.border = border
+
+    @property
+    def final_width(self):
+        return self.square_width + self.border
+
+    def scale_sprite(self, sprite: Sprite):
+        sprite.scale_x = self.final_width / sprite.image.width
+        sprite.scale_y = self.final_width / sprite.image.height
+
+    def position_sprite(self, sprite: Sprite, grid_position):
+        grid_x = grid_position[0]
+        grid_y = grid_position[1]
+        sprite.position = grid_x * self.final_width, grid_y * self.final_width
+
+
 class Cells(Layer):
     def __init__(self):
         super().__init__()
         self.cells = {}
+        self.grid_manager = GridManager(32, border=2)
 
     def born(self, grid_position):
         cell = Sprite('resources/cells_l.png')
-        cell.position = grid_position[0] * 30, grid_position[1] * 30
-        cell.scale = 0.50
+        cell.rotation = randint(0, 360)
+        self.grid_manager.scale_sprite(cell)
+        self.grid_manager.position_sprite(cell, grid_position)
         cell.do(Repeat(cell_scale + Reverse(cell_scale)))
         cell.do(Repeat(cell_rotate + Reverse(cell_rotate)))
         self.cells[grid_position] = cell
