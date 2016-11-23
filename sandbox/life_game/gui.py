@@ -17,7 +17,13 @@ cell_rotate = RotateBy(360, duration=30)
 
 
 class GridManager(object):
-    def __init__(self, square_width: int, border: int=0):
+    def __init__(
+        self,
+        layer: Layer,
+        square_width: int,
+        border: int=0,
+    ):
+        self.layer = layer
         self.square_width = square_width
         self.border = border
 
@@ -34,12 +40,32 @@ class GridManager(object):
         grid_y = grid_position[1]
         sprite.position = grid_x * self.final_width, grid_y * self.final_width
 
+    def get_window_position(self, grid_position_x, grid_position_y):
+        grid_x = grid_position_x
+        grid_y = grid_position_y
+        return grid_x * self.final_width, grid_y * self.final_width
+
+    def get_grid_position(self, window_x, window_y, z=0) -> tuple:
+        window_size = director.get_window_size()
+
+        window_center_x = window_size[0] // 2
+        window_center_y = window_size[1] // 2
+
+        window_relative_x = window_x - window_center_x
+        window_relative_y = window_y - window_center_y
+
+        real_width = self.final_width * self.layer.scale
+
+        return int(window_relative_x // real_width),\
+               int(window_relative_y // real_width),\
+               z
+
 
 class Cells(Layer):
     def __init__(self):
         super().__init__()
         self.cells = {}
-        self.grid_manager = GridManager(32, border=2)
+        self.grid_manager = GridManager(self, 32, border=2)
 
     def born(self, grid_position):
         cell = Sprite('resources/cells_l.png')
@@ -63,6 +89,7 @@ class MainLayer(ScrollableLayer):
         super().__init__()
 
         self.scroll_step = 100
+        self.grid_manager = GridManager(self, 32, border=2)
 
         self.background = Sprite('resources/banner-1711735_640.jpg')
         self.background.position = 0, 0
@@ -102,6 +129,23 @@ class MainLayer(ScrollableLayer):
         if key == wkey.Z:
             if self.scale <= 4:
                 self.scale += 0.2
+
+    def on_mouse_press(self, x, y, buttons, modifiers):
+        x, y = director.get_virtual_coordinates(x, y)
+        grid_position = self.grid_manager.get_grid_position(x, y)
+
+        # TODO: Have to inject in simulation ...
+        if self.cells.cells.get(grid_position):
+            self.cells.die(grid_position)
+        else:
+            self.cells.born(grid_position)
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        x, y = director.get_virtual_coordinates(x, y)
+        grid_position = self.grid_manager.get_grid_position(x, y)
+        window_position = self.grid_manager.get_window_position(grid_position[0], grid_position[1])
+
+        self.cross.position = window_position
 
 
 class LifeGameGui(Gui):
