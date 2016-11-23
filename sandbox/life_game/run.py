@@ -80,7 +80,7 @@ class CocosTerminal(Terminal):
 
     def run(self):
         from sandbox.life_game import gui
-        self.gui = gui.Gui(self)
+        self.gui = gui.LifeGameGui(self)
         self.gui.run()
 
 

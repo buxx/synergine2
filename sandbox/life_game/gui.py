@@ -4,6 +4,7 @@ from cocos.actions import Repeat, ScaleBy, Reverse
 
 from sandbox.life_game.simulation import CellDieEvent
 from sandbox.life_game.simulation import CellBornEvent
+from synergine2.gui import Gui
 from synergine2.simulation import Event
 from synergine2.terminals import TerminalPackage
 from synergine2.terminals import Terminal
@@ -25,23 +26,25 @@ class HelloWorld(cocos.layer.Layer):
         self.add(self.label)
 
 
-class Gui(object):
-    def __init__(self, terminal: Terminal):
-        self.terminal = terminal
-        self.terminal.register_event_handler(CellDieEvent, self.on_cell_die)
-        self.terminal.register_event_handler(CellBornEvent, self.on_cell_born)
+class LifeGameGui(Gui):
+    def __init__(
+            self,
+            terminal: Terminal,
+            read_queue_interval: float = 1 / 60.0,
+    ):
+        super().__init__(terminal, read_queue_interval)
 
-        cocos.director.director.init()
         self.hello_layer = HelloWorld()
         self.main_scene = cocos.scene.Scene(self.hello_layer)
+
+        self.terminal.register_event_handler(CellDieEvent, self.on_cell_die)
+        self.terminal.register_event_handler(CellBornEvent, self.on_cell_born)
 
         self.born = 0
         self.die = 0
 
-        pyglet.clock.schedule_interval(lambda *_, **__: self.terminal.read(), 1 / 60.0)
-
-    def run(self):
-        cocos.director.director.run(self.main_scene)
+    def get_main_scene(self) -> HelloWorld:
+        return self.main_scene
 
     def before_received(self, package: TerminalPackage):
         self.born = 0
