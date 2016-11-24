@@ -49,6 +49,7 @@ def get_str_representation_from_positions(
     start_with='',
     end_with='',
     force_items_as=None,
+    force_positions_as=None,
 ) -> str:
     positions = []
     for item_positions in items_positions.values():
@@ -84,6 +85,12 @@ def get_str_representation_from_positions(
                     str_item = force_item_as[1]
                     break
 
+        if force_positions_as:
+            for force_position_as in force_positions_as:
+                if position == force_position_as[0]:
+                    str_item = force_position_as[1]
+                    break
+
         added_value = str_item
         if position[0] != start_x:
             added_value = separator + added_value
@@ -94,3 +101,31 @@ def get_str_representation_from_positions(
 
     return str_representation + end_with
 
+
+def get_around_positions_of_positions(position, exclude_start_position=True) -> list:
+    """
+    TODO: compute with z (allow or disable with parameter)
+    Return positions around a point with distance of 1.
+
+    :param position: (x, y, z) tuple
+    :param exclude_start_position: if True, given position will not be
+    added to result list
+    :return: list of (x, y, z) positions
+    :rtype: list
+    """
+    pz = position[2]
+    px = position[0]
+    py = position[1]
+    points = [
+        (px-1, py-1, pz),
+        (px,   py-1, pz),
+        (px+1, py+1, pz),
+        (px-1, py  , pz),
+        (px+1, py  , pz),
+        (px-1, py+1, pz),
+        (px,   py+1, pz),
+        (px+1, py-1, pz)
+    ]
+    if not exclude_start_position:
+        points.append(position)
+    return points

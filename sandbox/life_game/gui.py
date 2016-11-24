@@ -158,7 +158,7 @@ class LifeGameGui(Gui):
     def __init__(
             self,
             terminal: Terminal,
-            read_queue_interval: float = 1 / 60.0,
+            read_queue_interval: float=1 / 60.0,
     ):
         super().__init__(terminal, read_queue_interval)
 
@@ -179,12 +179,22 @@ class LifeGameGui(Gui):
                     self.positions[subject.id] = subject.position
                     self.main_layer.cells.born(subject.position)
 
+        # Meuh non ...
+        # for subject in package.add_subjects:
+        #     self.positions[subject.id] = subject.position
+
     def on_cell_die(self, event: CellDieEvent):
-        self.main_layer.cells.die(self.positions[event.subject_id])
+        try:
+            self.main_layer.cells.die(self.positions[event.subject_id])
+        except KeyError:
+            pass
 
     def on_cell_born(self, event: CellBornEvent):
         # TODO: La position peut evoluer dans un autre programme
         # resoudre cette problematique de données subjects qui évolue
+        if event.subject_id not in self.terminal.subjects:
+            return
+
         subject = self.terminal.subjects.get(event.subject_id)
         self.positions[event.subject_id] = subject.position
         self.main_layer.cells.born(subject.position)

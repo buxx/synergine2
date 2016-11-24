@@ -107,6 +107,7 @@ class XYZSubjects(Subjects):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # TODO: accept multiple subjects as same position
+        # TODO: init xyz with given list
         self.xyz = {}
 
     def remove(self, value: XYZSubjectMixin):

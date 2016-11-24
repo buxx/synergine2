@@ -3,6 +3,7 @@ from synergine2.simulation import Event
 from synergine2.simulation import Behaviour
 from synergine2.xyz import ProximityMechanism
 from synergine2.xyz import XYZSubjectMixin
+from synergine2.xyz_utils import get_around_positions_of_positions
 
 COLLECTION_CELL = 'COLLECTION_CELL'  # Collections of Cell type
 
@@ -60,6 +61,16 @@ class CellBornBehaviour(Behaviour):
             simulation=self.simulation,
             position=self.subject.position,
         )
+
+        for position in get_around_positions_of_positions(self.subject.position):
+            if position not in self.simulation.subjects.xyz:
+                new_empty = Empty(
+                    simulation=self.simulation,
+                    position=position,
+                )
+                # Ici on casse le SimplePrintTerminal (car on créer des ligne avec des espaces manquants ?)
+                self.simulation.subjects.append(new_empty)
+
         self.simulation.subjects.remove(self.subject)
         self.simulation.subjects.append(new_cell)
         return [CellBornEvent(new_cell.id)]
@@ -91,7 +102,7 @@ class InvertCellStateBehaviour(Behaviour):
 
         self.simulation.subjects.remove(cell_at_position)
         self.simulation.subjects.append(new_empty)
-        return [CellDieEvent(self.subject.id)]
+        return [CellDieEvent(new_empty)]
 
 
 class Cell(XYZSubjectMixin, Subject):

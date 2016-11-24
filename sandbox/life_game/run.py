@@ -50,7 +50,11 @@ class SimplePrintTerminal(Terminal):
         print(get_str_representation_from_positions(
             items_positions,
             separator=' ',
-            force_items_as=(('0', ' '),),
+            # force_items_as=(('0', ' '),),
+            force_positions_as=(
+                ((-3, -10, 0), 'V'),
+                ((-2, -9, 0), 'X'),
+            )
         ))
 
         # Display current cycle events
@@ -86,17 +90,25 @@ class CocosTerminal(Terminal):
 
 def main():
     start_str_representation = """
-        0 0 0 0 0 0 0 0 0 0 0
-        0 0 0 1 1 1 1 0 0 0 0
-        0 0 0 1 0 0 1 0 0 0 0
-        0 1 1 1 0 0 1 1 1 0 0
-        0 1 0 0 0 0 0 0 1 0 0
-        0 1 0 0 0 0 0 0 1 0 0
-        0 1 1 1 0 0 1 1 1 0 0
-        0 0 0 1 0 0 1 0 0 0 0
-        0 0 0 1 1 1 1 0 0 0 0
-        0 0 0 0 0 0 0 0 0 0 0
-        0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 1 1 1 1 0 0 0 0 0 0
+        0 0 0 1 0 0 1 0 0 0 0 0 0
+        0 1 1 1 0 0 1 1 1 0 0 0 0
+        0 1 0 0 0 0 0 0 1 0 0 0 0
+        0 1 0 0 0 0 0 0 1 0 0 0 0
+        0 1 1 1 0 0 1 1 1 0 0 0 0
+        0 0 0 1 0 0 1 0 0 0 0 0 0
+        0 0 0 1 1 1 1 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 1 1 1 0 0 0 0 0
+        0 0 0 0 0 0 0 1 0 0 0 0 0
+        0 0 0 0 0 0 1 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
     """
     simulation = Simulation()
     subjects = get_subjects_from_str_representation(
