@@ -2,17 +2,17 @@ import multiprocessing
 
 from synergine2.processing import ProcessManager
 from synergine2.simulation import Subject
+from synergine2.simulation import Simulation
 from synergine2.simulation import Behaviour
 from synergine2.simulation import Mechanism
 from synergine2.simulation import Event
-from synergine2.simulation import Subjects
 from synergine2.utils import ChunkManager
 
 
 class CycleManager(object):
     def __init__(
             self,
-            subjects: Subjects,
+            simulation: Simulation,
             process_manager: ProcessManager=None,
     ):
         if process_manager is None:
@@ -22,7 +22,7 @@ class CycleManager(object):
                 job_maker=self.computing,
             )
 
-        self.subjects = subjects
+        self.simulation = simulation
         self.process_manager = process_manager
         self.current_cycle = 0
         self.first_cycle = True
@@ -30,15 +30,15 @@ class CycleManager(object):
     def next(self) -> [Event]:
         if self.first_cycle:
             # To dispatch subjects add/removes, enable track on them
-            self.subjects.track_changes = True
+            self.simulation.subjects.track_changes = True
             self.first_cycle = False
 
         results = {}
-        results_by_processes = self.process_manager.execute_jobs(self.subjects)
+        results_by_processes = self.process_manager.execute_jobs(self.simulation.subjects)
         events = []
         for process_results in results_by_processes:
             results.update(process_results)
-        for subject in self.subjects[:]:  # Duplicate list to prevent conflicts with behaviours subjects manipulations
+        for subject in self.simulation.subjects[:]:  # Duplicate list to prevent conflicts with behaviours subjects manipulations
             for behaviour_class in results[subject.id]:
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
                 # (genre se cacher et fuir son pas compatibles)
@@ -67,8 +67,6 @@ class CycleManager(object):
                     behaviours_data[type(behaviour)] = behaviour_data
 
             results[subject.id] = behaviours_data
-            # TODO: Tester les performances si on utilise un index numerique pour les results[subject]
-            # et behaviours_data[type(behaviours_data)]
         return results
 
     def get_mechanisms_to_compute(self, subject: Subject) -> [Mechanism]:
@@ -78,3 +76,21 @@ class CycleManager(object):
     def get_behaviours_to_compute(self, subject: Subject) -> [Behaviour]:
         # TODO: Implementer un systeme qui inhibe des behaviours (ex. someil inhibe avoir faim)
         return subject.behaviours.values()
+
+    def apply_actions(self, actions: list) -> [Event]:
+        """
+        TODO: bien specifier la forme de actions
+        :param actions:
+        """
+        events = []
+        for subject_id, behaviours_and_data in actions:
+            # Allow None for new subject behavior type
+            subject = self.simulation.subjects.index.get(subject_id, None)
+            for behaviour_class, behaviour_data in behaviours_and_data:
+                behaviour = behaviour_class(
+                    simulation=self.simulation,
+                    subject=subject,
+                )
+                events.extend(behaviour.action(behaviour_data))
+
+        return events

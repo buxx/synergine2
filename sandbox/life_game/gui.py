@@ -6,7 +6,7 @@ from cocos.sprite import Sprite
 from pyglet.window import key as wkey
 from random import randint
 
-from sandbox.life_game.simulation import CellDieEvent, Cell
+from sandbox.life_game.simulation import CellDieEvent, Cell, InvertCellStateBehaviour
 from sandbox.life_game.simulation import CellBornEvent
 from synergine2.gui import Gui
 from synergine2.terminals import TerminalPackage
@@ -91,9 +91,10 @@ class Cells(Layer):
 class MainLayer(ScrollableLayer):
     is_event_handler = True
 
-    def __init__(self):
+    def __init__(self, terminal: Terminal):
         super().__init__()
 
+        self.terminal = terminal
         self.scroll_step = 100
         self.grid_manager = GridManager(self, 32, border=2)
 
@@ -141,10 +142,9 @@ class MainLayer(ScrollableLayer):
         grid_position = self.grid_manager.get_grid_position(x, y)
 
         # TODO: Have to inject in simulation ...
-        if self.cells.cells.get(grid_position):
-            self.cells.die(grid_position)
-        else:
-            self.cells.born(grid_position)
+        self.terminal.send(TerminalPackage(
+            actions=[(None, [(InvertCellStateBehaviour, {'position': grid_position})])]
+        ))
 
     def on_mouse_motion(self, x, y, dx, dy):
         x, y = director.get_virtual_coordinates(x, y)
@@ -162,7 +162,7 @@ class LifeGameGui(Gui):
     ):
         super().__init__(terminal, read_queue_interval)
 
-        self.main_layer = MainLayer()
+        self.main_layer = MainLayer(terminal=self.terminal)
         self.main_scene = cocos.scene.Scene(self.main_layer)
         self.positions = {}
 

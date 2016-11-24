@@ -2,7 +2,7 @@ from math import sqrt
 from math import degrees
 from math import acos
 
-from synergine2.simulation import Mechanism
+from synergine2.simulation import Mechanism, Subjects
 from synergine2.simulation import Simulation as BaseSimulation
 
 
@@ -103,8 +103,20 @@ class ProximityMechanism(Mechanism):
         )
 
 
+class XYZSubjects(Subjects):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # TODO: accept multiple subjects as same position
+        self.xyz = {}
+
+    def remove(self, value: XYZSubjectMixin):
+        super().remove(value)
+        del self.xyz[value.position]
+
+    def append(self, p_object: XYZSubjectMixin):
+        super().append(p_object)
+        self.xyz[p_object.position] = p_object
+
+
 class Simulation(BaseSimulation):
-    """
-    TODO: xyz properties
-    """
-    pass
+    accepted_subject_class = XYZSubjects

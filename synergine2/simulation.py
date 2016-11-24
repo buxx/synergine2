@@ -3,27 +3,11 @@ import collections
 from synergine2.utils import initialize_subject
 
 
-class Simulation(object):
-    def __init__(self):
-        self.collections = collections.defaultdict(list)
-        self._subjects = None
-
-    @property
-    def subjects(self):
-        return self._subjects
-
-    @subjects.setter
-    def subjects(self, value: 'Subjects'):
-        if not isinstance(value, Subjects):
-            raise Exception('Simulation.subjects must be Subjects type')
-        self._subjects = value
-
-
 class Subject(object):
     collections = []
     behaviours_classes = []
 
-    def __init__(self, simulation: Simulation):
+    def __init__(self, simulation: 'Simulation'):
         self.id = id(self)  # We store object id because it's lost between process
         self.simulation = simulation
         self.behaviours = {}
@@ -47,9 +31,12 @@ class Subjects(list):
         self.removes = []
         self.adds = []
         self.track_changes = False
+        self.index = {}
         super().__init__(*args, **kwargs)
 
     def remove(self, value: Subject):
+        # Remove from index
+        del self.index[value.id]
         # Remove from subjects list
         super().remove(value)
         # Remove from collections
@@ -60,11 +47,33 @@ class Subjects(list):
             self.removes.append(value)
 
     def append(self, p_object):
+        # Add to index
+        self.index[p_object.id] = p_object
         # Add to subjects list
         super().append(p_object)
         # Add to adds list
         if self.track_changes:
             self.adds.append(p_object)
+
+
+class Simulation(object):
+    accepted_subject_class = Subjects
+
+    def __init__(self):
+        self.collections = collections.defaultdict(list)
+        self._subjects = None
+
+    @property
+    def subjects(self):
+        return self._subjects
+
+    @subjects.setter
+    def subjects(self, value: 'Subjects'):
+        if not isinstance(value, self.accepted_subject_class):
+            raise Exception('Simulation.subjects must be {0} type'.format(
+                self.accepted_subject_class,
+            ))
+        self._subjects = value
 
 
 class Mechanism(object):

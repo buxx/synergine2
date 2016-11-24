@@ -107,7 +107,7 @@ def main():
 
     core = Core(
         simulation=simulation,
-        cycle_manager=CycleManager(subjects=subjects),
+        cycle_manager=CycleManager(simulation=simulation),
         terminal_manager=TerminalManager([CocosTerminal(), SimplePrintTerminal()]),
     )
     core.run()

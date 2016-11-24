@@ -33,7 +33,7 @@ class TestSimpleSimulation(LifeGameBaseTest):
         simulation.subjects = subjects
 
         cycle_manager = CycleManager(
-            subjects=subjects,
+            simulation=simulation,
         )
 
         assert """
@@ -189,7 +189,7 @@ class TestMultipleSimulations(LifeGameBaseTest):
         simulation.subjects = subjects
 
         cycle_manager = CycleManager(
-            subjects=subjects,
+            simulation=simulation,
         )
 
         for str_representation in str_representations:

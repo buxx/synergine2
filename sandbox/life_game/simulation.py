@@ -55,6 +55,7 @@ class CellBornBehaviour(Behaviour):
         return False
 
     def action(self, data):
+        # TODO: une cell born ? Mettre des deads autour pour permetre l'expension
         new_cell = Cell(
             simulation=self.simulation,
             position=self.subject.position,
@@ -62,6 +63,35 @@ class CellBornBehaviour(Behaviour):
         self.simulation.subjects.remove(self.subject)
         self.simulation.subjects.append(new_cell)
         return [CellBornEvent(new_cell.id)]
+
+
+class InvertCellStateBehaviour(Behaviour):
+    # TODO: Bhaviour utilisés comme actions ? différentes ? ou comme ça ? Autre classe ?
+    def run(self, data):
+        pass
+
+    def action(self, data) -> [Event]:
+        position = data['position']
+        cell_at_position = self.simulation.subjects.xyz.get(position, None)
+
+        if not cell_at_position or isinstance(cell_at_position, Empty):
+            new_cell = Cell(
+                simulation=self.simulation,
+                position=position,
+            )
+            if cell_at_position:
+                self.simulation.subjects.remove(cell_at_position)
+            self.simulation.subjects.append(new_cell)
+            return [CellBornEvent(new_cell.id)]
+
+        new_empty = Empty(
+            simulation=self.simulation,
+            position=position,
+        )
+
+        self.simulation.subjects.remove(cell_at_position)
+        self.simulation.subjects.append(new_empty)
+        return [CellDieEvent(self.subject.id)]
 
 
 class Cell(XYZSubjectMixin, Subject):
