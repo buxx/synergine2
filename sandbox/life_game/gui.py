@@ -6,7 +6,8 @@ from cocos.sprite import Sprite
 from pyglet.window import key as wkey
 from random import randint
 
-from sandbox.life_game.simulation import CellDieEvent, Cell
+from sandbox.life_game.simulation import CellDieEvent, Cell, InvertCellStateBehaviour, \
+    EmptyPositionWithLotOfCellAroundEvent
 from sandbox.life_game.simulation import CellBornEvent
 from synergine2.gui import Gui
 from synergine2.terminals import TerminalPackage
@@ -14,6 +15,8 @@ from synergine2.terminals import Terminal
 
 cell_scale = ScaleBy(1.1, duration=0.25)
 cell_rotate = RotateBy(360, duration=30)
+flash_flash = ScaleBy(8, duration=0.5)
+flash_rotate = RotateBy(360, duration=6)
 
 
 class GridManager(object):
@@ -65,6 +68,7 @@ class Cells(Layer):
     def __init__(self):
         super().__init__()
         self.cells = {}
+        self.flashs = []
         self.grid_manager = GridManager(self, 32, border=2)
 
     def born(self, grid_position):
@@ -87,13 +91,25 @@ class Cells(Layer):
         except KeyError:
             pass  # Cell can be removed by gui
 
+    def flash(self, position):
+        flash = Sprite('resources/flash.png')
+        flash.opacity = 40
+        flash.scale = 0.1
+        flash.rotation = randint(0, 360)
+        flash.do(flash_flash + Reverse(flash_flash))
+        flash.do(Repeat(flash_rotate + Reverse(flash_rotate)))
+        self.grid_manager.position_sprite(flash, position)
+        self.flashs.append(flash)
+        self.add(flash)
+
 
 class MainLayer(ScrollableLayer):
     is_event_handler = True
 
-    def __init__(self):
+    def __init__(self, terminal: Terminal):
         super().__init__()
 
+        self.terminal = terminal
         self.scroll_step = 100
         self.grid_manager = GridManager(self, 32, border=2)
 
@@ -140,11 +156,9 @@ class MainLayer(ScrollableLayer):
         x, y = director.get_virtual_coordinates(x, y)
         grid_position = self.grid_manager.get_grid_position(x, y)
 
-        # TODO: Have to inject in simulation ...
-        if self.cells.cells.get(grid_position):
-            self.cells.die(grid_position)
-        else:
-            self.cells.born(grid_position)
+        self.terminal.send(TerminalPackage(
+            simulation_actions=[(InvertCellStateBehaviour, {'position': grid_position})],
+        ))
 
     def on_mouse_motion(self, x, y, dx, dy):
         x, y = director.get_virtual_coordinates(x, y)
@@ -158,16 +172,20 @@ class LifeGameGui(Gui):
     def __init__(
             self,
             terminal: Terminal,
-            read_queue_interval: float = 1 / 60.0,
+            read_queue_interval: float=1 / 60.0,
     ):
         super().__init__(terminal, read_queue_interval)
 
-        self.main_layer = MainLayer()
+        self.main_layer = MainLayer(terminal=self.terminal)
         self.main_scene = cocos.scene.Scene(self.main_layer)
         self.positions = {}
 
         self.terminal.register_event_handler(CellDieEvent, self.on_cell_die)
         self.terminal.register_event_handler(CellBornEvent, self.on_cell_born)
+        self.terminal.register_event_handler(
+            EmptyPositionWithLotOfCellAroundEvent,
+            self.on_empty_cell_with_lot_of_cell_around,
+        )
 
     def get_main_scene(self):
         return self.main_scene
@@ -179,12 +197,23 @@ class LifeGameGui(Gui):
                     self.positions[subject.id] = subject.position
                     self.main_layer.cells.born(subject.position)
 
+        for flash in self.main_layer.cells.flashs[:]:
+            self.main_layer.cells.flashs.remove(flash)
+            self.main_layer.cells.remove(flash)
+
     def on_cell_die(self, event: CellDieEvent):
-        self.main_layer.cells.die(self.positions[event.subject_id])
+        try:
+            self.main_layer.cells.die(self.positions[event.subject_id])
+        except KeyError:
+            pass
 
     def on_cell_born(self, event: CellBornEvent):
-        # TODO: La position peut evoluer dans un autre programme
-        # resoudre cette problematique de données subjects qui évolue
+        if event.subject_id not in self.terminal.subjects:
+            return
+
         subject = self.terminal.subjects.get(event.subject_id)
         self.positions[event.subject_id] = subject.position
         self.main_layer.cells.born(subject.position)
+
+    def on_empty_cell_with_lot_of_cell_around(self, event: EmptyPositionWithLotOfCellAroundEvent):
+        self.main_layer.cells.flash(event.position)

@@ -4,7 +4,7 @@ from sandbox.life_game.simulation import Empty
 from sandbox.life_game.utils import get_subjects_from_str_representation
 from synergine2.cycle import CycleManager
 from synergine2.simulation import Simulation
-from synergine2.simulation import Subjects
+from synergine2.xyz import XYZSubjects
 from synergine2.xyz_utils import get_str_representation_from_positions
 from tests import BaseTest
 from tests import str_kwargs
@@ -22,6 +22,7 @@ class LifeGameBaseTest(BaseTest):
 
         return get_str_representation_from_positions(
             items_positions,
+            complete_lines_with='0',
             **str_kwargs
         )
 
@@ -33,7 +34,7 @@ class TestSimpleSimulation(LifeGameBaseTest):
         simulation.subjects = subjects
 
         cycle_manager = CycleManager(
-            subjects=subjects,
+            simulation=simulation,
         )
 
         assert """
@@ -47,9 +48,11 @@ class TestSimpleSimulation(LifeGameBaseTest):
         cycle_manager.next()
 
         assert """
+            0 0 0 0 0
             0 0 1 0 0
             0 0 1 0 0
             0 0 1 0 0
+            0 0 0 0 0
         """ == self._get_str_representation_of_subjects(
             subjects,
         )
@@ -58,14 +61,16 @@ class TestSimpleSimulation(LifeGameBaseTest):
 
         assert """
             0 0 0 0 0
+            0 0 0 0 0
             0 1 1 1 0
+            0 0 0 0 0
             0 0 0 0 0
         """ == self._get_str_representation_of_subjects(
             subjects,
         )
 
     def _get_subjects(self, simulation: Simulation):
-        cells = Subjects(simulation=simulation)
+        cells = XYZSubjects(simulation=simulation)
 
         for position in [
             (-1, 0, 0),
@@ -115,70 +120,47 @@ class TestMultipleSimulations(LifeGameBaseTest):
             0 0 0 0 0 0 0 0 0 0 0
         """,
             """
-            0 0 0 0 1 1 0 0 0 0 0
-            0 0 0 1 1 1 1 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-            0 1 0 1 0 0 1 0 1 0 0
-            1 1 0 0 0 0 0 0 1 1 0
-            1 1 0 0 0 0 0 0 1 1 0
-            0 1 0 1 0 0 1 0 1 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-            0 0 0 1 1 1 1 0 0 0 0
-            0 0 0 0 1 1 0 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 1 1 0 0 0 0 0
+            0 0 0 0 1 1 1 1 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 1 0 1 0 0 1 0 1 0 0
+            0 1 1 0 0 0 0 0 0 1 1 0
+            0 1 1 0 0 0 0 0 0 1 1 0
+            0 0 1 0 1 0 0 1 0 1 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 1 1 1 1 0 0 0 0
+            0 0 0 0 0 1 1 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
         """,
             """
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 1 1 0 0 1 1 0 0 0
-            1 1 1 0 0 0 0 1 1 1 0
-            0 0 0 0 0 0 0 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-            1 1 1 0 0 0 0 1 1 1 0
-            0 0 1 1 0 0 1 1 0 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 1 0 0 1 0 0 0 0
+            0 0 0 0 1 0 0 1 0 0 0 0
+            0 0 0 1 1 0 0 1 1 0 0 0
+            0 1 1 1 0 0 0 0 1 1 1 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 1 1 1 0 0 0 0 1 1 1 0
+            0 0 0 1 1 0 0 1 1 0 0 0
+            0 0 0 0 1 0 0 1 0 0 0 0
+            0 0 0 0 1 0 0 1 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
         """,
             """
-            0 0 0 0 0 0 0 0 0 0 0
-            0 0 0 1 1 1 1 0 0 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 1 1 1 0 0 1 1 1 0 0
-            0 1 0 0 0 0 0 0 1 0 0
-            0 1 0 0 0 0 0 0 1 0 0
-            0 1 1 1 0 0 1 1 1 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 0 1 1 1 1 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 1 1 1 1 0 0 0 0
+            0 0 0 0 1 0 0 1 0 0 0 0
+            0 0 1 1 1 0 0 1 1 1 0 0
+            0 0 1 0 0 0 0 0 0 1 0 0
+            0 0 1 0 0 0 0 0 0 1 0 0
+            0 0 1 1 1 0 0 1 1 1 0 0
+            0 0 0 0 1 0 0 1 0 0 0 0
+            0 0 0 0 1 1 1 1 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0 0
         """,
-            """
-            0 0 0 0 1 1 0 0 0 0 0
-            0 0 0 1 1 1 1 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-            0 1 0 1 0 0 1 0 1 0 0
-            1 1 0 0 0 0 0 0 1 1 0
-            1 1 0 0 0 0 0 0 1 1 0
-            0 1 0 1 0 0 1 0 1 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-            0 0 0 1 1 1 1 0 0 0 0
-            0 0 0 0 1 1 0 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-        """,
-            """
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 1 1 0 0 1 1 0 0 0
-            1 1 1 0 0 0 0 1 1 1 0
-            0 0 0 0 0 0 0 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-            1 1 1 0 0 0 0 1 1 1 0
-            0 0 1 1 0 0 1 1 0 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 0 1 0 0 1 0 0 0 0
-            0 0 0 0 0 0 0 0 0 0 0
-        """
         ]
 
         simulation = Simulation()
@@ -189,12 +171,12 @@ class TestMultipleSimulations(LifeGameBaseTest):
         simulation.subjects = subjects
 
         cycle_manager = CycleManager(
-            subjects=subjects,
+            simulation=simulation,
         )
 
         for str_representation in str_representations:
             assert str_representation == \
                self._get_str_representation_of_subjects(
                     subjects,
-                )
+               )
             cycle_manager.next()

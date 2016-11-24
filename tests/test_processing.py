@@ -12,13 +12,21 @@ class MyFakeClass(object):
 
 class TestProcessing(BaseTest):
     @staticmethod
-    def _make_job_with_scalar(data_chunk: list) -> tuple:
+    def _make_job_with_scalar(
+            data_chunk: list,
+            process_number: int,
+            process_count: int,
+    ) -> tuple:
         current_pid = os.getpid()
         result = sum(data_chunk)
         return current_pid, result
 
     @staticmethod
-    def _make_job_with_object(data_chunk: list) -> tuple:
+    def _make_job_with_object(
+            data_chunk: list,
+            process_number: int,
+            process_count: int,
+    ) -> tuple:
         current_pid = os.getpid()
         data = [o.value for o in data_chunk]
         result = sum(data)
@@ -29,14 +37,16 @@ class TestProcessing(BaseTest):
         process_manager = ProcessManager(
             process_count=4,
             chunk_manager=chunk_manager,
-            job_maker=self._make_job_with_scalar,
         )
 
         data = list(range(100))
         process_id_list = []
         final_result = 0
 
-        results = process_manager.execute_jobs(data)
+        results = process_manager.chunk_and_execute_jobs(
+            data,
+            job_maker=self._make_job_with_scalar,
+        )
 
         for process_id, result in results:
             final_result += result
@@ -54,14 +64,16 @@ class TestProcessing(BaseTest):
         process_manager = ProcessManager(
             process_count=4,
             chunk_manager=chunk_manager,
-            job_maker=self._make_job_with_object,
         )
 
         data = [MyFakeClass(v) for v in range(100)]
         process_id_list = []
         final_result = 0
 
-        results = process_manager.execute_jobs(data)
+        results = process_manager.chunk_and_execute_jobs(
+            data,
+            job_maker=self._make_job_with_object,
+        )
 
         for process_id, result_object in results:
             final_result += result_object.value

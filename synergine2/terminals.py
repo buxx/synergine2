@@ -19,7 +19,9 @@ class TerminalPackage(object):
             add_subjects: [Subject]=None,
             remove_subjects: [Subject]=None,
             events: [Event]=None,
-            is_cycle: bool=True,
+            simulation_actions: [tuple]=None,
+            subject_actions: [tuple]=None,
+            is_cycle: bool=False,
             *args,
             **kwargs
     ):
@@ -27,6 +29,8 @@ class TerminalPackage(object):
         self.add_subjects = add_subjects or []
         self.remove_subjects = remove_subjects or []
         self.events = events or []
+        self.simulation_actions = simulation_actions or []
+        self.subject_actions = subject_actions or []
         self.is_cycle = is_cycle
 
 
@@ -147,7 +151,7 @@ class TerminalManager(object):
 
             output_queue.put(terminal_adapted_package)
 
-    def receive(self) -> []:
+    def receive(self) -> [TerminalPackage]:
         packages = []
         for input_queue in self.inputs_queues.values():
             try:

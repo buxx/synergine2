@@ -20,16 +20,26 @@ class Core(object):
         try:
             self.terminal_manager.start()
 
-            start_package = TerminalPackage(subjects=self.simulation.subjects)
+            start_package = TerminalPackage(
+                subjects=self.simulation.subjects,
+            )
             self.terminal_manager.send(start_package)
 
             while True:
-                # TODO: receive from terminals
-                events = self.cycle_manager.next()
+                events = []
+                packages = self.terminal_manager.receive()
+                for package in packages:
+                    events.extend(self.cycle_manager.apply_actions(
+                        simulation_actions=package.simulation_actions,
+                        subject_actions=package.subject_actions,
+                    ))
+
+                events.extend(self.cycle_manager.next())
                 cycle_package = TerminalPackage(
                     events=events,
                     add_subjects=self.simulation.subjects.adds,
                     remove_subjects=self.simulation.subjects.removes,
+                    is_cycle=True,
                 )
                 self.terminal_manager.send(cycle_package)
 

@@ -1,6 +1,7 @@
 import collections
 
-from sandbox.life_game.simulation import Cell
+from sandbox.life_game.simulation import Cell, LotOfCellsSignalBehaviour, LifeGame, \
+    EmptyPositionWithLotOfCellAroundEvent
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.simulation import CellDieEvent
 from sandbox.life_game.simulation import CellBornEvent
@@ -51,6 +52,10 @@ class SimplePrintTerminal(Terminal):
             items_positions,
             separator=' ',
             force_items_as=(('0', ' '),),
+            # force_positions_as=(
+            #     ((-3, -10, 0), 'V'),
+            #     ((-2, -9, 0), 'X'),
+            # )
         ))
 
         # Display current cycle events
@@ -66,6 +71,7 @@ class CocosTerminal(Terminal):
     subscribed_events = [
         CellDieEvent,
         CellBornEvent,
+        EmptyPositionWithLotOfCellAroundEvent,
     ]
 
     def __init__(self):
@@ -86,19 +92,27 @@ class CocosTerminal(Terminal):
 
 def main():
     start_str_representation = """
-        0 0 0 0 0 0 0 0 0 0 0
-        0 0 0 1 1 1 1 0 0 0 0
-        0 0 0 1 0 0 1 0 0 0 0
-        0 1 1 1 0 0 1 1 1 0 0
-        0 1 0 0 0 0 0 0 1 0 0
-        0 1 0 0 0 0 0 0 1 0 0
-        0 1 1 1 0 0 1 1 1 0 0
-        0 0 0 1 0 0 1 0 0 0 0
-        0 0 0 1 1 1 1 0 0 0 0
-        0 0 0 0 0 0 0 0 0 0 0
-        0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 1 1 1 1 0 0 0 0 0 0
+        0 0 0 1 0 0 1 0 0 0 0 0 0
+        0 1 1 1 0 0 1 1 1 0 0 0 0
+        0 1 0 0 0 0 0 0 1 0 0 0 0
+        0 1 0 0 0 0 0 0 1 0 0 0 0
+        0 1 1 1 0 0 1 1 1 0 0 0 0
+        0 0 0 1 0 0 1 0 0 0 0 0 0
+        0 0 0 1 1 1 1 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 1 1 1 0 0 0 0 0
+        0 0 0 0 0 0 0 1 0 0 0 0 0
+        0 0 0 0 0 0 1 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0
     """
-    simulation = Simulation()
+    simulation = LifeGame()
     subjects = get_subjects_from_str_representation(
         start_str_representation,
         simulation,
@@ -107,7 +121,7 @@ def main():
 
     core = Core(
         simulation=simulation,
-        cycle_manager=CycleManager(subjects=subjects),
+        cycle_manager=CycleManager(simulation=simulation),
         terminal_manager=TerminalManager([CocosTerminal(), SimplePrintTerminal()]),
     )
     core.run()
