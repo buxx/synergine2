@@ -50,11 +50,11 @@ class SimplePrintTerminal(Terminal):
         print(get_str_representation_from_positions(
             items_positions,
             separator=' ',
-            # force_items_as=(('0', ' '),),
-            force_positions_as=(
-                ((-3, -10, 0), 'V'),
-                ((-2, -9, 0), 'X'),
-            )
+            force_items_as=(('0', ' '),),
+            # force_positions_as=(
+            #     ((-3, -10, 0), 'V'),
+            #     ((-2, -9, 0), 'X'),
+            # )
         ))
 
         # Display current cycle events

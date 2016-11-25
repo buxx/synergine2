@@ -50,11 +50,47 @@ def get_str_representation_from_positions(
     end_with='',
     force_items_as=None,
     force_positions_as=None,
+    complete_lines_with=' ',
 ) -> str:
     positions = []
     for item_positions in items_positions.values():
         positions.extend(item_positions)
     positions = sorted(positions, key=lambda p: (p[2], p[1], p[0]))
+
+    if complete_lines_with is not None:
+        max_x_position = max(positions, key=lambda p: p[0])
+        min_x_position = min(positions, key=lambda p: p[0])
+        max_y_position = max(positions, key=lambda p: p[1])
+        min_y_position = min(positions, key=lambda p: p[1])
+        max_z_position = max(positions, key=lambda p: p[2])
+        min_z_position = min(positions, key=lambda p: p[2])
+
+        max_x = max_x_position[0]
+        min_x = min_x_position[0]
+        max_y = max_y_position[1]
+        min_y = min_y_position[1]
+        max_z = max_z_position[2]
+        min_z = min_z_position[2]
+
+        all_ = []
+
+        for x in range(min_x, max_x+1):
+            for y in range(min_y, max_y+1):
+                for z in range(min_z, max_z+1):
+                    all_.append((x, y, z))
+
+        pass
+
+        for one_of_all in all_:
+            if one_of_all not in positions:
+                if complete_lines_with not in items_positions:
+                    items_positions[complete_lines_with] = []
+                items_positions[complete_lines_with].append(one_of_all)
+
+        positions = []
+        for item_positions in items_positions.values():
+            positions.extend(item_positions)
+        positions = sorted(positions, key=lambda p: (p[2], p[1], p[0]))
 
     str_representation = start_with + tabulation
 

@@ -62,7 +62,8 @@ class CellBornBehaviour(Behaviour):
             position=self.subject.position,
         )
 
-        for position in get_around_positions_of_positions(self.subject.position):
+        positions_to_complete = get_around_positions_of_positions(self.subject.position)
+        for position in positions_to_complete:
             if position not in self.simulation.subjects.xyz:
                 new_empty = Empty(
                     simulation=self.simulation,
