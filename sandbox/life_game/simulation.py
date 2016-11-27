@@ -38,7 +38,7 @@ class CellAroundAnEmptyPositionMechanism(ProximityMixin, SimulationMechanism):
     feel_collections = [COLLECTION_CELL]
     parallelizable = True
 
-    def run(self, process_id: int=None, process_count: int=None):
+    def run(self, process_number: int=None, process_count: int=None):
         chunk_manager = ChunkManager(process_count)
         positions = self.simulation.subjects.xyz.keys()
         min_x, max_x, min_y, max_y, min_z, max_z = get_min_and_max(positions)
@@ -48,7 +48,7 @@ class CellAroundAnEmptyPositionMechanism(ProximityMixin, SimulationMechanism):
         results = {}
         for z in range(min_z, max_z+1):
             for y in range(min_y, max_y+1):
-                for x in xs_chunks[process_id]:
+                for x in xs_chunks[process_number]:
                     subject_here = self.simulation.subjects.xyz.get((x, y, z))
                     if not subject_here or isinstance(subject_here, Empty):
                         subjects = self.get_for_position(

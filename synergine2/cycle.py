@@ -82,7 +82,7 @@ class CycleManager(object):
     def simulation_computing(
             self,
             simulation,
-            process_id,
+            process_number,
             process_count,
     ):
         # TODO: necessaire de passer simulation ?
@@ -92,7 +92,7 @@ class CycleManager(object):
 
         for mechanism in mechanisms:
             mechanisms_data[type(mechanism)] = mechanism.run(
-                process_id=process_id,
+                process_number=process_number,
                 process_count=process_count,
             )
 
@@ -106,7 +106,7 @@ class CycleManager(object):
     def subjects_computing(
             self,
             subjects,
-            process_id=None,
+            process_number=None,
             process_count=None,
     ):
         results = {}

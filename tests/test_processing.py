@@ -12,13 +12,21 @@ class MyFakeClass(object):
 
 class TestProcessing(BaseTest):
     @staticmethod
-    def _make_job_with_scalar(data_chunk: list) -> tuple:
+    def _make_job_with_scalar(
+            data_chunk: list,
+            process_number: int,
+            process_count: int,
+    ) -> tuple:
         current_pid = os.getpid()
         result = sum(data_chunk)
         return current_pid, result
 
     @staticmethod
-    def _make_job_with_object(data_chunk: list) -> tuple:
+    def _make_job_with_object(
+            data_chunk: list,
+            process_number: int,
+            process_count: int,
+    ) -> tuple:
         current_pid = os.getpid()
         data = [o.value for o in data_chunk]
         result = sum(data)
