@@ -1,7 +1,8 @@
-from synergine2.simulation import Subject
+from synergine2.simulation import Subject, SimulationMechanism, Simulation
+from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import Event
-from synergine2.simulation import Behaviour
-from synergine2.xyz import ProximityMechanism
+from synergine2.simulation import SubjectBehaviour
+from synergine2.xyz import ProximitySubjectMechanism, ProximityMixin
 from synergine2.xyz import XYZSubjectMixin
 from synergine2.xyz_utils import get_around_positions_of_positions
 
@@ -20,12 +21,28 @@ class CellBornEvent(Event):
         self.subject_id = subject_id
 
 
-class CellProximityMechanism(ProximityMechanism):
+class EmptyPositionWithLotOfCellAroundEvent(Event):
+    def __init__(self, position, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subject_id = position
+
+
+class CellProximityMechanism(ProximitySubjectMechanism):
     distance = 1.41  # distance when on angle
     feel_collections = [COLLECTION_CELL]
 
 
-class CellDieBehaviour(Behaviour):
+class CellAroundAnEmptyPositionMechanism(ProximityMixin, SimulationMechanism):
+    distance = 1.41  # distance when on angle
+    feel_collections = [COLLECTION_CELL]
+    parallelizable = True
+
+    def run(self, process_id: int=None, process_count: int=None):
+        positions = self.simulation.subjects.xyz.keys()
+        pass
+
+
+class CellDieBehaviour(SubjectBehaviour):
     use = [CellProximityMechanism]
 
     def run(self, data):
@@ -46,7 +63,7 @@ class CellDieBehaviour(Behaviour):
         return [CellDieEvent(self.subject.id)]
 
 
-class CellBornBehaviour(Behaviour):
+class CellBornBehaviour(SubjectBehaviour):
     use = [CellProximityMechanism]
 
     def run(self, data):
@@ -56,7 +73,6 @@ class CellBornBehaviour(Behaviour):
         return False
 
     def action(self, data):
-        # TODO: une cell born ? Mettre des deads autour pour permetre l'expension
         new_cell = Cell(
             simulation=self.simulation,
             position=self.subject.position,
@@ -77,10 +93,9 @@ class CellBornBehaviour(Behaviour):
         return [CellBornEvent(new_cell.id)]
 
 
-class InvertCellStateBehaviour(Behaviour):
-    # TODO: Bhaviour utilisés comme actions ? différentes ? ou comme ça ? Autre classe ?
+class InvertCellStateBehaviour(SimulationBehaviour):
     def run(self, data):
-        pass
+        pass  # This behaviour is designed to be launch by terminal
 
     def action(self, data) -> [Event]:
         position = data['position']
@@ -106,6 +121,27 @@ class InvertCellStateBehaviour(Behaviour):
         return [CellDieEvent(new_empty)]
 
 
+class LotOfCellsSignalBehaviour(SimulationBehaviour):
+    use = [CellAroundAnEmptyPositionMechanism]
+
+    def run(self, data):
+        positions = []
+
+        for position, subjects in data[CellAroundAnEmptyPositionMechanism].items():
+            if len(subjects) >= 4:
+                positions.append(position)
+
+        return positions
+
+    def action(self, data) -> [Event]:
+        events = []
+
+        for position in data:
+            events.append(Event(position))
+
+        return events
+
+
 class Cell(XYZSubjectMixin, Subject):
     collections = Subject.collections[:]
     collections.extend([COLLECTION_CELL])
@@ -115,3 +151,7 @@ class Cell(XYZSubjectMixin, Subject):
 class Empty(XYZSubjectMixin, Subject):
     """Represent empty position where cell can spawn"""
     behaviours_classes = [CellBornBehaviour]
+
+
+class LifeGame(Simulation):
+    behaviours_classes = [LotOfCellsSignalBehaviour]

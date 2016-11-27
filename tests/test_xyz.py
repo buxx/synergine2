@@ -2,7 +2,7 @@
 from synergine2.simulation import Subject
 from synergine2.simulation import Subjects
 from synergine2.simulation import Simulation
-from synergine2.xyz import ProximityMechanism
+from synergine2.xyz import ProximitySubjectMechanism
 from synergine2.xyz import XYZSubjectMixin
 from synergine2.xyz_utils import get_positions_from_str_representation
 from synergine2.xyz_utils import get_str_representation_from_positions
@@ -14,7 +14,7 @@ class MySubject(XYZSubjectMixin, Subject):
     pass
 
 
-class MyProximityMechanism(ProximityMechanism):
+class MyProximityMechanism(ProximitySubjectMechanism):
     distance = 10
 
 
@@ -34,7 +34,10 @@ class TestXYZ(BaseTest):
             subject=subject,
         )
 
-        assert 5 == proximity_mechanism.get_distance_of(other_subject)
+        assert 5 == proximity_mechanism.get_distance_of(
+            position=subject.position,
+            subject=other_subject,
+        )
         assert [{
             'subject': other_subject,
             'direction': 90.0,
@@ -56,7 +59,10 @@ class TestXYZ(BaseTest):
             subject=subject,
         )
 
-        assert 11 == proximity_mechanism.get_distance_of(other_subject)
+        assert 11 == proximity_mechanism.get_distance_of(
+            position=subject.position,
+            subject=other_subject,
+        )
         # other_subject is to far away
         assert [] == proximity_mechanism.run()
 

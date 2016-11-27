@@ -42,6 +42,24 @@ def get_positions_from_str_representation(str_representation):
     return items_positions
 
 
+def get_min_and_max(positions) -> (int, int, int, int, int):
+    max_x_position = max(positions, key=lambda p: p[0])
+    min_x_position = min(positions, key=lambda p: p[0])
+    max_y_position = max(positions, key=lambda p: p[1])
+    min_y_position = min(positions, key=lambda p: p[1])
+    max_z_position = max(positions, key=lambda p: p[2])
+    min_z_position = min(positions, key=lambda p: p[2])
+
+    max_x = max_x_position[0]
+    min_x = min_x_position[0]
+    max_y = max_y_position[1]
+    min_y = min_y_position[1]
+    max_z = max_z_position[2]
+    min_z = min_z_position[2]
+
+    return min_x, max_x, min_y, max_y, min_z, max_z
+
+
 def get_str_representation_from_positions(
     items_positions: dict,
     separator='',
@@ -58,19 +76,7 @@ def get_str_representation_from_positions(
     positions = sorted(positions, key=lambda p: (p[2], p[1], p[0]))
 
     if complete_lines_with is not None:
-        max_x_position = max(positions, key=lambda p: p[0])
-        min_x_position = min(positions, key=lambda p: p[0])
-        max_y_position = max(positions, key=lambda p: p[1])
-        min_y_position = min(positions, key=lambda p: p[1])
-        max_z_position = max(positions, key=lambda p: p[2])
-        min_z_position = min(positions, key=lambda p: p[2])
-
-        max_x = max_x_position[0]
-        min_x = min_x_position[0]
-        max_y = max_y_position[1]
-        min_y = min_y_position[1]
-        max_z = max_z_position[2]
-        min_z = min_z_position[2]
+        min_x, max_x, min_y, max_y, min_z, max_z = get_min_and_max(positions)
 
         all_ = []
 

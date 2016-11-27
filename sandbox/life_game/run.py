@@ -1,6 +1,6 @@
 import collections
 
-from sandbox.life_game.simulation import Cell
+from sandbox.life_game.simulation import Cell, LotOfCellsSignalBehaviour, LifeGame
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.simulation import CellDieEvent
 from sandbox.life_game.simulation import CellBornEvent
@@ -110,7 +110,7 @@ def main():
         0 0 0 0 0 0 0 0 0 0 0 0 0
         0 0 0 0 0 0 0 0 0 0 0 0 0
     """
-    simulation = Simulation()
+    simulation = LifeGame()
     subjects = get_subjects_from_str_representation(
         start_str_representation,
         simulation,

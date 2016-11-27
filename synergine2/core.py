@@ -29,7 +29,10 @@ class Core(object):
                 events = []
                 packages = self.terminal_manager.receive()
                 for package in packages:
-                    events.extend(self.cycle_manager.apply_actions(package.actions))
+                    events.extend(self.cycle_manager.apply_actions(
+                        simulation_actions=package.simulation_actions,
+                        subject_actions=package.subject_actions,
+                    ))
 
                 events.extend(self.cycle_manager.next())
                 cycle_package = TerminalPackage(

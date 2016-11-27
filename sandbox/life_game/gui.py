@@ -141,9 +141,8 @@ class MainLayer(ScrollableLayer):
         x, y = director.get_virtual_coordinates(x, y)
         grid_position = self.grid_manager.get_grid_position(x, y)
 
-        # TODO: Have to inject in simulation ...
         self.terminal.send(TerminalPackage(
-            actions=[(None, [(InvertCellStateBehaviour, {'position': grid_position})])]
+            simulation_actions=[(InvertCellStateBehaviour, {'position': grid_position})],
         ))
 
     def on_mouse_motion(self, x, y, dx, dy):
@@ -179,10 +178,6 @@ class LifeGameGui(Gui):
                     self.positions[subject.id] = subject.position
                     self.main_layer.cells.born(subject.position)
 
-        # Meuh non ...
-        # for subject in package.add_subjects:
-        #     self.positions[subject.id] = subject.position
-
     def on_cell_die(self, event: CellDieEvent):
         try:
             self.main_layer.cells.die(self.positions[event.subject_id])
@@ -190,8 +185,6 @@ class LifeGameGui(Gui):
             pass
 
     def on_cell_born(self, event: CellBornEvent):
-        # TODO: La position peut evoluer dans un autre programme
-        # resoudre cette problematique de données subjects qui évolue
         if event.subject_id not in self.terminal.subjects:
             return
 

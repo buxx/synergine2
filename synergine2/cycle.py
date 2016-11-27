@@ -3,8 +3,8 @@ import multiprocessing
 from synergine2.processing import ProcessManager
 from synergine2.simulation import Subject
 from synergine2.simulation import Simulation
-from synergine2.simulation import Behaviour
-from synergine2.simulation import Mechanism
+from synergine2.simulation import SubjectBehaviour
+from synergine2.simulation import SubjectMechanism
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
 
@@ -48,9 +48,6 @@ class CycleManager(object):
         return events
 
     def computing(self, subjects):
-        # compute mechanisms (prepare check to not compute slienced or not used mechanisms)
-        # compute behaviours with mechanisms data
-        # return list with per subject: [behaviour: return, behaviour: return] if behaviour return True something
         results = {}
         for subject in subjects:
             mechanisms = self.get_mechanisms_to_compute(subject)
@@ -69,27 +66,41 @@ class CycleManager(object):
             results[subject.id] = behaviours_data
         return results
 
-    def get_mechanisms_to_compute(self, subject: Subject) -> [Mechanism]:
+    def get_mechanisms_to_compute(self, subject: Subject) -> [SubjectMechanism]:
         # TODO: Implementer un systeme qui inhibe des mechanisme (ex. someil inhibe l'ouie)
         return subject.mechanisms.values()
 
-    def get_behaviours_to_compute(self, subject: Subject) -> [Behaviour]:
+    def get_behaviours_to_compute(self, subject: Subject) -> [SubjectBehaviour]:
         # TODO: Implementer un systeme qui inhibe des behaviours (ex. someil inhibe avoir faim)
         return subject.behaviours.values()
 
-    def apply_actions(self, actions: list) -> [Event]:
+    def apply_actions(
+            self,
+            simulation_actions: [tuple]=None,
+            subject_actions: [tuple]=None,
+    ) -> [Event]:
         """
-        TODO: bien specifier la forme de actions
-        :param actions:
+        TODO: bien specifier la forme des parametres
+        simulation_actions = [(class, {'data': 'foo'})]
+        subject_actions = [(subject_id, [(class, {'data': 'foo'}])]
         """
+        simulation_actions = simulation_actions or []
+        subject_actions = subject_actions or []
         events = []
-        for subject_id, behaviours_and_data in actions:
-            # Allow None for new subject behavior type
-            subject = self.simulation.subjects.index.get(subject_id, None)
+
+        for subject_id, behaviours_and_data in subject_actions:
+            subject = self.simulation.subjects.index.get(subject_id)
             for behaviour_class, behaviour_data in behaviours_and_data:
                 behaviour = behaviour_class(
                     simulation=self.simulation,
                     subject=subject,
+                )
+                events.extend(behaviour.action(behaviour_data))
+
+        for behaviours_and_data in simulation_actions:
+            for behaviour_class, behaviour_data in behaviours_and_data:
+                behaviour = behaviour_class(
+                    simulation=self.simulation,
                 )
                 events.extend(behaviour.action(behaviour_data))
 

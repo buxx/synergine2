@@ -12,25 +12,8 @@ class ChunkManager(object):
         return x
 
 
-def get_mechanisms_classes(subject: 'Subject') -> ['Mechanisms']:
+def get_mechanisms_classes(mechanized) -> ['Mechanisms']:
     mechanisms_classes = []
-    for behaviour_class in subject.behaviours_classes:
+    for behaviour_class in mechanized.behaviours_classes:
         mechanisms_classes.extend(behaviour_class.use)
     return list(set(mechanisms_classes))  # Remove duplicates
-
-
-def initialize_subject(
-        simulation: 'Simulation',
-        subject: 'Subject',
-) -> None:
-    for mechanism_class in get_mechanisms_classes(subject):
-        subject.mechanisms[mechanism_class] = mechanism_class(
-            simulation=simulation,
-            subject=subject,
-        )
-
-    for behaviour_class in subject.behaviours_classes:
-        subject.behaviours[behaviour_class] = behaviour_class(
-            simulation=simulation,
-            subject=subject,
-        )
