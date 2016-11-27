@@ -2,9 +2,10 @@ from synergine2.simulation import Subject, SimulationMechanism, Simulation
 from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import Event
 from synergine2.simulation import SubjectBehaviour
+from synergine2.utils import ChunkManager
 from synergine2.xyz import ProximitySubjectMechanism, ProximityMixin
 from synergine2.xyz import XYZSubjectMixin
-from synergine2.xyz_utils import get_around_positions_of_positions
+from synergine2.xyz_utils import get_around_positions_of_positions, get_min_and_max
 
 COLLECTION_CELL = 'COLLECTION_CELL'  # Collections of Cell type
 
@@ -24,7 +25,7 @@ class CellBornEvent(Event):
 class EmptyPositionWithLotOfCellAroundEvent(Event):
     def __init__(self, position, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.subject_id = position
+        self.position = position
 
 
 class CellProximityMechanism(ProximitySubjectMechanism):
@@ -38,8 +39,25 @@ class CellAroundAnEmptyPositionMechanism(ProximityMixin, SimulationMechanism):
     parallelizable = True
 
     def run(self, process_id: int=None, process_count: int=None):
+        chunk_manager = ChunkManager(process_count)
         positions = self.simulation.subjects.xyz.keys()
-        pass
+        min_x, max_x, min_y, max_y, min_z, max_z = get_min_and_max(positions)
+        xs = list(range(min_x, max_x+1))
+        xs_chunks = chunk_manager.make_chunks(xs)
+
+        results = {}
+        for z in range(min_z, max_z+1):
+            for y in range(min_y, max_y+1):
+                for x in xs_chunks[process_id]:
+                    subject_here = self.simulation.subjects.xyz.get((x, y, z))
+                    if not subject_here or isinstance(subject_here, Empty):
+                        subjects = self.get_for_position(
+                            position=(x, y, z),
+                            simulation=self.simulation,
+                        )
+                        results[(x, y, z)] = subjects
+
+        return results
 
 
 class CellDieBehaviour(SubjectBehaviour):
@@ -133,11 +151,17 @@ class LotOfCellsSignalBehaviour(SimulationBehaviour):
 
         return positions
 
+    @classmethod
+    def merge_data(cls, new_data, start_data=None):
+        start_data = start_data or []
+        start_data.extend(new_data)
+        return start_data
+
     def action(self, data) -> [Event]:
         events = []
 
         for position in data:
-            events.append(Event(position))
+            events.append(EmptyPositionWithLotOfCellAroundEvent(position))
 
         return events
 

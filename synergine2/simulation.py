@@ -176,6 +176,13 @@ class SimulationBehaviour(object):
         """
         raise NotImplementedError()
 
+    @classmethod
+    def merge_data(cls, new_data, start_data=None):
+        """
+        Called if behaviour executed in subprocess
+        """
+        raise NotImplementedError()
+
     def action(self, data) -> [Event]:
         """
         Method called in main process

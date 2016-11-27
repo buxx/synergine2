@@ -1,7 +1,7 @@
 import multiprocessing
 
 from synergine2.processing import ProcessManager
-from synergine2.simulation import Subject
+from synergine2.simulation import Subject, SimulationMechanism, SimulationBehaviour
 from synergine2.simulation import Simulation
 from synergine2.simulation import SubjectBehaviour
 from synergine2.simulation import SubjectMechanism
@@ -19,7 +19,6 @@ class CycleManager(object):
             process_manager = ProcessManager(
                 process_count=multiprocessing.cpu_count(),
                 chunk_manager=ChunkManager(multiprocessing.cpu_count()),
-                job_maker=self.computing,
             )
 
         self.simulation = simulation
@@ -33,21 +32,83 @@ class CycleManager(object):
             self.simulation.subjects.track_changes = True
             self.first_cycle = False
 
-        results = {}
-        results_by_processes = self.process_manager.execute_jobs(self.simulation.subjects)
         events = []
+        # TODO: gestion des behaviours non parallelisables
+        # TODO: Proposer des ordres d'execution
+        events.extend(self._get_subjects_events())
+        events.extend(self._get_simulation_events())
+
+        return events
+
+    def _get_simulation_events(self) -> [Event]:
+        events = []
+        results = {}
+        results_by_processes = self.process_manager.execute_jobs(
+            data=self.simulation,
+            job_maker=self.simulation_computing,
+        )
+
+        for process_result in results_by_processes:
+            for behaviour_class, behaviour_result in process_result.items():
+                results[behaviour_class] = behaviour_class.merge_data(
+                    behaviour_result,
+                    results.get(behaviour_class),
+                )
+
+        # Make events
+        for behaviour_class, behaviour_data in results.items():
+            events.extend(self.simulation.behaviours[behaviour_class].action(behaviour_data))
+
+        return events
+
+    def _get_subjects_events(self) -> [Event]:
+        events = []
+        results_by_processes = self.process_manager.chunk_and_execute_jobs(
+            data=self.simulation.subjects,
+            job_maker=self.subjects_computing,
+        )
+        results = {}
         for process_results in results_by_processes:
             results.update(process_results)
         for subject in self.simulation.subjects[:]:  # Duplicate list to prevent conflicts with behaviours subjects manipulations
-            for behaviour_class in results[subject.id]:
+            for behaviour_class, behaviour_data in results[subject.id].items():
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
                 # (genre se cacher et fuir son pas compatibles)
-                actions_events = subject.behaviours[behaviour_class].action(results[subject.id][behaviour_class])
+                actions_events = subject.behaviours[behaviour_class].action(behaviour_data)
                 events.extend(actions_events)
 
         return events
 
-    def computing(self, subjects):
+    def simulation_computing(
+            self,
+            simulation,
+            process_id,
+            process_count,
+    ):
+        # TODO: necessaire de passer simulation ?
+        mechanisms = self.get_mechanisms_to_compute(simulation)
+        mechanisms_data = {}
+        behaviours_data = {}
+
+        for mechanism in mechanisms:
+            mechanisms_data[type(mechanism)] = mechanism.run(
+                process_id=process_id,
+                process_count=process_count,
+            )
+
+        for behaviour in self.get_behaviours_to_compute(simulation):
+            behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
+            if behaviour_data:
+                behaviours_data[type(behaviour)] = behaviour_data
+
+        return behaviours_data
+
+    def subjects_computing(
+            self,
+            subjects,
+            process_id=None,
+            process_count=None,
+    ):
         results = {}
         for subject in subjects:
             mechanisms = self.get_mechanisms_to_compute(subject)
@@ -59,20 +120,20 @@ class CycleManager(object):
 
             for behaviour in self.get_behaviours_to_compute(subject):
                 # We identify behaviour data with it's class to be able to intersect it after subprocess data collect
-                behaviour_data = behaviour.run(mechanisms_data)
+                behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
                 if behaviour_data:
                     behaviours_data[type(behaviour)] = behaviour_data
 
             results[subject.id] = behaviours_data
         return results
 
-    def get_mechanisms_to_compute(self, subject: Subject) -> [SubjectMechanism]:
+    def get_mechanisms_to_compute(self, mechanisable) -> [SubjectMechanism, SimulationMechanism]:
         # TODO: Implementer un systeme qui inhibe des mechanisme (ex. someil inhibe l'ouie)
-        return subject.mechanisms.values()
+        return mechanisable.mechanisms.values()
 
-    def get_behaviours_to_compute(self, subject: Subject) -> [SubjectBehaviour]:
+    def get_behaviours_to_compute(self, mechanisable) -> [SubjectBehaviour, SimulationBehaviour]:
         # TODO: Implementer un systeme qui inhibe des behaviours (ex. someil inhibe avoir faim)
-        return subject.behaviours.values()
+        return mechanisable.behaviours.values()
 
     def apply_actions(
             self,
@@ -97,11 +158,10 @@ class CycleManager(object):
                 )
                 events.extend(behaviour.action(behaviour_data))
 
-        for behaviours_and_data in simulation_actions:
-            for behaviour_class, behaviour_data in behaviours_and_data:
-                behaviour = behaviour_class(
-                    simulation=self.simulation,
-                )
-                events.extend(behaviour.action(behaviour_data))
+        for behaviour_class, behaviour_data in simulation_actions:
+            behaviour = behaviour_class(
+                simulation=self.simulation,
+            )
+            events.extend(behaviour.action(behaviour_data))
 
         return events

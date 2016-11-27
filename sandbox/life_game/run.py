@@ -1,6 +1,7 @@
 import collections
 
-from sandbox.life_game.simulation import Cell, LotOfCellsSignalBehaviour, LifeGame
+from sandbox.life_game.simulation import Cell, LotOfCellsSignalBehaviour, LifeGame, \
+    EmptyPositionWithLotOfCellAroundEvent
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.simulation import CellDieEvent
 from sandbox.life_game.simulation import CellBornEvent
@@ -70,6 +71,7 @@ class CocosTerminal(Terminal):
     subscribed_events = [
         CellDieEvent,
         CellBornEvent,
+        EmptyPositionWithLotOfCellAroundEvent,
     ]
 
     def __init__(self):

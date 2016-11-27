@@ -6,7 +6,8 @@ from cocos.sprite import Sprite
 from pyglet.window import key as wkey
 from random import randint
 
-from sandbox.life_game.simulation import CellDieEvent, Cell, InvertCellStateBehaviour
+from sandbox.life_game.simulation import CellDieEvent, Cell, InvertCellStateBehaviour, \
+    EmptyPositionWithLotOfCellAroundEvent
 from sandbox.life_game.simulation import CellBornEvent
 from synergine2.gui import Gui
 from synergine2.terminals import TerminalPackage
@@ -14,6 +15,8 @@ from synergine2.terminals import Terminal
 
 cell_scale = ScaleBy(1.1, duration=0.25)
 cell_rotate = RotateBy(360, duration=30)
+flash_flash = ScaleBy(8, duration=0.5)
+flash_rotate = RotateBy(360, duration=6)
 
 
 class GridManager(object):
@@ -65,6 +68,7 @@ class Cells(Layer):
     def __init__(self):
         super().__init__()
         self.cells = {}
+        self.flashs = []
         self.grid_manager = GridManager(self, 32, border=2)
 
     def born(self, grid_position):
@@ -86,6 +90,17 @@ class Cells(Layer):
             del self.cells[grid_position]
         except KeyError:
             pass  # Cell can be removed by gui
+
+    def flash(self, position):
+        flash = Sprite('resources/flash.png')
+        flash.opacity = 40
+        flash.scale = 0.1
+        flash.rotation = randint(0, 360)
+        flash.do(flash_flash + Reverse(flash_flash))
+        flash.do(Repeat(flash_rotate + Reverse(flash_rotate)))
+        self.grid_manager.position_sprite(flash, position)
+        self.flashs.append(flash)
+        self.add(flash)
 
 
 class MainLayer(ScrollableLayer):
@@ -167,6 +182,10 @@ class LifeGameGui(Gui):
 
         self.terminal.register_event_handler(CellDieEvent, self.on_cell_die)
         self.terminal.register_event_handler(CellBornEvent, self.on_cell_born)
+        self.terminal.register_event_handler(
+            EmptyPositionWithLotOfCellAroundEvent,
+            self.on_empty_cell_with_lot_of_cell_around,
+        )
 
     def get_main_scene(self):
         return self.main_scene
@@ -177,6 +196,10 @@ class LifeGameGui(Gui):
                 if isinstance(subject, Cell):
                     self.positions[subject.id] = subject.position
                     self.main_layer.cells.born(subject.position)
+
+        for flash in self.main_layer.cells.flashs[:]:
+            self.main_layer.cells.flashs.remove(flash)
+            self.main_layer.cells.remove(flash)
 
     def on_cell_die(self, event: CellDieEvent):
         try:
@@ -191,3 +214,6 @@ class LifeGameGui(Gui):
         subject = self.terminal.subjects.get(event.subject_id)
         self.positions[event.subject_id] = subject.position
         self.main_layer.cells.born(subject.position)
+
+    def on_empty_cell_with_lot_of_cell_around(self, event: EmptyPositionWithLotOfCellAroundEvent):
+        self.main_layer.cells.flash(event.position)
