@@ -4,6 +4,7 @@ from math import acos
 
 from synergine2.simulation import SubjectMechanism, Subjects, Subject
 from synergine2.simulation import Simulation as BaseSimulation
+from synergine2.xyz_utils import get_distance_between_points
 
 
 """
@@ -23,10 +24,6 @@ Y
 """
 
 COLLECTION_XYZ = 'COLLECTION_XYZ'
-
-
-def get_distance_between_points(a: tuple, b: tuple) -> float:
-    return abs(sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2))
 
 
 def get_degree_from_north(a, b):

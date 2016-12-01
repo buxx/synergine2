@@ -1,3 +1,4 @@
+from math import sqrt
 import collections
 
 
@@ -198,3 +199,7 @@ def get_around_positions_of(
         positions.remove(position)
 
     return positions
+
+
+def get_distance_between_points(a: tuple, b: tuple) -> float:
+    return abs(sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2))

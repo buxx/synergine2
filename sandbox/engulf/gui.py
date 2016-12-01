@@ -27,8 +27,10 @@ class GrassLayer(GridLayerMixin, BaseMainLayer):
         super().__init__(*args, **kwargs)
         self.cells = {}
 
-    def born(self, grid_position):
+    def born(self, grid_position, opacity=100):
         grass = Sprite('resources/grass.png')
+        grass.rotation = randint(0, 360)
+        grass.opacity = opacity
         self.grid_manager.scale_sprite(grass)
         self.grid_manager.position_sprite(grass, grid_position)
         self.cells[grid_position] = grass
@@ -65,4 +67,7 @@ class Game(Gui):
                     self.main_layer.cells.born(subject.position)
                 if isinstance(subject, Grass):
                     self.positions[subject.id] = subject.position
-                    self.main_layer.grasses.born(subject.position)
+                    self.main_layer.grasses.born(
+                        subject.position,
+                        subject.density,
+                    )

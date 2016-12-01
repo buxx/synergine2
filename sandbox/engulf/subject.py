@@ -20,3 +20,20 @@ class Grass(XYZSubjectMixin, Subject):
         COLLECTION_EATABLE,
         COLLECTION_GRASS,
     ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._density = 100.0
+
+    @property
+    def density(self) -> float:
+        return self._density
+
+    @density.setter
+    def density(self, value: float) -> None:
+        if value > 100:
+            self._density = 100
+        elif value < 0:
+            self._density = 0
+        else:
+            self._density = value
