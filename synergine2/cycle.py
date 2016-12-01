@@ -23,7 +23,7 @@ class CycleManager(object):
 
         self.simulation = simulation
         self.process_manager = process_manager
-        self.current_cycle = 0
+        self.current_cycle = -1
         self.first_cycle = True
 
     def next(self) -> [Event]:
@@ -31,6 +31,7 @@ class CycleManager(object):
             # To dispatch subjects add/removes, enable track on them
             self.simulation.subjects.track_changes = True
             self.first_cycle = False
+        self.current_cycle += 1
 
         events = []
         # TODO: gestion des behaviours non parallelisables
@@ -71,7 +72,7 @@ class CycleManager(object):
         for process_results in results_by_processes:
             results.update(process_results)
         for subject in self.simulation.subjects[:]:  # Duplicate list to prevent conflicts with behaviours subjects manipulations
-            for behaviour_class, behaviour_data in results[subject.id].items():
+            for behaviour_class, behaviour_data in results.get(subject.id, {}).items():
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
                 # (genre se cacher et fuir son pas compatibles)
                 actions_events = subject.behaviours[behaviour_class].action(behaviour_data)
@@ -133,7 +134,14 @@ class CycleManager(object):
 
     def get_behaviours_to_compute(self, mechanisable) -> [SubjectBehaviour, SimulationBehaviour]:
         # TODO: Implementer un systeme qui inhibe des behaviours (ex. someil inhibe avoir faim)
-        return mechanisable.behaviours.values()
+        behaviours = list(mechanisable.behaviours.values())
+
+        for behaviour in behaviours[:]:
+            if behaviour.frequency != 1:
+                if self.current_cycle % behaviour.frequency:
+                    behaviours.remove(behaviour)
+
+        return behaviours
 
     def apply_actions(
             self,

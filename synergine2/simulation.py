@@ -135,6 +135,9 @@ class Event(object):
 
 
 class SubjectBehaviour(object):
+    frequency = 1
+    use = []
+
     def __init__(
             self,
             simulation: Simulation,
@@ -163,6 +166,9 @@ class SubjectBehaviour(object):
 
 
 class SimulationBehaviour(object):
+    frequency = 1
+    use = []
+
     def __init__(
             self,
             simulation: Simulation,

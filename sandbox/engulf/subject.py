@@ -1,3 +1,4 @@
+from sandbox.engulf.behaviour import GrowUp
 from synergine2.simulation import Subject
 from synergine2.xyz import XYZSubjectMixin
 
@@ -19,6 +20,9 @@ class Grass(XYZSubjectMixin, Subject):
     collections = [
         COLLECTION_EATABLE,
         COLLECTION_GRASS,
+    ]
+    behaviours_classes = [
+        GrowUp,
     ]
 
     def __init__(self, *args, **kwargs):

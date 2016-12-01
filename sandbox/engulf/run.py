@@ -19,6 +19,7 @@ Engulf is simulation containing:
 
 """
 from random import randint, seed
+from sandbox.engulf.behaviour import GrassGrownUp
 
 from sandbox.engulf.subject import Cell, Grass, COLLECTION_GRASS
 from synergine2.core import Core
@@ -34,7 +35,9 @@ class Engulf(Simulation):
 
 
 class GameTerminal(Terminal):
-    subscribed_events = []
+    subscribed_events = [
+        GrassGrownUp,
+    ]
 
     def __init__(self):
         super().__init__()
