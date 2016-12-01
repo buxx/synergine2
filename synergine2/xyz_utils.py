@@ -171,3 +171,30 @@ def get_around_positions_of_positions(position, exclude_start_position=True) -> 
     if not exclude_start_position:
         points.append(position)
     return points
+
+
+def get_around_positions_of(
+        position,
+        distance=1,
+        exclude_start_point=True,
+) -> list:
+    """
+    Return positions around a point.
+    :param position: (x, y, z) tuple
+    :param distance: Distance to compute
+    :return: list of (x, y, z) positions
+    """
+    start_x = position[0] - distance
+    start_y = position[1] - distance
+    # start_z = position[0] - distance
+    positions = []
+    range_distance = (distance * 2) + 1
+    for dx in range(range_distance):
+        for dy in range(range_distance):
+            # for dz in range(range_distance):
+            # points.append((start_z+dz, start_x+dx, start_y+dy))
+            positions.append((start_x + dx, start_y + dy, position[2]))
+    if exclude_start_point:
+        positions.remove(position)
+
+    return positions

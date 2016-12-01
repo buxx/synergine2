@@ -20,12 +20,13 @@ Engulf is simulation containing:
 """
 from random import randint
 
-from sandbox.engulf.subject import Cell, Grass
+from sandbox.engulf.subject import Cell, Grass, COLLECTION_GRASS
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
 from synergine2.terminals import TerminalManager, Terminal, TerminalPackage
 from synergine2.xyz import Simulation
 from sandbox.engulf.simulation import EngulfSubjects
+from synergine2.xyz_utils import get_around_positions_of
 
 
 class Engulf(Simulation):
@@ -78,7 +79,7 @@ def fill_with_random_grass(
     start_count: int,
     start_position: tuple,
     end_position: tuple,
-    density: int=10,
+    density: int=5,
 ) -> None:
     grasses = []
 
@@ -88,6 +89,7 @@ def fill_with_random_grass(
             randint(start_position[1], end_position[1]+1),
             randint(start_position[2], end_position[2]+1),
         )
+
         if position not in subjects.grass_xyz:
             grass = Grass(
                 simulation=subjects.simulation,
@@ -96,7 +98,17 @@ def fill_with_random_grass(
             grasses.append(grass)
             subjects.append(grass)
 
-        # TODO: density
+    for grass in subjects.simulation.collections[COLLECTION_GRASS][:]:
+        a = 1
+        for around in get_around_positions_of(grass.position, distance=density):
+            if around not in subjects.grass_xyz:
+                grass = Grass(
+                    simulation=subjects.simulation,
+                    position=around,
+                )
+                grasses.append(grass)
+                subjects.append(grass)
+                # TODO: valeur nutritive regressive avec eloignement
 
 
 def main():
