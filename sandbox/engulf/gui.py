@@ -2,7 +2,7 @@ from random import randint
 
 import cocos
 from cocos.sprite import Sprite
-from sandbox.engulf.subject import Cell
+from sandbox.engulf.subject import Cell, Grass
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.gui import Gui, GridLayerMixin
 from synergine2_cocos2d.gui import MainLayer as BaseMainLayer
@@ -22,11 +22,28 @@ class CellsLayer(GridLayerMixin, BaseMainLayer):
         self.add(cell)
 
 
-class MainLayer(GridLayerMixin, BaseMainLayer):
+class GrassLayer(GridLayerMixin, BaseMainLayer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cells = CellsLayer(terminal=kwargs.pop('terminal'))
+        self.cells = {}
+
+    def born(self, grid_position):
+        grass = Sprite('resources/grass.png')
+        self.grid_manager.scale_sprite(grass)
+        self.grid_manager.position_sprite(grass, grid_position)
+        self.cells[grid_position] = grass
+        self.add(grass)
+
+
+class MainLayer(GridLayerMixin, BaseMainLayer):
+    def __init__(self, terminal, *args, **kwargs):
+        super().__init__(terminal, *args, **kwargs)
+
+        self.cells = CellsLayer(terminal=terminal)
         self.add(self.cells)
+
+        self.grasses = GrassLayer(terminal=terminal)
+        self.add(self.grasses)
 
 
 class Game(Gui):
@@ -46,3 +63,6 @@ class Game(Gui):
                 if isinstance(subject, Cell):
                     self.positions[subject.id] = subject.position
                     self.main_layer.cells.born(subject.position)
+                if isinstance(subject, Grass):
+                    self.positions[subject.id] = subject.position
+                    self.main_layer.grasses.born(subject.position)

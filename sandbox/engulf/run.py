@@ -20,12 +20,12 @@ Engulf is simulation containing:
 """
 from random import randint
 
-from sandbox.engulf.subject import Cell
+from sandbox.engulf.subject import Cell, Grass
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
 from synergine2.terminals import TerminalManager, Terminal, TerminalPackage
 from synergine2.xyz import Simulation
-from synergine2.xyz import XYZSubjects
+from sandbox.engulf.simulation import EngulfSubjects
 
 
 class Engulf(Simulation):
@@ -50,40 +50,69 @@ class GameTerminal(Terminal):
         self.gui.run()
 
 
-def get_random_subjects(
-        simulation: Simulation,
-        count: int,
-        x_min: int,
-        y_min: int,
-        x_max: int,
-        y_max: int,
-) -> [Cell]:
-    cells = XYZSubjects(simulation=simulation)
+def fill_with_random_cells(
+    subjects: EngulfSubjects,
+    count: int,
+    start_position: tuple,
+    end_position: tuple,
+) -> None:
+    cells = []
 
     while len(cells) < count:
         position = (
-            randint(x_min, x_max+1),
-            randint(y_min, y_max+1),
-            0
+            randint(start_position[0], end_position[0]+1),
+            randint(start_position[1], end_position[1]+1),
+            randint(start_position[2], end_position[2]+1),
         )
-        if position not in cells.xyz:
-            cells.append(Cell(
-                simulation=simulation,
+        if position not in subjects.cell_xyz:
+            cell = Cell(
+                simulation=subjects.simulation,
                 position=position,
-            ))
+            )
+            cells.append(cell)
+            subjects.append(cell)
 
-    return cells
+
+def fill_with_random_grass(
+    subjects: EngulfSubjects,
+    start_count: int,
+    start_position: tuple,
+    end_position: tuple,
+    density: int=10,
+) -> None:
+    grasses = []
+
+    while len(grasses) < start_count:
+        position = (
+            randint(start_position[0], end_position[0]+1),
+            randint(start_position[1], end_position[1]+1),
+            randint(start_position[2], end_position[2]+1),
+        )
+        if position not in subjects.grass_xyz:
+            grass = Grass(
+                simulation=subjects.simulation,
+                position=position,
+            )
+            grasses.append(grass)
+            subjects.append(grass)
+
+        # TODO: density
 
 
 def main():
     simulation = Engulf()
-    subjects = get_random_subjects(
-        simulation,
+    subjects = EngulfSubjects(simulation=simulation)
+    fill_with_random_cells(
+        subjects,
         30,
-        -34,
-        -34,
-        34,
-        34,
+        (-34, -34, 0),
+        (34, 34, 0),
+    )
+    fill_with_random_grass(
+        subjects,
+        15,
+        (-34, -34, 0),
+        (34, 34, 0),
     )
     simulation.subjects = subjects
 
