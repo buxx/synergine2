@@ -19,7 +19,7 @@ Engulf is simulation containing:
 
 """
 from random import randint, seed
-from sandbox.engulf.behaviour import GrassGrownUp
+from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, GrassSpawnBehaviour
 
 from sandbox.engulf.subject import Cell, Grass, COLLECTION_GRASS
 from synergine2.core import Core
@@ -31,12 +31,15 @@ from synergine2.xyz_utils import get_around_positions_of, get_distance_between_p
 
 
 class Engulf(Simulation):
-    pass
+    behaviours_classes = [
+        GrassSpawnBehaviour,
+    ]
 
 
 class GameTerminal(Terminal):
     subscribed_events = [
         GrassGrownUp,
+        GrassSpawn,
     ]
 
     def __init__(self):
