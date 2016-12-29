@@ -140,6 +140,7 @@ def main():
         terminal_manager=TerminalManager([GameTerminal(
             asynchronous=False,
         )]),
+        cycles_per_seconds=1,
     )
     core.run()
 
