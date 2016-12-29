@@ -42,8 +42,8 @@ class GameTerminal(Terminal):
         GrassSpawn,
     ]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.gui = None
 
     def receive(self, package: TerminalPackage):
@@ -137,7 +137,9 @@ def main():
     core = Core(
         simulation=simulation,
         cycle_manager=CycleManager(simulation=simulation),
-        terminal_manager=TerminalManager([GameTerminal()]),
+        terminal_manager=TerminalManager([GameTerminal(
+            asynchronous=False,
+        )]),
     )
     core.run()
 

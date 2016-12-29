@@ -42,13 +42,14 @@ class Terminal(object):
     # who are not instance of listed classes
     subscribed_events = [Event]
 
-    def __init__(self):
+    def __init__(self, asynchronous: bool=True):
         self._input_queue = None
         self._output_queue = None
         self._stop_required = False
         self.subjects = {}
         self.cycle_events = []
         self.event_handlers = collections.defaultdict(list)
+        self.asynchronous = asynchronous
 
     def accept_event(self, event: Event) -> bool:
         for event_class in self.subscribed_events:
@@ -85,6 +86,8 @@ class Terminal(object):
 
     def receive(self, package: TerminalPackage):
         self.update_with_package(package)
+        # End of cycle management signal
+        self.send(TerminalPackage(is_cycle=True))
 
     def send(self, package: TerminalPackage):
         self._output_queue.put(package)
@@ -153,11 +156,23 @@ class TerminalManager(object):
 
     def receive(self) -> [TerminalPackage]:
         packages = []
-        for input_queue in self.inputs_queues.values():
-            try:
-                while True:
-                    packages.append(input_queue.get(block=False, timeout=None))
-            except Empty:
-                pass  # Queue is empty
+        for terminal, input_queue in self.inputs_queues.items():
+            # When terminal is synchronous, wait it's cycle package
+            if not terminal.asynchronous:
+                continue_ = True
+                while continue_:
+                    package = input_queue.get()
+                    # In case where terminal send package before end of cycle
+                    # management
+                    continue_ = not package.is_cycle
+                    packages.append(package)
+            else:
+                try:
+                    while True:
+                        packages.append(
+                            input_queue.get(block=False, timeout=None),
+                        )
+                except Empty:
+                    pass  # Queue is empty
 
         return packages
