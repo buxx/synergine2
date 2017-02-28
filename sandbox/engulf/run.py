@@ -18,6 +18,12 @@ Engulf is simulation containing:
       * alone/not alone: - be alone + not alone
 
 """
+import os
+import sys
+
+synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
+sys.path.append(synergine2_ath)
+
 from random import randint, seed
 from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, GrassSpawnBehaviour
 
