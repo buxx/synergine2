@@ -1,3 +1,4 @@
+# coding: utf-8
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.simulation import Cell
 from synergine2.simulation import Simulation

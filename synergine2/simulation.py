@@ -1,3 +1,4 @@
+# coding: utf-8
 import collections
 
 from synergine2.utils import get_mechanisms_classes

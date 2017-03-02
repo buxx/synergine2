@@ -1,3 +1,4 @@
+# coding: utf-8
 import multiprocessing
 
 from synergine2.processing import ProcessManager

@@ -1,3 +1,4 @@
+# coding: utf-8
 import collections
 from sandbox.life_game.simulation import Cell
 from sandbox.life_game.simulation import Empty

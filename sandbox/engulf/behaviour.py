@@ -1,3 +1,4 @@
+# coding: utf-8
 from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager

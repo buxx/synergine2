@@ -1,3 +1,4 @@
+# coding: utf-8
 # -*- coding: utf-8 -*-
 from synergine2.simulation import Subject
 from synergine2.simulation import Subjects

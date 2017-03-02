@@ -1,3 +1,4 @@
+# coding: utf-8
 from synergine2.simulation import Subject, SimulationMechanism, Simulation
 from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import Event

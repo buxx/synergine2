@@ -1,3 +1,4 @@
+# coding: utf-8
 import cocos
 import pyglet
 from pyglet.window import key as wkey

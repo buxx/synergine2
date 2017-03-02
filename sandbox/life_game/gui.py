@@ -1,3 +1,4 @@
+# coding: utf-8
 import cocos
 from cocos.actions import ScaleBy, Repeat, Reverse, RotateBy
 from cocos.director import director

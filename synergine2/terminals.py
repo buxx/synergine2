@@ -1,3 +1,4 @@
+# coding: utf-8
 import collections
 from copy import copy
 from multiprocessing import Queue

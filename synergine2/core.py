@@ -1,3 +1,4 @@
+# coding: utf-8
 import time
 from synergine2.cycle import CycleManager
 from synergine2.simulation import Simulation

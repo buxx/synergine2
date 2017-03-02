@@ -1,3 +1,4 @@
+# coding: utf-8
 from sandbox.engulf.behaviour import GrowUp
 from synergine2.simulation import Subject
 from synergine2.xyz import XYZSubjectMixin

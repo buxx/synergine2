@@ -1,3 +1,4 @@
+# coding: utf-8
 from synergine2.utils import ChunkManager
 from tests import BaseTest
 

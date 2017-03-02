@@ -1,3 +1,4 @@
+# coding: utf-8
 from sandbox.engulf.subject import Cell, Grass
 from synergine2.xyz import XYZSubjects, XYZSubjectMixin
 

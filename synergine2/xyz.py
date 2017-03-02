@@ -1,3 +1,4 @@
+# coding: utf-8
 from math import sqrt
 from math import degrees
 from math import acos

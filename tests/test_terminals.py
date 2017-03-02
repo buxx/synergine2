@@ -1,3 +1,4 @@
+# coding: utf-8
 import time
 
 from synergine2.simulation import Event
