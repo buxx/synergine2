@@ -7,13 +7,17 @@ from multiprocessing import Process
 from queue import Empty
 
 import time
+
+from synergine2.base import BaseObject
+from synergine2.config import Config
+from synergine2.log import SynergineLogger
 from synergine2.simulation import Subject
 from synergine2.simulation import Event
 
 STOP_SIGNAL = '__STOP_SIGNAL__'
 
 
-class TerminalPackage(object):
+class TerminalPackage(BaseObject):
     def __init__(
             self,
             subjects: [Subject]=None,
@@ -33,6 +37,18 @@ class TerminalPackage(object):
         self.simulation_actions = simulation_actions or []
         self.subject_actions = subject_actions or []
         self.is_cycle = is_cycle
+
+    def repr_debug(self) -> str:
+        subjects = self.subjects or []
+        return str(dict(
+            subjects=subjects,
+            add_subjects=[s.id for s in self.add_subjects],
+            remove_subjects=[s.id for s in self.remove_subjects],
+            events=[e.repr_debug() for e in self.events],
+            simulation_actions=['{}: {}'.format(a.__class__.__name__, p) for a, p in self.simulation_actions],
+            subject_actions=['{}: {}'.format(a.__class__.__name__, p) for a, p in self.subject_actions],
+            is_cycle=self.is_cycle,
+        ))
 
 
 class Terminal(object):
@@ -118,13 +134,22 @@ class Terminal(object):
 
 
 class TerminalManager(object):
-    def __init__(self, terminals: [Terminal]):
+    def __init__(
+        self,
+        config: Config,
+        logger: SynergineLogger,
+        terminals: [Terminal]
+    ):
+        self.config = config
+        self.logger = logger
         self.terminals = terminals
         self.outputs_queues = {}
         self.inputs_queues = {}
 
     def start(self) -> None:
+        self.logger.info('Start terminals')
         for terminal in self.terminals:
+            # TODO: logs
             output_queue = Queue()
             self.outputs_queues[terminal] = output_queue
 
@@ -142,7 +167,13 @@ class TerminalManager(object):
             output_queue.put(STOP_SIGNAL)
 
     def send(self, package: TerminalPackage):
+        self.logger.info('Send package to terminals')
+        if self.logger.is_debug:
+            self.logger.debug('Send package to terminals: {}'.format(
+                str(package.repr_debug()),
+            ))
         for terminal, output_queue in self.outputs_queues.items():
+            self.logger.info('Send package to terminal {}'.format(terminal.__class__.__name__))
             # Terminal maybe don't want all events, so reduce list of event
             # Thirst make a copy to personalize this package
             terminal_adapted_package = copy(package)
@@ -153,11 +184,22 @@ class TerminalManager(object):
                 if not terminal.accept_event(package_event):
                     terminal_adapted_package.events.remove(package_event)
 
+            if self.logger.is_debug:
+                self.logger.debug('Send package to terminal {}: {}'.format(
+                    terminal.__class__.__name__,
+                    terminal_adapted_package.repr_debug(),
+                ))
+
             output_queue.put(terminal_adapted_package)
 
     def receive(self) -> [TerminalPackage]:
+        self.logger.info('Receive terminals packages')
         packages = []
         for terminal, input_queue in self.inputs_queues.items():
+            self.logger.info('Receive terminal {} packages ({})'.format(
+                terminal.__class__.__name__,
+                'sync' if not terminal.asynchronous else 'async'
+            ))
             # When terminal is synchronous, wait it's cycle package
             if not terminal.asynchronous:
                 continue_ = True
@@ -166,14 +208,28 @@ class TerminalManager(object):
                     # In case where terminal send package before end of cycle
                     # management
                     continue_ = not package.is_cycle
+
+                    if self.logger.is_debug:
+                        self.logger.debug('Receive package from {}: {}'.format(
+                            terminal.__class__.__name__,
+                            str(package.repr_debug()),
+                        ))
+
                     packages.append(package)
             else:
                 try:
                     while True:
-                        packages.append(
-                            input_queue.get(block=False, timeout=None),
-                        )
+                        package = input_queue.get(block=False, timeout=None)
+
+                        if self.logger.is_debug:
+                            self.logger.debug('Receive package from {}: {}'.format(
+                                str(terminal),
+                                str(package.repr_debug()),
+                            ))
+
+                        packages.append(package)
                 except Empty:
                     pass  # Queue is empty
 
+        self.logger.info('{} package(s) received'.format(len(packages)))
         return packages

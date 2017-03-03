@@ -21,12 +21,16 @@ Engulf is simulation containing:
 import os
 import sys
 
+import logging
+
 synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_ath)
 
 from random import randint, seed
 from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, GrassSpawnBehaviour
 
+from synergine2.config import Config
+from synergine2.log import get_default_logger
 from sandbox.engulf.subject import Cell, Grass, COLLECTION_GRASS
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
@@ -140,12 +144,25 @@ def main():
     )
     simulation.subjects = subjects
 
+    config = Config()
+    logger = get_default_logger(level=logging.DEBUG)
+    logger.debug('HELLO')
     core = Core(
+        config=config,
+        logger=logger,
         simulation=simulation,
-        cycle_manager=CycleManager(simulation=simulation),
-        terminal_manager=TerminalManager([GameTerminal(
-            asynchronous=False,
-        )]),
+        cycle_manager=CycleManager(
+            config=config,
+            logger=logger,
+            simulation=simulation,
+        ),
+        terminal_manager=TerminalManager(
+            config=config,
+            logger=logger,
+            terminals=[GameTerminal(
+                asynchronous=False,
+            )]
+        ),
         cycles_per_seconds=1,
     )
     core.run()

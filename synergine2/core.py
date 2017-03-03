@@ -1,6 +1,9 @@
 # coding: utf-8
 import time
+
+from synergine2.config import Config
 from synergine2.cycle import CycleManager
+from synergine2.log import SynergineLogger
 from synergine2.simulation import Simulation
 from synergine2.terminals import TerminalManager
 from synergine2.terminals import TerminalPackage
@@ -9,11 +12,15 @@ from synergine2.terminals import TerminalPackage
 class Core(object):
     def __init__(
         self,
+        config: Config,
+        logger: SynergineLogger,
         simulation: Simulation,
         cycle_manager: CycleManager,
         terminal_manager: TerminalManager=None,
         cycles_per_seconds: int=1,
     ):
+        self.config = config
+        self.logger = logger
         self.simulation = simulation
         self.cycle_manager = cycle_manager
         self.terminal_manager = terminal_manager or TerminalManager([])
@@ -21,12 +28,14 @@ class Core(object):
         self._current_cycle_start_time = None
 
     def run(self):
+        self.logger.info('Run core')
         try:
             self.terminal_manager.start()
 
             start_package = TerminalPackage(
                 subjects=self.simulation.subjects,
             )
+            self.logger.info('Send start package to terminals')
             self.terminal_manager.send(start_package)
 
             while True:
@@ -59,14 +68,19 @@ class Core(object):
         self.terminal_manager.stop()
 
     def _start_cycle(self):
-        self._current_cycle_start_time = time.time()
+        time_ = time.time()
+        self.logger.info('Start cycle at time {}'.format(time_))
+        self._current_cycle_start_time = time_
 
     def _end_cycle(self) -> None:
         """
         Make a sleep if cycle duration take less time of wanted (see
         cycles_per_seconds constructor parameter)
         """
-        cycle_duration = time.time() - self._current_cycle_start_time
+        time_ = time.time()
+        self.logger.info('End of cycle at time {}'.format(time_))
+        cycle_duration = time_ - self._current_cycle_start_time
         sleep_time = self._loop_delta - cycle_duration
+        self.logger.info('Sleep time is {}'.format(sleep_time))
         if sleep_time > 0:
             time.sleep(sleep_time)

@@ -11,6 +11,13 @@ class GrassGrownUp(Event):
         self.subject_id = subject_id
         self.density = density
 
+    def repr_debug(self) -> str:
+        return '{}: subject_id:{}, density:{}'.format(
+            self.__class__.__name__,
+            self.subject_id,
+            self.density,
+        )
+
 
 class GrassSpawn(Event):
     def __init__(self, subject_id, position, density, *args, **kwargs):
@@ -18,6 +25,14 @@ class GrassSpawn(Event):
         self.subject_id = subject_id
         self.position = position
         self.density = density
+
+    def repr_debug(self) -> str:
+        return '{}: subject_id:{}, position:{}, density:{}'.format(
+            self.__class__.__name__,
+            self.subject_id,
+            self.position,
+            self.density,
+        )
 
 
 class GrassSpotablePositionsMechanism(SimulationMechanism):

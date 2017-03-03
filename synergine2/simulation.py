@@ -1,6 +1,7 @@
 # coding: utf-8
 import collections
 
+from synergine2.base import BaseObject
 from synergine2.utils import get_mechanisms_classes
 
 
@@ -18,6 +19,15 @@ class Subject(object):
             self.simulation.collections[collection].append(self)
 
         self.initialize()
+
+    def __str__(self):
+        return self.id
+
+    def __repr__(self):
+        return '{}({})'.format(
+            type(self).__name__,
+            self.id,
+        )
 
     def initialize(self):
         for mechanism_class in get_mechanisms_classes(self):
@@ -103,7 +113,7 @@ class Simulation(object):
             )
 
 
-class SubjectMechanism(object):
+class SubjectMechanism(BaseObject):
     def __init__(
             self,
             simulation: Simulation,
@@ -116,7 +126,7 @@ class SubjectMechanism(object):
         raise NotImplementedError()
 
 
-class SimulationMechanism(object):
+class SimulationMechanism(BaseObject):
     """If parallelizable behaviour, call """
     parallelizable = False
 
@@ -126,16 +136,22 @@ class SimulationMechanism(object):
     ):
         self.simulation = simulation
 
+    def repr_debug(self) -> str:
+        return self.__class__.__name__
+
     def run(self, process_id: int=None, process_count: int=None):
         raise NotImplementedError()
 
 
-class Event(object):
+class Event(BaseObject):
     def __init__(self, *args, **kwargs):
         pass
 
+    def repr_debug(self) -> str:
+        return self.__class__.__name__
 
-class SubjectBehaviour(object):
+
+class SubjectBehaviour(BaseObject):
     frequency = 1
     use = []
 
@@ -166,7 +182,7 @@ class SubjectBehaviour(object):
         raise NotImplementedError()
 
 
-class SimulationBehaviour(object):
+class SimulationBehaviour(BaseObject):
     frequency = 1
     use = []
 
