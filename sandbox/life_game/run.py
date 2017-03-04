@@ -2,6 +2,11 @@
 import os
 import sys
 
+import logging
+
+from synergine2.config import Config
+from synergine2.log import get_default_logger
+
 synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_ath)
 
@@ -126,10 +131,23 @@ def main():
     )
     simulation.subjects = subjects
 
+    config = Config()
+    logger = get_default_logger(level=logging.DEBUG)
+
     core = Core(
+        config=config,
+        logger=logger,
         simulation=simulation,
-        cycle_manager=CycleManager(simulation=simulation),
-        terminal_manager=TerminalManager([CocosTerminal(), SimplePrintTerminal()]),
+        cycle_manager=CycleManager(
+            config=config,
+            logger=logger,
+            simulation=simulation,
+        ),
+        terminal_manager=TerminalManager(
+            config=config,
+            logger=logger,
+            terminals=[CocosTerminal(), SimplePrintTerminal()]
+        ),
     )
     core.run()
 

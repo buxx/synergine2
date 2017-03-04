@@ -23,7 +23,7 @@ class Core(object):
         self.logger = logger
         self.simulation = simulation
         self.cycle_manager = cycle_manager
-        self.terminal_manager = terminal_manager or TerminalManager([])
+        self.terminal_manager = terminal_manager or TerminalManager(config, logger, [])
         self._loop_delta = 1./cycles_per_seconds
         self._current_cycle_start_time = None
 

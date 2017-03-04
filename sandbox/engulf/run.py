@@ -146,7 +146,7 @@ def main():
 
     config = Config()
     logger = get_default_logger(level=logging.DEBUG)
-    logger.debug('HELLO')
+
     core = Core(
         config=config,
         logger=logger,
