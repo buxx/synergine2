@@ -198,19 +198,18 @@ class CycleManager(object):
 
         for subject in subjects:
             mechanisms = self.get_mechanisms_to_compute(subject)
-            if not mechanisms:
-                break
 
-            self.logger.info('Subject {}: {} mechanisms'.format(
-                str(subject.id),
-                str(len(mechanisms)),
-            ))
-
-            if self.logger.is_debug:
-                self.logger.info('Subject {}: mechanisms are: {}'.format(
+            if mechanisms:
+                self.logger.info('Subject {}: {} mechanisms'.format(
                     str(subject.id),
-                    str([m.repr_debug for m in mechanisms])
+                    str(len(mechanisms)),
                 ))
+
+                if self.logger.is_debug:
+                    self.logger.info('Subject {}: mechanisms are: {}'.format(
+                        str(subject.id),
+                        str([m.repr_debug for m in mechanisms])
+                    ))
 
             mechanisms_data = {}
             behaviours_data = {}
@@ -226,13 +225,16 @@ class CycleManager(object):
 
                 mechanisms_data[type(mechanism)] = mechanism_data
 
-            if self.logger.is_debug:
-                self.logger.info('Subject {}: mechanisms data are: {}'.format(
-                    str(subject.id),
-                    str(mechanisms_data),
-                ))
+            if mechanisms:
+                if self.logger.is_debug:
+                    self.logger.info('Subject {}: mechanisms data are: {}'.format(
+                        str(subject.id),
+                        str(mechanisms_data),
+                    ))
 
             subject_behaviours = self.get_behaviours_to_compute(subject)
+            if not subject_behaviours:
+                break
 
             self.logger.info('Subject {}: have {} behaviours'.format(
                 str(subject.id),
