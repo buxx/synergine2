@@ -6,6 +6,8 @@ from cocos.director import director
 from cocos.layer import ScrollableLayer, Layer
 from cocos.sprite import Sprite
 
+from synergine2.config import Config
+from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 
@@ -106,11 +108,16 @@ class MainLayer(ScrollableLayer):
 class Gui(object):
     def __init__(
             self,
+            config: Config,
+            logger: SynergineLogger,
             terminal: Terminal,
             read_queue_interval: float= 1/60.0,
     ):
+        self.config = config
+        self.logger = logger,
         self._read_queue_interval = read_queue_interval
         self.terminal = terminal
+        self.cycle_duration = self.config.core.cycle_duration
         cocos.director.director.init()
 
     def run(self):

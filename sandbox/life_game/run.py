@@ -34,8 +34,8 @@ class SimplePrintTerminal(Terminal):
         CellBornEvent,
     ]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._cycle_born_count = 0
         self._cycle_die_count = 0
         self.register_event_handler(CellDieEvent, self.record_die)
@@ -86,8 +86,8 @@ class CocosTerminal(Terminal):
         EmptyPositionWithLotOfCellAroundEvent,
     ]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.subjects = None
         self.gui = None
 
@@ -98,7 +98,7 @@ class CocosTerminal(Terminal):
 
     def run(self):
         from sandbox.life_game import gui
-        self.gui = gui.LifeGameGui(self)
+        self.gui = gui.LifeGameGui(self.config, self.logger, self)
         self.gui.run()
 
 
@@ -146,7 +146,10 @@ def main():
         terminal_manager=TerminalManager(
             config=config,
             logger=logger,
-            terminals=[CocosTerminal(), SimplePrintTerminal()]
+            terminals=[
+                CocosTerminal(config, logger),
+                SimplePrintTerminal(config, logger),
+            ]
         ),
     )
     core.run()

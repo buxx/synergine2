@@ -2,31 +2,58 @@
 from random import randint
 
 import cocos
+from cocos.actions import MoveTo, Repeat, ScaleBy, Reverse, RotateTo
 from cocos.sprite import Sprite
-from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn
+from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo as MoveToEvent
 from sandbox.engulf.subject import Cell, Grass
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.gui import Gui, GridLayerMixin
 from synergine2_cocos2d.gui import MainLayer as BaseMainLayer
 
+cell_scale = ScaleBy(1.1, duration=0.25)
+
 
 class CellsLayer(GridLayerMixin, BaseMainLayer):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, game: 'Game', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cells = {}
+        self.game = game
+        self.cell_positions = {}
+        self.cell_ids = {}
 
-    def born(self, grid_position):
+    @property
+    def move_duration(self):
+        return self.game.cycle_duration
+
+    @property
+    def fake_move_rotate_duration(self):
+        return self.move_duration / 3
+
+    def born(self, subject_id: int, grid_position):
         cell = Sprite('resources/cell.png')
         cell.rotation = randint(0, 360)
         self.grid_manager.scale_sprite(cell)
         self.grid_manager.position_sprite(cell, grid_position)
-        self.cells[grid_position] = cell
+        self.cell_positions[grid_position] = cell
+        self.cell_ids[subject_id] = cell
+        cell.do(Repeat(cell_scale + Reverse(cell_scale)))
         self.add(cell)
+
+    def move(self, subject_id: int, position: tuple):
+        cell = self.cell_ids[subject_id]
+
+        window_position = self.grid_manager.get_window_position(position[0], position[1])
+        move_action = MoveTo(window_position, self.move_duration)
+
+        fake_rotate = RotateTo(randint(0, 360), self.fake_move_rotate_duration)
+
+        cell.do(move_action)
+        cell.do(fake_rotate)
 
 
 class GrassLayer(GridLayerMixin, BaseMainLayer):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, game: 'Game', *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.game = game
         self.grasses = {}
 
     def born(self, subject_id, grid_position, opacity=100):
@@ -43,13 +70,14 @@ class GrassLayer(GridLayerMixin, BaseMainLayer):
 
 
 class MainLayer(GridLayerMixin, BaseMainLayer):
-    def __init__(self, terminal, *args, **kwargs):
+    def __init__(self, game: 'Game', terminal, *args, **kwargs):
         super().__init__(terminal, *args, **kwargs)
+        self.game = game
 
-        self.cells = CellsLayer(terminal=terminal)
+        self.cells = CellsLayer(game=game, terminal=terminal)
         self.add(self.cells)
 
-        self.grasses = GrassLayer(terminal=terminal)
+        self.grasses = GrassLayer(game=game, terminal=terminal)
         self.add(self.grasses)
 
 
@@ -57,9 +85,10 @@ class Game(Gui):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_layer = MainLayer(terminal=self.terminal)
+        self.main_layer = MainLayer(game=self, terminal=self.terminal)
         self.main_scene = cocos.scene.Scene(self.main_layer)
 
+        # Event registering
         self.terminal.register_event_handler(
             GrassGrownUp,
             self.on_grass_grown_up,
@@ -67,6 +96,10 @@ class Game(Gui):
         self.terminal.register_event_handler(
             GrassSpawn,
             self.on_grass_spawn,
+        )
+        self.terminal.register_event_handler(
+            MoveToEvent,
+            self.on_move_to,
         )
 
     def get_main_scene(self):
@@ -76,7 +109,7 @@ class Game(Gui):
         if package.subjects:  # It's thirst package
             for subject in package.subjects:
                 if isinstance(subject, Cell):
-                    self.main_layer.cells.born(subject.position)
+                    self.main_layer.cells.born(subject.id, subject.position)
                 if isinstance(subject, Grass):
                     self.main_layer.grasses.born(
                         subject.id,
@@ -95,4 +128,10 @@ class Game(Gui):
         self.main_layer.grasses.set_density(
             event.subject_id,
             event.density,  # TODO: Recupe ces données depuis local plutôt que event ?
+        )
+
+    def on_move_to(self, event: MoveToEvent):
+        self.main_layer.cells.move(
+            event.subject_id,
+            event.position,
         )

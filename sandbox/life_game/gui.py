@@ -9,6 +9,8 @@ from random import randint
 from sandbox.life_game.simulation import CellBornEvent
 from sandbox.life_game.simulation import CellDieEvent, Cell, InvertCellStateBehaviour, \
     EmptyPositionWithLotOfCellAroundEvent
+from synergine2.config import Config
+from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.gui import Gui, GridLayerMixin, MainLayer as BaseMainLayer
@@ -100,10 +102,12 @@ class MainLayer(GridLayerMixin, BaseMainLayer):
 class LifeGameGui(Gui):
     def __init__(
             self,
+            config: Config,
+            logger: SynergineLogger,
             terminal: Terminal,
             read_queue_interval: float=1 / 60.0,
     ):
-        super().__init__(terminal, read_queue_interval)
+        super().__init__(config, logger, terminal, read_queue_interval)
 
         self.main_layer = MainLayer(terminal=self.terminal)
         self.main_scene = cocos.scene.Scene(self.main_layer)

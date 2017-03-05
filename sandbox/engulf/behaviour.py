@@ -1,8 +1,12 @@
 # coding: utf-8
+from random import randint
+
+from sandbox.engulf.const import COLLECTION_GRASS
 from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
-from synergine2.xyz_utils import get_around_positions_of_positions
+from synergine2.xyz import ProximitySubjectMechanism
+from synergine2.xyz_utils import get_around_positions_of_positions, get_around_positions_of
 
 
 class GrassGrownUp(Event):
@@ -115,3 +119,58 @@ class GrassSpawnBehaviour(SimulationBehaviour):
                 ))
 
         return events
+
+
+class EatableDirectProximityMechanism(ProximitySubjectMechanism):
+    distance = 1.41  # distance when on angle
+    feel_collections = [COLLECTION_GRASS]
+
+
+class MoveTo(Event):
+    def __init__(self, subject_id: int, position: tuple, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subject_id = subject_id
+        self.position = position
+
+    def repr_debug(self) -> str:
+        return '{}: subject_id:{}, position:{}'.format(
+            type(self).__name__,
+            self.subject_id,
+            self.position,
+        )
+
+
+class SearchFood(SubjectBehaviour):
+    """
+    Si une nourriture a une case de distance et cellule non rassasié, move dans sa direction.
+    """
+    use = [EatableDirectProximityMechanism]
+
+    def run(self, data):
+        pass
+
+
+class Eat(SubjectBehaviour):
+    """
+    Prduit un immobilisme si sur une case de nourriture, dans le cas ou la cellule n'est as rassasié.
+    """
+    def run(self, data):
+        pass
+
+
+class Explore(SubjectBehaviour):
+    """
+    Produit un mouvement au hasard (ou un immobilisme)
+    """
+    use = []
+
+    def action(self, data) -> [Event]:
+        position = self.get_random_around_position()
+        return [MoveTo(self.subject.id, position)]
+
+    def run(self, data):
+        return True  # for now, want move every time
+
+    def get_random_around_position(self):
+        around_positions = get_around_positions_of(self.subject.position)
+        return around_positions[randint(0, len(around_positions)-1)]

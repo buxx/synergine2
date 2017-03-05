@@ -59,7 +59,14 @@ class Terminal(object):
     # who are not instance of listed classes
     subscribed_events = [Event]
 
-    def __init__(self, asynchronous: bool=True):
+    def __init__(
+        self,
+        config: Config,
+        logger: SynergineLogger,
+        asynchronous: bool=True,
+    ):
+        self.config = config
+        self.logger = logger
         self._input_queue = None
         self._output_queue = None
         self._stop_required = False

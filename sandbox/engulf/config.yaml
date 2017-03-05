@@ -1,0 +1,4 @@
+core:
+    cycle_duration: 0.5
+terminals:
+    sync: True

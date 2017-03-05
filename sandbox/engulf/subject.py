@@ -1,12 +1,8 @@
 # coding: utf-8
-from sandbox.engulf.behaviour import GrowUp
+from sandbox.engulf.behaviour import GrowUp, SearchFood, Eat, Explore
+from sandbox.engulf.const import COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_EATABLE, COLLECTION_GRASS
 from synergine2.simulation import Subject
 from synergine2.xyz import XYZSubjectMixin
-
-COLLECTION_CELL = 'CELL'
-COLLECTION_ALIVE = 'ALIVE'
-COLLECTION_EATABLE = 'EATABLE'
-COLLECTION_GRASS = 'GRASS'
 
 
 class Cell(XYZSubjectMixin, Subject):
@@ -14,6 +10,11 @@ class Cell(XYZSubjectMixin, Subject):
         COLLECTION_CELL,
         COLLECTION_ALIVE,
         COLLECTION_EATABLE,
+    ]
+    behaviours_classes = [
+        SearchFood,
+        Eat,
+        Explore,
     ]
 
 
