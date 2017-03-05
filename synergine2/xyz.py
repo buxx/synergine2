@@ -5,7 +5,6 @@ from math import acos
 
 from synergine2.simulation import SubjectMechanism, Subjects, Subject
 from synergine2.simulation import Simulation as BaseSimulation
-from synergine2.xyz_utils import get_distance_between_points
 
 
 """
@@ -25,6 +24,61 @@ Y
 """
 
 COLLECTION_XYZ = 'COLLECTION_XYZ'
+
+NORTH = 11
+NORTH_EST = 12
+EST = 15
+SOUTH_EST = 18
+SOUTH = 17
+SOUTH_WEST = 16
+WEST = 13
+NORTH_WEST = 10
+
+DIRECTIONS = (
+    NORTH,
+    NORTH_EST,
+    EST,
+    SOUTH_EST,
+    SOUTH,
+    SOUTH_WEST,
+    WEST,
+    NORTH_WEST,
+)
+
+DIRECTION_FROM_NORTH_DEGREES = {
+    (0, 22.5): NORTH,
+    (22.5, 67): NORTH_EST,
+    (67, 112.5): EST,
+    (112.5, 157.5): SOUTH_EST,
+    (157.5, 202.5): SOUTH,
+    (202.5, 247.5): SOUTH_WEST,
+    (247.5, 292.5): WEST,
+    (292.5, 337.5): NORTH_WEST,
+    (337.5, 360): NORTH,
+    (337.5, 0): NORTH
+}
+
+DIRECTION_SLIGHTLY = {
+    NORTH: (NORTH_WEST, NORTH, NORTH_EST),
+    NORTH_EST: (NORTH, NORTH_EST, EST),
+    EST: (NORTH_EST, EST, SOUTH_EST),
+    SOUTH_EST: (EST, SOUTH_EST, SOUTH),
+    SOUTH: (SOUTH_EST, SOUTH, SOUTH_WEST),
+    SOUTH_WEST: (SOUTH, SOUTH_WEST, WEST),
+    WEST: (SOUTH_WEST, WEST, NORTH_WEST),
+    NORTH_WEST: (WEST, NORTH_WEST, NORTH),
+}
+
+DIRECTION_MODIFIERS = {
+    NORTH_WEST: (-1, -1, 0),
+    NORTH: (0, -1, 0),
+    NORTH_EST: (1, -1, 0),
+    WEST: (-1, 0, 0),
+    EST: (1, 0, 0),
+    SOUTH_WEST: (-1, 1, 0),
+    SOUTH: (0, 1, 0),
+    SOUTH_EST: (1, 1, 0),
+}
 
 
 def get_degree_from_north(a, b):
@@ -57,8 +111,17 @@ class XYZSubjectMixin(object, metaclass=XYZSubjectMixinMetaClass):
         """
         :param position: tuple with (x, y, z)
         """
-        self.position = kwargs.pop('position')
+        self._position = kwargs.pop('position')
+        self.previous_direction = None
         super().__init__(*args, **kwargs)
+
+    @property
+    def position(self):
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        self._position = value
 
 
 class ProximityMixin(object):
@@ -107,6 +170,7 @@ class ProximityMixin(object):
 
     @classmethod
     def get_distance_of(cls, position, subject: XYZSubjectMixin):
+        from synergine2.xyz_utils import get_distance_between_points  # cyclic import
         return get_distance_between_points(
             position,
             subject.position,

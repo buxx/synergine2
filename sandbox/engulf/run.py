@@ -82,7 +82,7 @@ def fill_with_random_cells(
         position = (
             randint(start_position[0], end_position[0]+1),
             randint(start_position[1], end_position[1]+1),
-            randint(start_position[2], end_position[2]+1),
+            0,
         )
         if position not in subjects.cell_xyz:
             cell = Cell(
@@ -106,7 +106,7 @@ def fill_with_random_grass(
         position = (
             randint(start_position[0], end_position[0]+1),
             randint(start_position[1], end_position[1]+1),
-            randint(start_position[2], end_position[2]+1),
+            0,
         )
 
         if position not in subjects.grass_xyz:

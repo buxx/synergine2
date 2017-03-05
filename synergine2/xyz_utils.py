@@ -2,6 +2,8 @@
 from math import sqrt
 import collections
 
+from synergine2.xyz import DIRECTION_MODIFIERS
+
 
 def get_positions_from_str_representation(str_representation):
     # TODO: Manage z axis (like ------------ as separator)
@@ -204,3 +206,12 @@ def get_around_positions_of(
 
 def get_distance_between_points(a: tuple, b: tuple) -> float:
     return abs(sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2))
+
+
+def get_position_for_direction(from_position: tuple, direction: int) -> tuple:
+    modifier = DIRECTION_MODIFIERS[direction]
+    return (
+        from_position[0] + modifier[0],
+        from_position[1] + modifier[1],
+        from_position[2] + modifier[2],
+    )

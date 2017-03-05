@@ -1,12 +1,12 @@
 # coding: utf-8
-from random import randint
+from random import choice
 
 from sandbox.engulf.const import COLLECTION_GRASS
 from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
-from synergine2.xyz import ProximitySubjectMechanism
-from synergine2.xyz_utils import get_around_positions_of_positions, get_around_positions_of
+from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIGHTLY
+from synergine2.xyz_utils import get_around_positions_of_positions, get_around_positions_of, get_position_for_direction
 
 
 class GrassGrownUp(Event):
@@ -165,12 +165,17 @@ class Explore(SubjectBehaviour):
     use = []
 
     def action(self, data) -> [Event]:
-        position = self.get_random_around_position()
+        direction = self.get_random_direction()
+        position = get_position_for_direction(self.subject.position, direction)
+        self.subject.position = position
+        self.subject.previous_direction = direction
+
         return [MoveTo(self.subject.id, position)]
 
     def run(self, data):
         return True  # for now, want move every time
 
-    def get_random_around_position(self):
-        around_positions = get_around_positions_of(self.subject.position)
-        return around_positions[randint(0, len(around_positions)-1)]
+    def get_random_direction(self):
+        if not self.subject.previous_direction:
+            return choice(DIRECTIONS)
+        return choice(DIRECTION_SLIGHTLY[self.subject.previous_direction])

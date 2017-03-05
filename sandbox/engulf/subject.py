@@ -11,6 +11,7 @@ class Cell(XYZSubjectMixin, Subject):
         COLLECTION_ALIVE,
         COLLECTION_EATABLE,
     ]
+    # TODO: Mettre en place la "selection/choix": car il y a deux move possible chaque cycle ci-dessous.
     behaviours_classes = [
         SearchFood,
         Eat,
