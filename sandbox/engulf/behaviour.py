@@ -6,7 +6,8 @@ from sandbox.engulf.const import COLLECTION_GRASS
 from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour, SubjectBehaviourSelector
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
-from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIGHTLY
+from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIGHTLY, DIRECTION_FROM_NORTH_DEGREES, \
+    get_direction_from_north_degree
 from synergine2.xyz_utils import get_around_positions_of_positions, get_around_positions_of, get_position_for_direction
 
 
@@ -148,7 +149,19 @@ class SearchFood(SubjectBehaviour):
     use = [EatableDirectProximityMechanism]
 
     def run(self, data):
-        pass
+        if not data[EatableDirectProximityMechanism]:
+            return False
+
+        direction_degrees = [d['direction'] for d in data[EatableDirectProximityMechanism]]
+        return get_direction_from_north_degree(choice(direction_degrees))
+
+    def action(self, data) -> [Event]:
+        direction = data
+        position = get_position_for_direction(self.subject.position, direction)
+        self.subject.position = position
+        self.subject.previous_direction = direction
+
+        return [MoveTo(self.subject.id, position)]
 
 
 class Eat(SubjectBehaviour):
@@ -165,6 +178,9 @@ class Explore(SubjectBehaviour):
     """
     use = []
 
+    def run(self, data):
+        return True  # for now, want move every time
+
     def action(self, data) -> [Event]:
         direction = self.get_random_direction()
         position = get_position_for_direction(self.subject.position, direction)
@@ -172,9 +188,6 @@ class Explore(SubjectBehaviour):
         self.subject.previous_direction = direction
 
         return [MoveTo(self.subject.id, position)]
-
-    def run(self, data):
-        return True  # for now, want move every time
 
     def get_random_direction(self):
         if not self.subject.previous_direction:
@@ -194,6 +207,55 @@ class CellBehaviourSelector(SubjectBehaviourSelector):
 
     def reduce_behaviours(
         self,
-        behaviours: typing.Dict[typing.Type[SubjectBehaviour], dict],
-    ) -> typing.Dict[typing.Type[SubjectBehaviour], dict]:
-        return behaviours  # TODO: code it
+        behaviours: typing.Dict[typing.Type[SubjectBehaviour], object],
+    ) -> typing.Dict[typing.Type[SubjectBehaviour], object]:
+        reduced_behaviours = {}  # type: typing.Dict[typing.Type[SubjectBehaviour], object]
+
+        for behaviour_class, behaviour_data in behaviours.items():
+            if not self.behaviour_class_in_sublist(behaviour_class):
+                reduced_behaviours[behaviour_class] = behaviour_data
+            elif self.behaviour_class_is_prior(behaviour_class, behaviours):
+                reduced_behaviours[behaviour_class] = behaviour_data
+
+        return reduced_behaviours
+
+    def behaviour_class_in_sublist(self, behaviour_class: typing.Type[SubjectBehaviour]) -> bool:
+        for sublist in self.behaviour_hierarchy:
+            if behaviour_class in sublist:
+                return True
+        return False
+
+    def behaviour_class_is_prior(
+        self,
+        behaviour_class: typing.Type[SubjectBehaviour],
+        behaviours: typing.Dict[typing.Type[SubjectBehaviour], object],
+    ) -> bool:
+        for sublist in self.behaviour_hierarchy:
+            if behaviour_class in sublist:
+                behaviour_position = sublist.index(behaviour_class)
+                other_behaviour_top_position = self.get_other_behaviour_top_position(
+                    behaviour_class,
+                    behaviours,
+                    sublist,
+                )
+                if other_behaviour_top_position is not None and behaviour_position > other_behaviour_top_position:
+                    return False
+        return True
+
+    def get_other_behaviour_top_position(
+        self,
+        exclude_behaviour_class,
+        behaviours,
+        sublist,
+    ) -> typing.Union[None, int]:
+        position = None
+        for behaviour_class in behaviours.keys():
+            if behaviour_class != exclude_behaviour_class:
+                try:
+                    behaviour_position = sublist.index(behaviour_class)
+                except ValueError:
+                    pass
+                if position is None or behaviour_position < position:
+                    position = behaviour_position
+
+        return position

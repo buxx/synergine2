@@ -222,6 +222,6 @@ class SimulationBehaviour(BaseObject):
 class SubjectBehaviourSelector(BaseObject):
     def reduce_behaviours(
         self,
-        behaviours: typing.Dict[typing.Type[SubjectBehaviour], dict],
-    ) -> typing.Dict[typing.Type[SubjectBehaviour], dict]:
+        behaviours: typing.Dict[typing.Type[SubjectBehaviour], object],
+    ) -> typing.Dict[typing.Type[SubjectBehaviour], object]:
         raise NotImplementedError()
