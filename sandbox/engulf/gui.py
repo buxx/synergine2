@@ -4,7 +4,7 @@ from random import randint
 import cocos
 from cocos.actions import MoveTo, Repeat, ScaleBy, Reverse, RotateTo
 from cocos.sprite import Sprite
-from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo as MoveToEvent
+from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo as MoveToEvent, EatEvent
 from sandbox.engulf.subject import Cell, Grass
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.gui import Gui, GridLayerMixin
@@ -101,6 +101,10 @@ class Game(Gui):
             MoveToEvent,
             self.on_move_to,
         )
+        self.terminal.register_event_handler(
+            EatEvent,
+            self.on_eat,
+        )
 
     def get_main_scene(self):
         return self.main_scene
@@ -134,4 +138,10 @@ class Game(Gui):
         self.main_layer.cells.move(
             event.subject_id,
             event.position,
+        )
+
+    def on_eat(self, event: EatEvent):
+        self.main_layer.grasses.set_density(
+            event.eaten_id,
+            event.eaten_new_density,
         )

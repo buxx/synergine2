@@ -3,6 +3,7 @@ import collections
 import typing
 
 from synergine2.base import BaseObject
+from synergine2.config import Config
 from synergine2.utils import get_mechanisms_classes
 
 
@@ -11,7 +12,12 @@ class Subject(object):
     behaviours_classes = []
     behaviour_selector_class = None  # type: typing.Type[SubjectBehaviourSelector]
 
-    def __init__(self, simulation: 'Simulation'):
+    def __init__(
+        self,
+        config: Config,
+        simulation: 'Simulation',
+    ):
+        self.config = config
         self.id = id(self)  # We store object id because it's lost between process
         self.simulation = simulation
         self.behaviours = {}
@@ -37,12 +43,14 @@ class Subject(object):
     def initialize(self):
         for mechanism_class in get_mechanisms_classes(self):
             self.mechanisms[mechanism_class] = mechanism_class(
+                config=self.config,
                 simulation=self.simulation,
                 subject=self,
             )
 
         for behaviour_class in self.behaviours_classes:
             self.behaviours[behaviour_class] = behaviour_class(
+                config=self.config,
                 simulation=self.simulation,
                 subject=self,
             )
@@ -86,7 +94,11 @@ class Simulation(object):
     accepted_subject_class = Subjects
     behaviours_classes = []
 
-    def __init__(self):
+    def __init__(
+        self,
+        config: Config,
+    ):
+        self.config = config
         self.collections = collections.defaultdict(list)
         self._subjects = None
         self.behaviours = {}
@@ -109,11 +121,13 @@ class Simulation(object):
     def initialize(self):
         for mechanism_class in get_mechanisms_classes(self):
             self.mechanisms[mechanism_class] = mechanism_class(
+                config=self.config,
                 simulation=self,
             )
 
         for behaviour_class in self.behaviours_classes:
             self.behaviours[behaviour_class] = behaviour_class(
+                config=self.config,
                 simulation=self,
             )
 
@@ -121,9 +135,11 @@ class Simulation(object):
 class SubjectMechanism(BaseObject):
     def __init__(
             self,
+            config: Config,
             simulation: Simulation,
             subject: Subject,
     ):
+        self.config = config
         self.simulation = simulation
         self.subject = subject
 
@@ -137,8 +153,10 @@ class SimulationMechanism(BaseObject):
 
     def __init__(
             self,
+            config: Config,
             simulation: Simulation,
     ):
+        self.config = config
         self.simulation = simulation
 
     def repr_debug(self) -> str:
@@ -162,9 +180,11 @@ class SubjectBehaviour(BaseObject):
 
     def __init__(
             self,
+            config: Config,
             simulation: Simulation,
             subject: Subject,
     ):
+        self.config = config
         self.simulation = simulation
         self.subject = subject
 
@@ -177,7 +197,7 @@ class SubjectBehaviour(BaseObject):
         Note: Returned data will be transfered from sub processes.
               Prefer scalar types.
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # TODO Test it and change to strictly False
 
     def action(self, data) -> [Event]:
         """
@@ -193,8 +213,10 @@ class SimulationBehaviour(BaseObject):
 
     def __init__(
             self,
+            config: Config,
             simulation: Simulation,
     ):
+        self.config = config
         self.simulation = simulation
 
     def run(self, data):

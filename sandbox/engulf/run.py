@@ -27,7 +27,7 @@ synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__
 sys.path.append(synergine2_ath)
 
 from random import randint, seed
-from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, GrassSpawnBehaviour, MoveTo
+from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, GrassSpawnBehaviour, MoveTo, EatEvent
 
 from synergine2.config import Config
 from synergine2.log import get_default_logger
@@ -52,6 +52,7 @@ class GameTerminal(Terminal):
         GrassGrownUp,
         GrassSpawn,
         MoveTo,
+        EatEvent,
     ]
 
     def __init__(self, *args, **kwargs):
@@ -71,6 +72,7 @@ class GameTerminal(Terminal):
 
 
 def fill_with_random_cells(
+    config,
     subjects: EngulfSubjects,
     count: int,
     start_position: tuple,
@@ -86,6 +88,7 @@ def fill_with_random_cells(
         )
         if position not in subjects.cell_xyz:
             cell = Cell(
+                config,
                 simulation=subjects.simulation,
                 position=position,
             )
@@ -94,6 +97,7 @@ def fill_with_random_cells(
 
 
 def fill_with_random_grass(
+    config,
     subjects: EngulfSubjects,
     start_count: int,
     start_position: tuple,
@@ -111,6 +115,7 @@ def fill_with_random_grass(
 
         if position not in subjects.grass_xyz:
             grass = Grass(
+                config,
                 simulation=subjects.simulation,
                 position=position,
             )
@@ -121,6 +126,7 @@ def fill_with_random_grass(
         for around in get_around_positions_of(grass.position, distance=density):
             if around not in subjects.grass_xyz:
                 new_grass = Grass(
+                    config,
                     simulation=subjects.simulation,
                     position=around,
                 )
@@ -131,25 +137,28 @@ def fill_with_random_grass(
 
 def main():
     seed(0)
-    simulation = Engulf()
+
+    config = Config()
+    config.load_files(['sandbox/engulf/config.yaml'])
+    logger = get_default_logger(level=logging.DEBUG)
+
+    simulation = Engulf(config)
     subjects = EngulfSubjects(simulation=simulation)
     fill_with_random_cells(
+        config,
         subjects,
         30,
         (-34, -34, 0),
         (34, 34, 0),
     )
     fill_with_random_grass(
+        config,
         subjects,
         5,
         (-34, -34, 0),
         (34, 34, 0),
     )
     simulation.subjects = subjects
-
-    config = Config()
-    config.load_files(['sandbox/engulf/config.yaml'])
-    logger = get_default_logger(level=logging.DEBUG)
 
     core = Core(
         config=config,

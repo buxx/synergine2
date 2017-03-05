@@ -10,6 +10,10 @@ from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIG
     get_direction_from_north_degree
 from synergine2.xyz_utils import get_around_positions_of_positions, get_around_positions_of, get_position_for_direction
 
+# Import for typing hint
+if False:
+    from sandbox.engulf.subject import Grass
+
 
 class GrassGrownUp(Event):
     def __init__(self, subject_id, density, *args, **kwargs):
@@ -127,6 +131,9 @@ class EatableDirectProximityMechanism(ProximitySubjectMechanism):
     distance = 1.41  # distance when on angle
     feel_collections = [COLLECTION_GRASS]
 
+    def acceptable_subject(self, subject: 'Grass') -> bool:
+        return subject.density >= self.config.simulation.eat_grass_required_density
+
 
 class MoveTo(Event):
     def __init__(self, subject_id: int, position: tuple, *args, **kwargs):
@@ -142,6 +149,14 @@ class MoveTo(Event):
         )
 
 
+class EatEvent(Event):
+    def __init__(self, eaten_id: int, eater_id: int, eaten_new_density: float, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.eaten_id = eaten_id
+        self.eater_id = eater_id
+        self.eaten_new_density = eaten_new_density
+
+
 class SearchFood(SubjectBehaviour):
     """
     Si une nourriture a une case de distance et cellule non rassasié, move dans sa direction.
@@ -149,6 +164,9 @@ class SearchFood(SubjectBehaviour):
     use = [EatableDirectProximityMechanism]
 
     def run(self, data):
+        if self.subject.appetite < self.config.simulation.search_food_appetite_required:
+            return False
+
         if not data[EatableDirectProximityMechanism]:
             return False
 
@@ -169,7 +187,28 @@ class Eat(SubjectBehaviour):
     Prduit un immobilisme si sur une case de nourriture, dans le cas ou la cellule n'est as rassasié.
     """
     def run(self, data):
-        pass
+        if self.subject.appetite < self.config.simulation.eat_grass_required_density:
+            return False
+
+        for grass in self.simulation.collections.get(COLLECTION_GRASS, []):
+            if grass.position == self.subject.position:
+                return grass.id
+
+    def action(self, data) -> [Event]:
+        subject_id = data
+
+        grass = self.simulation.subjects.index[subject_id]  # TODO: cas ou grass disparu ?
+        grass.density -= self.config.simulation.eat_grass_density_reduction
+
+        self.subject.appetite -= self.config.simulation.eat_grass_appetite_reduction
+
+        # TODO: Comment mettre des logs (ne peuvent pas être passé aux subprocess)?
+
+        return [EatEvent(
+            eater_id=self.subject.id,
+            eaten_id=subject_id,
+            eaten_new_density=grass.density,
+        )]
 
 
 class Explore(SubjectBehaviour):
@@ -195,12 +234,26 @@ class Explore(SubjectBehaviour):
         return choice(DIRECTION_SLIGHTLY[self.subject.previous_direction])
 
 
+class Hungry(SubjectBehaviour):
+    def run(self, data):
+        return True
+
+    def action(self, data) -> [Event]:
+        self.subject.appetite += self.config.simulation.hungry_reduction
+        return []
+
+    def get_random_direction(self):
+        if not self.subject.previous_direction:
+            return choice(DIRECTIONS)
+        return choice(DIRECTION_SLIGHTLY[self.subject.previous_direction])
+
+
 class CellBehaviourSelector(SubjectBehaviourSelector):
     # If behaviour in sublist, only one be kept in sublist
     behaviour_hierarchy = (  # TODO: refact it
         (
-            Eat,
-            SearchFood,
+            Eat,  # TODO: Introduce priority with appetite
+            SearchFood,  # TODO: Introduce priority with appetite
             Explore,
         ),
     )
@@ -253,9 +306,9 @@ class CellBehaviourSelector(SubjectBehaviourSelector):
             if behaviour_class != exclude_behaviour_class:
                 try:
                     behaviour_position = sublist.index(behaviour_class)
+                    if position is None or behaviour_position < position:
+                        position = behaviour_position
                 except ValueError:
                     pass
-                if position is None or behaviour_position < position:
-                    position = behaviour_position
 
         return position

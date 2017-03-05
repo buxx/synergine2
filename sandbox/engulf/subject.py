@@ -1,5 +1,5 @@
 # coding: utf-8
-from sandbox.engulf.behaviour import GrowUp, SearchFood, Eat, Explore, CellBehaviourSelector
+from sandbox.engulf.behaviour import GrowUp, SearchFood, Eat, Explore, CellBehaviourSelector, Hungry
 from sandbox.engulf.const import COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_EATABLE, COLLECTION_GRASS
 from synergine2.simulation import Subject
 from synergine2.xyz import XYZSubjectMixin
@@ -16,8 +16,26 @@ class Cell(XYZSubjectMixin, Subject):
         SearchFood,
         Eat,
         Explore,
+        Hungry,
     ]
     behaviour_selector_class = CellBehaviourSelector
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._appetite = self.config.simulation.start_appetite  # /100
+
+    @property
+    def appetite(self) -> float:
+        return self._appetite
+
+    @appetite.setter
+    def appetite(self, value) -> None:
+        if value > 100:
+            self._appetite = 100
+        elif value < 0:
+            self._appetite = 0
+        else:
+            self._appetite = value
 
 
 class Grass(XYZSubjectMixin, Subject):

@@ -2,3 +2,10 @@ core:
     cycle_duration: 0.5
 terminals:
     sync: True
+simulation:
+    start_appetite: 50
+    hungry_reduction: 0.25
+    search_food_appetite_required: 30
+    eat_grass_required_density: 25
+    eat_grass_appetite_reduction: 5
+    eat_grass_density_reduction: 25

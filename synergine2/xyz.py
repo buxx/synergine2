@@ -152,7 +152,7 @@ class ProximityMixin(object):
                     ),
                     self.distance_round_decimals,
                 )
-                if distance <= self.distance:
+                if distance <= self.distance and self.acceptable_subject(subject):
                     direction = round(
                         get_degree_from_north(
                             position,
@@ -175,6 +175,9 @@ class ProximityMixin(object):
             position,
             subject.position,
         )
+
+    def acceptable_subject(self, subject: Subject) -> bool:
+        pass
 
 
 class ProximitySubjectMechanism(ProximityMixin, SubjectMechanism):
