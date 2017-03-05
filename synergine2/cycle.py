@@ -110,7 +110,12 @@ class CycleManager(object):
 
         # Duplicate list to prevent conflicts with behaviours subjects manipulations
         for subject in self.simulation.subjects[:]:
-            for behaviour_class, behaviour_data in results.get(subject.id, {}).items():
+            subject_behaviours = results.get(subject.id, {})
+            if subject.behaviour_selector:
+                # TODO: Looging
+                subject_behaviours = subject.behaviour_selector.reduce_behaviours(dict(subject_behaviours))
+
+            for behaviour_class, behaviour_data in subject_behaviours.items():
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
                 # (genre se cacher et fuir son pas compatibles)
                 behaviour_events = subject.behaviours[behaviour_class].action(behaviour_data)

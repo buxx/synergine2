@@ -1,8 +1,9 @@
 # coding: utf-8
+import typing
 from random import choice
 
 from sandbox.engulf.const import COLLECTION_GRASS
-from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour
+from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour, SubjectBehaviourSelector
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
 from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIGHTLY
@@ -179,3 +180,20 @@ class Explore(SubjectBehaviour):
         if not self.subject.previous_direction:
             return choice(DIRECTIONS)
         return choice(DIRECTION_SLIGHTLY[self.subject.previous_direction])
+
+
+class CellBehaviourSelector(SubjectBehaviourSelector):
+    # If behaviour in sublist, only one be kept in sublist
+    behaviour_hierarchy = (  # TODO: refact it
+        (
+            Eat,
+            SearchFood,
+            Explore,
+        ),
+    )
+
+    def reduce_behaviours(
+        self,
+        behaviours: typing.Dict[typing.Type[SubjectBehaviour], dict],
+    ) -> typing.Dict[typing.Type[SubjectBehaviour], dict]:
+        return behaviours  # TODO: code it

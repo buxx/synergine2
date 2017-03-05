@@ -1,5 +1,5 @@
 # coding: utf-8
-from sandbox.engulf.behaviour import GrowUp, SearchFood, Eat, Explore
+from sandbox.engulf.behaviour import GrowUp, SearchFood, Eat, Explore, CellBehaviourSelector
 from sandbox.engulf.const import COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_EATABLE, COLLECTION_GRASS
 from synergine2.simulation import Subject
 from synergine2.xyz import XYZSubjectMixin
@@ -17,6 +17,7 @@ class Cell(XYZSubjectMixin, Subject):
         Eat,
         Explore,
     ]
+    behaviour_selector_class = CellBehaviourSelector
 
 
 class Grass(XYZSubjectMixin, Subject):

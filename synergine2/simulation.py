@@ -1,5 +1,6 @@
 # coding: utf-8
 import collections
+import typing
 
 from synergine2.base import BaseObject
 from synergine2.utils import get_mechanisms_classes
@@ -8,12 +9,16 @@ from synergine2.utils import get_mechanisms_classes
 class Subject(object):
     collections = []
     behaviours_classes = []
+    behaviour_selector_class = None  # type: typing.Type[SubjectBehaviourSelector]
 
     def __init__(self, simulation: 'Simulation'):
         self.id = id(self)  # We store object id because it's lost between process
         self.simulation = simulation
         self.behaviours = {}
         self.mechanisms = {}
+        self.behaviour_selector = None  # type: SubjectBehaviourSelector
+        if self.behaviour_selector_class:
+            self.behaviour_selector = self.behaviour_selector_class()
 
         for collection in self.collections:
             self.simulation.collections[collection].append(self)
@@ -211,4 +216,12 @@ class SimulationBehaviour(BaseObject):
         Method called in main process
         Return events will be give to terminals
         """
+        raise NotImplementedError()
+
+
+class SubjectBehaviourSelector(BaseObject):
+    def reduce_behaviours(
+        self,
+        behaviours: typing.Dict[typing.Type[SubjectBehaviour], dict],
+    ) -> typing.Dict[typing.Type[SubjectBehaviour], dict]:
         raise NotImplementedError()
