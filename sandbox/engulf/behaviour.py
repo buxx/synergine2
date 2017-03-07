@@ -113,7 +113,8 @@ class GrassSpawnBehaviour(SimulationBehaviour):
         for position in data:
             if position not in list(self.simulation.subjects.grass_xyz.keys()):
                 new_grass = Grass(
-                    self.simulation,
+                    config=self.config,
+                    simulation=self.simulation,
                     position=position,
                     density=20,
                 )
