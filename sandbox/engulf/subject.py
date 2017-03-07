@@ -47,9 +47,9 @@ class Grass(XYZSubjectMixin, Subject):
         GrowUp,
     ]
 
-    def __init__(self, *args, density=100.0, **kwargs):
+    def __init__(self, *args, **kwargs):
+        self._density = kwargs.pop('density', 100.0)
         super().__init__(*args, **kwargs)
-        self._density = density
 
     @property
     def density(self) -> float:
