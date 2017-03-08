@@ -36,12 +36,12 @@ from sandbox.engulf.const import COLLECTION_GRASS
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
 from synergine2.terminals import TerminalManager, Terminal, TerminalPackage
-from synergine2.xyz import Simulation
+from synergine2.xyz import XYZSimulation
 from sandbox.engulf.simulation import EngulfSubjects
 from synergine2.xyz_utils import get_around_positions_of, get_distance_between_points
 
 
-class Engulf(Simulation):
+class Engulf(XYZSimulation):
     behaviours_classes = [
         GrassSpawnBehaviour,
     ]

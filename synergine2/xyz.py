@@ -133,7 +133,7 @@ class ProximityMixin(object):
     def get_for_position(
             self,
             position,
-            simulation: 'Simulation',
+            simulation: 'XYZSimulation',
             exclude_subject: Subject=None,
     ):
         subjects = []
@@ -205,7 +205,7 @@ class XYZSubjects(Subjects):
         self.xyz[p_object.position] = p_object
 
 
-class Simulation(BaseSimulation):
+class XYZSimulation(BaseSimulation):
     accepted_subject_class = XYZSubjects
 
 
