@@ -192,6 +192,7 @@ class Eat(SubjectBehaviour):
             return False
 
         for grass in self.simulation.collections.get(COLLECTION_GRASS, []):
+            # TODO: Use simulation/xyz pre calculated indexes
             if grass.position == self.subject.position:
                 return grass.id
 
