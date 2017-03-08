@@ -1,11 +1,12 @@
 # coding: utf-8
-from synergine2.simulation import Subject, SimulationMechanism, Simulation
+from synergine2.simulation import Subject, SimulationMechanism
 from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import Event
 from synergine2.simulation import SubjectBehaviour
 from synergine2.utils import ChunkManager
 from synergine2.xyz import ProximitySubjectMechanism, ProximityMixin
 from synergine2.xyz import XYZSubjectMixin
+from synergine2.xyz import XYZSimulation
 from synergine2.xyz_utils import get_around_positions_of_positions, get_min_and_max
 
 COLLECTION_CELL = 'COLLECTION_CELL'  # Collections of Cell type
@@ -74,6 +75,7 @@ class CellDieBehaviour(SubjectBehaviour):
 
     def action(self, data):
         new_empty = Empty(
+            config=self.config,
             simulation=self.simulation,
             position=self.subject.position,
         )
@@ -93,6 +95,7 @@ class CellBornBehaviour(SubjectBehaviour):
 
     def action(self, data):
         new_cell = Cell(
+            config=self.config,
             simulation=self.simulation,
             position=self.subject.position,
         )
@@ -101,6 +104,7 @@ class CellBornBehaviour(SubjectBehaviour):
         for position in positions_to_complete:
             if position not in self.simulation.subjects.xyz:
                 new_empty = Empty(
+                    config=self.config,
                     simulation=self.simulation,
                     position=position,
                 )
@@ -122,6 +126,7 @@ class InvertCellStateBehaviour(SimulationBehaviour):
 
         if not cell_at_position or isinstance(cell_at_position, Empty):
             new_cell = Cell(
+                config=self.config,
                 simulation=self.simulation,
                 position=position,
             )
@@ -131,6 +136,7 @@ class InvertCellStateBehaviour(SimulationBehaviour):
             return [CellBornEvent(new_cell.id)]
 
         new_empty = Empty(
+            config=self.config,
             simulation=self.simulation,
             position=position,
         )
@@ -178,5 +184,5 @@ class Empty(XYZSubjectMixin, Subject):
     behaviours_classes = [CellBornBehaviour]
 
 
-class LifeGame(Simulation):
+class LifeGame(XYZSimulation):
     behaviours_classes = [LotOfCellsSignalBehaviour]

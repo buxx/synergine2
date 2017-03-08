@@ -16,11 +16,13 @@ def get_subjects_from_str_representation(
         for position in positions:
             if item == '0':
                 subjects.append(Empty(
+                    config=simulation.config,
                     simulation=simulation,
                     position=position,
                 ))
             if item == '1':
                 subjects.append(Cell(
+                    config=simulation.config,
                     simulation=simulation,
                     position=position,
                 ))

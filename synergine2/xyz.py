@@ -192,7 +192,7 @@ class ProximityMixin(object):
         )
 
     def acceptable_subject(self, subject: Subject) -> bool:
-        pass
+        return True
 
 
 class ProximitySubjectMechanism(ProximityMixin, SubjectMechanism):

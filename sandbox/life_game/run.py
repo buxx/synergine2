@@ -124,15 +124,17 @@ def main():
         0 0 0 0 0 0 0 0 0 0 0 0 0
         0 0 0 0 0 0 0 0 0 0 0 0 0
     """
-    simulation = LifeGame()
+
+    config = Config()
+    config.load_files(['sandbox/life_game/config.yaml'])
+    logger = get_default_logger(level=logging.DEBUG)
+
+    simulation = LifeGame(config)
     subjects = get_subjects_from_str_representation(
         start_str_representation,
         simulation,
     )
     simulation.subjects = subjects
-
-    config = Config()
-    logger = get_default_logger(level=logging.DEBUG)
 
     core = Core(
         config=config,

@@ -32,7 +32,7 @@ class Subject(object):
         self.initialize()
 
     def __str__(self):
-        return self.id
+        return self.__repr__()
 
     def __repr__(self):
         return '{}({})'.format(

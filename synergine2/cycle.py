@@ -333,6 +333,7 @@ class CycleManager(object):
 
         for behaviour_class, behaviour_data in simulation_actions:
             behaviour = behaviour_class(
+                config=self.config,
                 simulation=self.simulation,
             )
 
