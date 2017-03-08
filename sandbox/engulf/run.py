@@ -21,16 +21,17 @@ Engulf is simulation containing:
 import logging
 import os
 import sys
+import typing
 
 synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_ath)
 
 from random import randint, seed
-from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo, EatEvent
+from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo, EatEvent, AttackEvent
 
 from synergine2.config import Config
 from synergine2.log import get_default_logger
-from sandbox.engulf.subject import Cell, Grass
+from sandbox.engulf.subject import Cell, Grass, PreyCell, PredatorCell
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
 from synergine2.terminals import TerminalManager, Terminal, TerminalPackage
@@ -44,6 +45,7 @@ class GameTerminal(Terminal):
         GrassSpawn,
         MoveTo,
         EatEvent,
+        AttackEvent,
     ]
 
     def __init__(self, *args, **kwargs):
@@ -68,6 +70,7 @@ def fill_with_random_cells(
     count: int,
     start_position: tuple,
     end_position: tuple,
+    cell_class: typing.Type[PreyCell],
 ) -> None:
     cells = []
 
@@ -78,7 +81,7 @@ def fill_with_random_cells(
             0,
         )
         if position not in subjects.cell_xyz:
-            cell = Cell(
+            cell = cell_class(
                 config,
                 simulation=subjects.simulation,
                 position=position,
@@ -116,18 +119,19 @@ def fill_with_random_grass(
     for grass in grasses:
         for around in get_around_positions_of(grass.position, distance=density):
             if around not in subjects.grass_xyz:
-                new_grass = Grass(
-                    config,
-                    simulation=subjects.simulation,
-                    position=around,
-                )
-                distance = get_distance_between_points(around, grass.position)
-                new_grass.density = 100 - round((distance * 100) / 7)
-                subjects.append(new_grass)
+                if subjects.simulation.is_possible_position(around):
+                    new_grass = Grass(
+                        config,
+                        simulation=subjects.simulation,
+                        position=around,
+                    )
+                    distance = get_distance_between_points(around, grass.position)
+                    new_grass.density = 100 - round((distance * 100) / 7)
+                    subjects.append(new_grass)
 
 
 def main():
-    seed(0)
+    seed(42)
 
     config = Config()
     config.load_files(['sandbox/engulf/config.yaml'])
@@ -141,6 +145,15 @@ def main():
         30,
         (-34, -34, 0),
         (34, 34, 0),
+        cell_class=PreyCell,
+    )
+    fill_with_random_cells(
+        config,
+        subjects,
+        30,
+        (-34, -34, 0),
+        (34, 34, 0),
+        cell_class=PredatorCell,
     )
     fill_with_random_grass(
         config,

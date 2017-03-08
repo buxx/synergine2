@@ -2,18 +2,18 @@
 import typing
 from random import choice
 
-from sandbox.engulf.const import COLLECTION_GRASS
+from sandbox.engulf.const import COLLECTION_GRASS, COLLECTION_CELL
 from sandbox.engulf.exceptions import NotFoundWhereToGo
 from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour, SubjectBehaviourSelector
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
-from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIGHTLY, DIRECTION_FROM_NORTH_DEGREES, \
-    get_direction_from_north_degree
-from synergine2.xyz_utils import get_around_positions_of_positions, get_around_positions_of, get_position_for_direction
+from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIGHTLY, get_direction_from_north_degree
+from synergine2.xyz_utils import get_around_positions_of_positions, get_position_for_direction
 
 # Import for typing hint
 if False:
     from sandbox.engulf.subject import Grass
+    from sandbox.engulf.subject import PreyCell
 
 
 class GrassGrownUp(Event):
@@ -129,12 +129,22 @@ class GrassSpawnBehaviour(SimulationBehaviour):
         return events
 
 
-class EatableDirectProximityMechanism(ProximitySubjectMechanism):
+class GrassEatableDirectProximityMechanism(ProximitySubjectMechanism):
     distance = 1.41  # distance when on angle
     feel_collections = [COLLECTION_GRASS]
 
     def acceptable_subject(self, subject: 'Grass') -> bool:
         return subject.density >= self.config.simulation.eat_grass_required_density
+
+
+class PreyEatableDirectProximityMechanism(ProximitySubjectMechanism):
+    distance = 1.41  # distance when on angle
+    feel_collections = [COLLECTION_CELL]
+
+    def acceptable_subject(self, subject: 'PreyCell') -> bool:
+        # TODO: N'attaquer que des "herbivores" ?
+        from sandbox.engulf.subject import PreyCell  # cyclic
+        return isinstance(subject, PreyCell)
 
 
 class MoveTo(Event):
@@ -159,20 +169,27 @@ class EatEvent(Event):
         self.eaten_new_density = eaten_new_density
 
 
-class SearchFood(SubjectBehaviour):
+class AttackEvent(Event):
+    def __init__(self, attacker_id: int, attacked_id: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attacker_id = attacker_id
+        self.attacked_id = attacked_id
+
+
+class SearchGrass(SubjectBehaviour):
     """
     Si une nourriture a une case de distance et cellule non rassasié, move dans sa direction.
     """
-    use = [EatableDirectProximityMechanism]
+    use = [GrassEatableDirectProximityMechanism]
 
     def run(self, data):
         if self.subject.appetite < self.config.simulation.search_food_appetite_required:
             return False
 
-        if not data[EatableDirectProximityMechanism]:
+        if not data[GrassEatableDirectProximityMechanism]:
             return False
 
-        direction_degrees = [d['direction'] for d in data[EatableDirectProximityMechanism]]
+        direction_degrees = [d['direction'] for d in data[GrassEatableDirectProximityMechanism]]
         return get_direction_from_north_degree(choice(direction_degrees))
 
     def action(self, data) -> [Event]:
@@ -184,7 +201,7 @@ class SearchFood(SubjectBehaviour):
         return [MoveTo(self.subject.id, position)]
 
 
-class Eat(SubjectBehaviour):
+class EatGrass(SubjectBehaviour):
     """
     Prduit un immobilisme si sur une case de nourriture, dans le cas ou la cellule n'est as rassasié.
     """
@@ -269,12 +286,25 @@ class Hungry(SubjectBehaviour):
         return choice(DIRECTION_SLIGHTLY[self.subject.previous_direction])
 
 
+class Attack(SubjectBehaviour):
+    use = [PreyEatableDirectProximityMechanism]
+
+    def run(self, data):
+        if data[PreyEatableDirectProximityMechanism]:
+            return choice(data[PreyEatableDirectProximityMechanism])
+        return False
+
+    def action(self, data) -> [Event]:
+        # TODO: Dommages / mort
+        return [AttackEvent(attacker_id=self.subject.id, attacked_id=data['subject'].id)]
+
+
 class CellBehaviourSelector(SubjectBehaviourSelector):
     # If behaviour in sublist, only one be kept in sublist
     behaviour_hierarchy = (  # TODO: refact it
         (
-            Eat,  # TODO: Introduce priority with appetite
-            SearchFood,  # TODO: Introduce priority with appetite
+            EatGrass,  # TODO: Introduce priority with appetite
+            SearchGrass,  # TODO: Introduce priority with appetite
             Explore,
         ),
     )

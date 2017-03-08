@@ -1,6 +1,7 @@
 # coding: utf-8
-from sandbox.engulf.behaviour import GrowUp, SearchFood, Eat, Explore, CellBehaviourSelector, Hungry
-from sandbox.engulf.const import COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_EATABLE, COLLECTION_GRASS
+from sandbox.engulf.behaviour import GrowUp, SearchGrass, EatGrass, Explore, CellBehaviourSelector, Hungry, Attack
+from sandbox.engulf.const import COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_EATABLE, COLLECTION_GRASS, \
+    COLLECTION_PREY, COLLECTION_PREDATOR
 from synergine2.simulation import Subject
 from synergine2.xyz import XYZSubjectMixin
 
@@ -13,8 +14,6 @@ class Cell(XYZSubjectMixin, Subject):
     ]
     # TODO: Mettre en place la "selection/choix": car il y a deux move possible chaque cycle ci-dessous.
     behaviours_classes = [
-        SearchFood,
-        Eat,
         Explore,
         Hungry,
     ]
@@ -36,6 +35,16 @@ class Cell(XYZSubjectMixin, Subject):
             self._appetite = 0
         else:
             self._appetite = value
+
+
+class PreyCell(Cell):
+    collections = Cell.collections[:] + [COLLECTION_PREY]
+    behaviours_classes = Cell.behaviours_classes[:] + [SearchGrass, EatGrass]
+
+
+class PredatorCell(Cell):
+    collections = Cell.collections[:] + [COLLECTION_PREDATOR]
+    behaviours_classes = Cell.behaviours_classes[:] + [Attack]
 
 
 class Grass(XYZSubjectMixin, Subject):
