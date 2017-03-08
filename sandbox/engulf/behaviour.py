@@ -63,7 +63,7 @@ class GrassSpotablePositionsMechanism(SimulationMechanism):
                 'around': [],
             }
             for around in arounds:
-                if around not in self.simulation.subjects.grass_xyz:
+                if around not in self.simulation.subjects.grass_xyz and self.simulation.is_possible_position(around):
                     around_data['around'].append(around)
 
             if around_data['around']:
