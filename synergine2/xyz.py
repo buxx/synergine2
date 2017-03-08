@@ -213,7 +213,7 @@ def get_direction_from_north_degree(degree: float):
     for range, direction in DIRECTION_FROM_NORTH_DEGREES.items():
         if range[0] <= degree <= range[1]:
             return direction
-    raise Exception('Degree {} our of range ({})'.format(
+    raise Exception('Degree {} out of range ({})'.format(
         degree,
         DIRECTION_FROM_NORTH_DEGREES,
     ))
