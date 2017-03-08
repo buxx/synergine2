@@ -1,6 +1,7 @@
 # coding: utf-8
+from sandbox.engulf.behaviour import GrassSpawnBehaviour
 from sandbox.engulf.subject import Cell, Grass
-from synergine2.xyz import XYZSubjects, XYZSubjectMixin
+from synergine2.xyz import XYZSubjects, XYZSubjectMixin, XYZSimulation
 
 __author__ = 'bux'
 
@@ -30,3 +31,24 @@ class EngulfSubjects(XYZSubjects):
 
         if isinstance(p_object, Grass):
             self.grass_xyz[p_object.position] = p_object
+
+
+class Engulf(XYZSimulation):
+    behaviours_classes = [
+        GrassSpawnBehaviour,
+    ]
+
+    def is_possible_position(self, position: tuple) -> bool:
+        top_left = (-35, -35, 0)
+        bottom_right = (35, 35, 0)
+
+        pos_x = position[0]
+        pos_y = position[1]
+
+        if pos_x < top_left[0] or pos_x > bottom_right[0]:
+            return False
+
+        if pos_y < top_left[1] or pos_y > bottom_right[1]:
+            return False
+
+        return True

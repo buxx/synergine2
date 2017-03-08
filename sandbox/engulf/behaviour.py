@@ -3,6 +3,7 @@ import typing
 from random import choice
 
 from sandbox.engulf.const import COLLECTION_GRASS
+from sandbox.engulf.exceptions import NotFoundWhereToGo
 from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour, SubjectBehaviourSelector
 from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
@@ -223,12 +224,30 @@ class Explore(SubjectBehaviour):
         return True  # for now, want move every time
 
     def action(self, data) -> [Event]:
-        direction = self.get_random_direction()
-        position = get_position_for_direction(self.subject.position, direction)
-        self.subject.position = position
-        self.subject.previous_direction = direction
+        try:
+            position, direction = self.get_random_position_and_direction()
+            self.subject.position = position
+            self.subject.previous_direction = direction
+            return [MoveTo(self.subject.id, position)]
+        except NotFoundWhereToGo:
+            return []
 
-        return [MoveTo(self.subject.id, position)]
+    def get_random_position_and_direction(self) -> tuple:
+        attempts = 0
+
+        while attempts <= 5:
+            attempts += 1
+            direction = self.get_random_direction()
+            position = get_position_for_direction(self.subject.position, direction)
+
+            if self.simulation.is_possible_subject_position(self.subject, position):
+                return position, direction
+
+            # If blocked, permit any direction (not slightly)
+            if attempts >= 3:
+                self.subject.previous_direction = None
+
+        raise NotFoundWhereToGo()
 
     def get_random_direction(self):
         if not self.subject.previous_direction:

@@ -224,8 +224,8 @@ class XYZSubjects(Subjects):
         if self.have_to_check_position_is_possible() \
            and not self.simulation.is_possible_subject_position(p_object, p_object.position):
             raise PositionNotPossible('Position {} for {} is not possible'.format(
-                p_object.position,
-                p_object,
+                str(p_object.position),
+                str(p_object),
             ))
 
         self.xyz[p_object.position] = p_object
