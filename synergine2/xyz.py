@@ -3,6 +3,7 @@ from math import sqrt
 from math import degrees
 from math import acos
 
+from synergine2.exceptions import SynergineException
 from synergine2.simulation import SubjectMechanism, Subjects, Subject
 from synergine2.simulation import Simulation as BaseSimulation
 
@@ -81,6 +82,14 @@ DIRECTION_MODIFIERS = {
 }
 
 
+class XYZException(SynergineException):
+    pass
+
+
+class PositionNotPossible(XYZException):
+    pass
+
+
 def get_degree_from_north(a, b):
     if a == b:
         return 0
@@ -130,6 +139,9 @@ class ProximityMixin(object):
     direction_round_decimals = 0
     distance_round_decimals = 2
 
+    def have_to_check_position_is_possible(self) -> bool:
+        return True
+
     def get_for_position(
             self,
             position,
@@ -143,6 +155,9 @@ class ProximityMixin(object):
             # etant dans fell_collection
             for subject in simulation.collections.get(feel_collection, []):
                 if subject == exclude_subject:
+                    continue
+
+                if self.have_to_check_position_is_possible() and not simulation.is_possible_position(subject.position):
                     continue
 
                 distance = round(
@@ -196,17 +211,34 @@ class XYZSubjects(Subjects):
         # TODO: init xyz with given list
         self.xyz = {}
 
+    def have_to_check_position_is_possible(self) -> bool:
+        return True
+
     def remove(self, value: XYZSubjectMixin):
         super().remove(value)
         del self.xyz[value.position]
 
     def append(self, p_object: XYZSubjectMixin):
         super().append(p_object)
+
+        if self.have_to_check_position_is_possible() \
+           and not self.simulation.is_possible_subject_position(p_object, p_object.position):
+            raise PositionNotPossible('Position {} for {} is not possible'.format(
+                p_object.position,
+                p_object,
+            ))
+
         self.xyz[p_object.position] = p_object
 
 
 class XYZSimulation(BaseSimulation):
     accepted_subject_class = XYZSubjects
+
+    def is_possible_subject_position(self, subject: XYZSubjectMixin, position: tuple) -> bool:
+        return self.is_possible_position(position)
+
+    def is_possible_position(self, position: tuple) -> bool:
+        return True
 
 
 def get_direction_from_north_degree(degree: float):
