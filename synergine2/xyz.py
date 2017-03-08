@@ -216,7 +216,11 @@ class XYZSubjects(Subjects):
 
     def remove(self, value: XYZSubjectMixin):
         super().remove(value)
-        del self.xyz[value.position]
+
+        try:
+            del self.xyz[value.position]
+        except KeyError:
+            pass  # TODO: cE DICT DOIT CONTENIR DES LISTES DE SUBJECTS
 
     def append(self, p_object: XYZSubjectMixin):
         super().append(p_object)

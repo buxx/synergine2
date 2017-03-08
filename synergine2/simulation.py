@@ -17,6 +17,9 @@ class Subject(object):
         config: Config,
         simulation: 'Simulation',
     ):
+        # TODO: Bannir les attribut de classe passé en reference ! Et meme virer les attr de classe tout court.
+        self.collections = self.collections[:]
+
         self.config = config
         self.id = id(self)  # We store object id because it's lost between process
         self.simulation = simulation

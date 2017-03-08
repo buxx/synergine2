@@ -1,5 +1,6 @@
 # coding: utf-8
-from sandbox.engulf.behaviour import GrowUp, SearchGrass, EatGrass, Explore, CellBehaviourSelector, Hungry, Attack
+from sandbox.engulf.behaviour import GrowUp, SearchGrass, EatGrass, Explore, CellBehaviourSelector, Hungry, Attack, \
+    SearchPrey, EatPrey
 from sandbox.engulf.const import COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_EATABLE, COLLECTION_GRASS, \
     COLLECTION_PREY, COLLECTION_PREDATOR
 from synergine2.simulation import Subject
@@ -44,7 +45,7 @@ class PreyCell(Cell):
 
 class PredatorCell(Cell):
     collections = Cell.collections[:] + [COLLECTION_PREDATOR]
-    behaviours_classes = Cell.behaviours_classes[:] + [Attack]
+    behaviours_classes = Cell.behaviours_classes[:] + [SearchPrey, Attack, EatPrey]
 
 
 class Grass(XYZSubjectMixin, Subject):

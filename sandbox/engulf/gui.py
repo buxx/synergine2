@@ -4,7 +4,7 @@ from random import randint
 import cocos
 from cocos.actions import MoveTo, Repeat, ScaleBy, Reverse, RotateTo
 from cocos.sprite import Sprite
-from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo as MoveToEvent, EatEvent, AttackEvent
+from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo as MoveToEvent, EatEvent, AttackEvent, EatenEvent
 from sandbox.engulf.subject import Cell, Grass, PreyCell, PredatorCell
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.gui import Gui, GridLayerMixin
@@ -41,6 +41,9 @@ class CellsLayer(GridLayerMixin, BaseMainLayer):
         self.add(cell)
 
     def move(self, subject_id: int, position: tuple):
+        if subject_id not in self.cell_ids:
+            return  # Cell eaten before
+
         cell = self.cell_ids[subject_id]
 
         window_position = self.grid_manager.get_window_position(position[0], position[1])
@@ -54,6 +57,12 @@ class CellsLayer(GridLayerMixin, BaseMainLayer):
     def attack(self, attacker_id: int, attacked_id: int):
         attacker = self.cell_ids[attacker_id]
         attacker.do(ScaleBy(1.7, duration=0.25))
+
+    def eaten(self, eaten_id: int):
+        eaten = self.cell_ids[eaten_id]
+        self.remove(eaten)
+        # TODO: refact: On a pas nettoyer self.cell_positions par exemple
+        del self.cell_ids[eaten_id]
 
 
 class GrassLayer(GridLayerMixin, BaseMainLayer):
@@ -115,6 +124,10 @@ class Game(Gui):
             AttackEvent,
             self.on_attack,
         )
+        self.terminal.register_event_handler(
+            EatenEvent,
+            self.on_eaten,
+        )
 
     def get_main_scene(self):
         return self.main_scene
@@ -162,4 +175,9 @@ class Game(Gui):
         self.main_layer.cells.attack(
             event.attacker_id,
             event.attacked_id,
+        )
+
+    def on_eaten(self, event: EatenEvent):
+        self.main_layer.cells.eaten(
+            event.eaten_id,
         )

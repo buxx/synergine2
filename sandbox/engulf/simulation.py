@@ -18,7 +18,10 @@ class EngulfSubjects(XYZSubjects):
         super().remove(value)
 
         if isinstance(value, Cell):
-            del self.cell_xyz[value.position]
+            try:
+                del self.cell_xyz[value.position]
+            except KeyError:
+                pass  # TODO: cE DICT DOIT CONTENIR DES LISTES DE SUBJECTS
 
         if isinstance(value, Grass):
             del self.grass_xyz[value.position]

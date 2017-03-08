@@ -2,7 +2,7 @@
 import typing
 from random import choice
 
-from sandbox.engulf.const import COLLECTION_GRASS, COLLECTION_CELL
+from sandbox.engulf.const import COLLECTION_GRASS, COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_PREY
 from sandbox.engulf.exceptions import NotFoundWhereToGo
 from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour, SubjectBehaviourSelector
 from synergine2.simulation import Event
@@ -169,6 +169,12 @@ class EatEvent(Event):
         self.eaten_new_density = eaten_new_density
 
 
+class EatenEvent(Event):
+    def __init__(self, eaten_id: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.eaten_id = eaten_id
+
+
 class AttackEvent(Event):
     def __init__(self, attacker_id: int, attacked_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -176,20 +182,20 @@ class AttackEvent(Event):
         self.attacked_id = attacked_id
 
 
-class SearchGrass(SubjectBehaviour):
-    """
-    Si une nourriture a une case de distance et cellule non rassasié, move dans sa direction.
-    """
-    use = [GrassEatableDirectProximityMechanism]
+class SearchFood(SubjectBehaviour):
+    mechanism_data_class = NotImplemented
+
+    def get_required_appetite(self) -> float:
+        raise NotImplementedError()
 
     def run(self, data):
-        if self.subject.appetite < self.config.simulation.search_food_appetite_required:
+        if self.subject.appetite < self.get_required_appetite():
             return False
 
-        if not data[GrassEatableDirectProximityMechanism]:
+        if not data[self.mechanism_data_class]:
             return False
 
-        direction_degrees = [d['direction'] for d in data[GrassEatableDirectProximityMechanism]]
+        direction_degrees = [d['direction'] for d in data[self.mechanism_data_class]]
         return get_direction_from_north_degree(choice(direction_degrees))
 
     def action(self, data) -> [Event]:
@@ -201,10 +207,29 @@ class SearchGrass(SubjectBehaviour):
         return [MoveTo(self.subject.id, position)]
 
 
+class SearchGrass(SearchFood):
+    """
+    Si une nourriture a une case de distance et cellule non rassasié, move dans sa direction.
+    """
+    use = [GrassEatableDirectProximityMechanism]
+    mechanism_data_class = use[0]
+
+    def get_required_appetite(self) -> float:
+        return self.config.simulation.search_food_appetite_required
+
+
+class SearchPrey(SearchFood):
+    """
+    Si une nourriture a une case de distance et cellule non rassasié, move dans sa direction.
+    """
+    use = [PreyEatableDirectProximityMechanism]
+    mechanism_data_class = use[0]
+
+    def get_required_appetite(self) -> float:
+        return self.config.simulation.search_and_attack_prey_apetite_required
+
+
 class EatGrass(SubjectBehaviour):
-    """
-    Prduit un immobilisme si sur une case de nourriture, dans le cas ou la cellule n'est as rassasié.
-    """
     def run(self, data):
         if self.subject.appetite < self.config.simulation.eat_grass_required_density:
             return False
@@ -231,6 +256,32 @@ class EatGrass(SubjectBehaviour):
         )]
 
 
+class EatPrey(SubjectBehaviour):
+    def run(self, data):
+        if self.subject.appetite < self.config.simulation.search_and_attack_prey_apetite_required:
+            return False
+
+        for prey in self.simulation.collections.get(COLLECTION_PREY, []):
+            # TODO: Use simulation/xyz pre calculated indexes
+            if prey.position == self.subject.position:
+                return prey.id
+
+    def action(self, data) -> [Event]:
+        subject_id = data
+
+        # Cell already eaten ?
+        if subject_id not in self.simulation.subjects.index:
+            return []
+
+        prey = self.simulation.subjects.index[subject_id]
+        self.simulation.subjects.remove(prey)
+        self.subject.appetite -= self.config.simulation.eat_prey_required_density
+
+        return [EatenEvent(
+            eaten_id=prey.id,
+        )]
+
+
 class Explore(SubjectBehaviour):
     """
     Produit un mouvement au hasard (ou un immobilisme)
@@ -238,7 +289,11 @@ class Explore(SubjectBehaviour):
     use = []
 
     def run(self, data):
-        return True  # for now, want move every time
+        # TODO: Il faut pouvoir dire tel behaviour concerne que tel collections
+        if COLLECTION_ALIVE not in self.subject.collections:
+            return False
+
+        return True
 
     def action(self, data) -> [Event]:
         try:
@@ -290,12 +345,30 @@ class Attack(SubjectBehaviour):
     use = [PreyEatableDirectProximityMechanism]
 
     def run(self, data):
-        if data[PreyEatableDirectProximityMechanism]:
-            return choice(data[PreyEatableDirectProximityMechanism])
+        if self.subject.appetite < self.config.simulation.search_and_attack_prey_apetite_required:
+            return False
+
+        eatable_datas = data[PreyEatableDirectProximityMechanism]
+        attackable_datas = []
+
+        for eatable_data in eatable_datas:
+            if COLLECTION_ALIVE in eatable_data['subject'].collections:
+                attackable_datas.append(eatable_data)
+
+        if attackable_datas:
+            return choice(attackable_datas)
         return False
 
     def action(self, data) -> [Event]:
-        # TODO: Dommages / mort
+        attacked = self.simulation.subjects.index[data['subject'].id]
+
+        try:
+            # TODO il faut automatiser/Refactoriser le fait de retirer/ajouter un collection
+            self.simulation.collections[COLLECTION_ALIVE].remove(attacked)
+            attacked.collections.remove(COLLECTION_ALIVE)
+        except ValueError:
+            pass  # On considere qu'il a ete tué par une autre, TODO: en être sur ?
+
         return [AttackEvent(attacker_id=self.subject.id, attacked_id=data['subject'].id)]
 
 
@@ -303,7 +376,10 @@ class CellBehaviourSelector(SubjectBehaviourSelector):
     # If behaviour in sublist, only one be kept in sublist
     behaviour_hierarchy = (  # TODO: refact it
         (
+            EatPrey,
             EatGrass,  # TODO: Introduce priority with appetite
+            Attack,
+            SearchPrey,
             SearchGrass,  # TODO: Introduce priority with appetite
             Explore,
         ),

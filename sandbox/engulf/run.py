@@ -27,7 +27,7 @@ synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__
 sys.path.append(synergine2_ath)
 
 from random import randint, seed
-from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo, EatEvent, AttackEvent
+from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo, EatEvent, AttackEvent, EatenEvent
 
 from synergine2.config import Config
 from synergine2.log import get_default_logger
@@ -46,6 +46,7 @@ class GameTerminal(Terminal):
         MoveTo,
         EatEvent,
         AttackEvent,
+        EatenEvent,
     ]
 
     def __init__(self, *args, **kwargs):
