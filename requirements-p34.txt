@@ -1,0 +1,11 @@
+appdirs==1.4.2
+cocos2d==0.6.4
+packaging==16.8
+py==1.4.31
+pyglet==1.2.4
+pymlconf==0.7.0
+pyparsing==2.1.10
+pytest==3.0.4
+PyYAML==3.12
+six==1.10.0
+typing
