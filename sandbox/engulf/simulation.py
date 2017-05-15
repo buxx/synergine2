@@ -19,9 +19,9 @@ class EngulfSubjects(XYZSubjects):
 
         if isinstance(value, Cell):
             try:
-                del self.cell_xyz[value.position]
-            except KeyError:
-                pass  # TODO: cE DICT DOIT CONTENIR DES LISTES DE SUBJECTS
+                self.cell_xyz.get(value.position, []).remove(value)
+            except ValueError:
+                pass
 
         if isinstance(value, Grass):
             del self.grass_xyz[value.position]
@@ -30,10 +30,10 @@ class EngulfSubjects(XYZSubjects):
         super().append(p_object)
 
         if isinstance(p_object, Cell):
-            self.cell_xyz[p_object.position] = p_object
+            self.cell_xyz.get(p_object.position, []).append(p_object)
 
         if isinstance(p_object, Grass):
-            self.grass_xyz[p_object.position] = p_object
+            self.grass_xyz.get(p_object.position, []).append(p_object)
 
 
 class Engulf(XYZSimulation):

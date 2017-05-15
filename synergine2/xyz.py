@@ -218,9 +218,9 @@ class XYZSubjects(Subjects):
         super().remove(value)
 
         try:
-            del self.xyz[value.position]
-        except KeyError:
-            pass  # TODO: cE DICT DOIT CONTENIR DES LISTES DE SUBJECTS
+            self.xyz.get(value.position, []).remove(value)
+        except ValueError:
+            pass
 
     def append(self, p_object: XYZSubjectMixin):
         super().append(p_object)
@@ -232,7 +232,7 @@ class XYZSubjects(Subjects):
                 str(p_object),
             ))
 
-        self.xyz[p_object.position] = p_object
+        self.xyz.get(p_object.position, []).append(p_object)
 
 
 class XYZSimulation(BaseSimulation):
