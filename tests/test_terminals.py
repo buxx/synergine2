@@ -1,6 +1,8 @@
 # coding: utf-8
 import time
 
+from synergine2.config import Config
+from synergine2.log import SynergineLogger
 from synergine2.simulation import Event
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
@@ -42,8 +44,10 @@ class SendBackTerminal(Terminal):
 class TestTerminals(BaseTest):
     def test_terminal_communications(self):
         terminals_manager = TerminalManager(
+            Config(),
+            SynergineLogger('test'),
             terminals=[
-                MultiplyTerminal(),
+                MultiplyTerminal(Config(), SynergineLogger('test')),
             ]
         )
         terminals_manager.start()
@@ -67,9 +71,11 @@ class TestTerminals(BaseTest):
 
     def test_terminals_communications(self):
         terminals_manager = TerminalManager(
+            Config(),
+            SynergineLogger('test'),
             terminals=[
-                MultiplyTerminal(),
-                DivideTerminal(),
+                MultiplyTerminal(Config(), SynergineLogger('test')),
+                DivideTerminal(Config(), SynergineLogger('test')),
             ]
         )
         terminals_manager.start()
@@ -98,7 +104,9 @@ class TestTerminals(BaseTest):
             pass
 
         terminals_manager = TerminalManager(
-            terminals=[ListenEverythingTerminal()]
+            Config(),
+            SynergineLogger('test'),
+            terminals=[ListenEverythingTerminal(Config(), SynergineLogger('test'))]
         )
         terminals_manager.start()
         terminals_manager.send(ValueTerminalPackage(value=42))
@@ -125,7 +133,9 @@ class TestTerminals(BaseTest):
             subscribed_events = [AnOtherEvent]
 
         terminals_manager = TerminalManager(
-            terminals=[ListenAnEventTerminal()]
+            Config(),
+            SynergineLogger('test'),
+            terminals=[ListenAnEventTerminal(Config(), SynergineLogger('test'))]
         )
         terminals_manager.start()
         terminals_manager.send(ValueTerminalPackage(value=42))

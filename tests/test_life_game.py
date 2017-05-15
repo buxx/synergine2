@@ -3,9 +3,11 @@ import collections
 from sandbox.life_game.simulation import Cell
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.utils import get_subjects_from_str_representation
+from synergine2.config import Config
 from synergine2.cycle import CycleManager
-from synergine2.simulation import Simulation
+from synergine2.log import SynergineLogger
 from synergine2.xyz import XYZSubjects
+from synergine2.xyz import XYZSimulation
 from synergine2.xyz_utils import get_str_representation_from_positions
 from tests import BaseTest
 from tests import str_kwargs
@@ -30,11 +32,13 @@ class LifeGameBaseTest(BaseTest):
 
 class TestSimpleSimulation(LifeGameBaseTest):
     def test_cycles_evolution(self):
-        simulation = Simulation()
+        simulation = XYZSimulation(Config())
         subjects = self._get_subjects(simulation)
         simulation.subjects = subjects
 
         cycle_manager = CycleManager(
+            Config(),
+            SynergineLogger('test'),
             simulation=simulation,
         )
 
@@ -70,7 +74,7 @@ class TestSimpleSimulation(LifeGameBaseTest):
             subjects,
         )
 
-    def _get_subjects(self, simulation: Simulation):
+    def _get_subjects(self, simulation: XYZSimulation):
         cells = XYZSubjects(simulation=simulation)
 
         for position in [
@@ -79,6 +83,7 @@ class TestSimpleSimulation(LifeGameBaseTest):
             (1, 0, 0),
         ]:
             cells.append(Cell(
+                Config(),
                 simulation=simulation,
                 position=position,
             ))
@@ -98,6 +103,7 @@ class TestSimpleSimulation(LifeGameBaseTest):
             (2, 1, 0),
         ]:
             cells.append(Empty(
+                Config(),
                 simulation=simulation,
                 position=position,
             ))
@@ -164,7 +170,7 @@ class TestMultipleSimulations(LifeGameBaseTest):
         """,
         ]
 
-        simulation = Simulation()
+        simulation = XYZSimulation(Config())
         subjects = get_subjects_from_str_representation(
             str_representations[0],
             simulation,
@@ -172,6 +178,8 @@ class TestMultipleSimulations(LifeGameBaseTest):
         simulation.subjects = subjects
 
         cycle_manager = CycleManager(
+            config=Config(),
+            logger=SynergineLogger('test'),
             simulation=simulation,
         )
 

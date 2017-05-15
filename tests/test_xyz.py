@@ -1,9 +1,10 @@
 # coding: utf-8
 # -*- coding: utf-8 -*-
+from synergine2.config import Config
 from synergine2.simulation import Subject
-from synergine2.simulation import Subjects
-from synergine2.simulation import Simulation
 from synergine2.xyz import ProximitySubjectMechanism
+from synergine2.xyz import XYZSubjects
+from synergine2.xyz import XYZSimulation
 from synergine2.xyz import XYZSubjectMixin
 from synergine2.xyz_utils import get_positions_from_str_representation
 from synergine2.xyz_utils import get_str_representation_from_positions
@@ -21,16 +22,17 @@ class MyProximityMechanism(ProximitySubjectMechanism):
 
 class TestXYZ(BaseTest):
     def test_proximity_mechanism_with_one(self):
-        simulation = Simulation()
-        subject = MySubject(simulation, position=(0, 0, 0))
-        other_subject = MySubject(simulation, position=(5, 0, 0))
+        simulation = XYZSimulation(Config())
+        subject = MySubject(Config(), simulation, position=(0, 0, 0))
+        other_subject = MySubject(Config(), simulation, position=(5, 0, 0))
 
-        simulation.subjects = Subjects(
+        simulation.subjects = XYZSubjects(
             [subject, other_subject],
             simulation=simulation,
         )
 
         proximity_mechanism = MyProximityMechanism(
+            config=Config(),
             simulation=simulation,
             subject=subject,
         )
@@ -46,16 +48,17 @@ class TestXYZ(BaseTest):
         }] == proximity_mechanism.run()
 
     def test_proximity_mechanism_excluding(self):
-        simulation = Simulation()
-        subject = MySubject(simulation, position=(0, 0, 0))
-        other_subject = MySubject(simulation, position=(11, 0, 0))
+        simulation = XYZSimulation(Config())
+        subject = MySubject(Config(), simulation, position=(0, 0, 0))
+        other_subject = MySubject(Config(), simulation, position=(11, 0, 0))
 
-        simulation.subjects = Subjects(
+        simulation.subjects = XYZSubjects(
             [subject, other_subject],
             simulation=simulation,
         )
 
         proximity_mechanism = MyProximityMechanism(
+            config=Config(),
             simulation=simulation,
             subject=subject,
         )
@@ -68,17 +71,18 @@ class TestXYZ(BaseTest):
         assert [] == proximity_mechanism.run()
 
     def test_proximity_mechanism_with_multiple(self):
-        simulation = Simulation()
-        subject = MySubject(simulation, position=(0, 0, 0))
+        simulation = XYZSimulation(Config())
+        subject = MySubject(Config(), simulation, position=(0, 0, 0))
         other_subjects = []
 
         for i in range(3):
-            other_subjects.append(MySubject(simulation, position=(i, i, 0)))
+            other_subjects.append(MySubject(Config(), simulation, position=(i, i, 0)))
 
-        simulation.subjects = Subjects([subject], simulation=simulation)
+        simulation.subjects = XYZSubjects([subject], simulation=simulation)
         simulation.subjects.extend(other_subjects)
 
         proximity_mechanism = MyProximityMechanism(
+            config=Config(),
             simulation=simulation,
             subject=subject,
         )
