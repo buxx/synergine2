@@ -30,10 +30,10 @@ class EngulfSubjects(XYZSubjects):
         super().append(p_object)
 
         if isinstance(p_object, Cell):
-            self.cell_xyz.get(p_object.position, []).append(p_object)
+            self.cell_xyz.setdefault(p_object.position, []).append(p_object)
 
         if isinstance(p_object, Grass):
-            self.grass_xyz.get(p_object.position, []).append(p_object)
+            self.grass_xyz.setdefault(p_object.position, []).append(p_object)
 
 
 class Engulf(XYZSimulation):

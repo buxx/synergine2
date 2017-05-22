@@ -232,7 +232,7 @@ class XYZSubjects(Subjects):
                 str(p_object),
             ))
 
-        self.xyz.get(p_object.position, []).append(p_object)
+        self.xyz.setdefault(p_object.position, []).append(p_object)
 
 
 class XYZSimulation(BaseSimulation):
