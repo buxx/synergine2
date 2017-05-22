@@ -1,11 +1,16 @@
+apipkg==1.4
 appdirs==1.4.2
 cocos2d==0.6.4
+coverage==4.4.1
+execnet==1.4.1
 packaging==16.8
-pkg-resources==0.0.0
 py==1.4.31
 pyglet==1.2.4
 pymlconf==0.7.0
 pyparsing==2.1.10
 pytest==3.0.4
+pytest-cov==2.5.1
+pytest-xdist==1.16.0
 PyYAML==3.12
 six==1.10.0
+typing==3.6.1
