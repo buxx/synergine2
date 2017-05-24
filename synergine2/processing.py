@@ -21,22 +21,30 @@ class ProcessManager(object):
             chunks = self._chunk_manager.make_chunks(data)
             results = manager.dict()
 
-            for process_number in range(self._process_count):
-                processes.append(Process(
-                    target=self._job_maker_wrapper,
-                    args=(
-                        process_number,
-                        chunks[process_number],
-                        results,
-                        job_maker,
-                    )
-                ))
+            if self._process_count > 1:
+                for process_number in range(self._process_count):
+                    processes.append(Process(
+                        target=self._job_maker_wrapper,
+                        args=(
+                            process_number,
+                            chunks[process_number],
+                            results,
+                            job_maker,
+                        )
+                    ))
 
-            for process in processes:
-                process.start()
+                for process in processes:
+                    process.start()
 
-            for process in processes:
-                process.join()
+                for process in processes:
+                    process.join()
+            else:
+                self._job_maker_wrapper(
+                    0,
+                    data,
+                    results,
+                    job_maker,
+                )
 
             return results.values()
 
@@ -45,22 +53,30 @@ class ProcessManager(object):
             processes = list()
             results = manager.dict()
 
-            for process_number in range(self._process_count):
-                processes.append(Process(
-                    target=self._job_maker_wrapper,
-                    args=(
-                        process_number,
-                        data,
-                        results,
-                        job_maker,
-                    )
-                ))
+            if self._process_count > 1:
+                for process_number in range(self._process_count):
+                    processes.append(Process(
+                        target=self._job_maker_wrapper,
+                        args=(
+                            process_number,
+                            data,
+                            results,
+                            job_maker,
+                        )
+                    ))
 
-            for process in processes:
-                process.start()
+                for process in processes:
+                    process.start()
 
-            for process in processes:
-                process.join()
+                for process in processes:
+                    process.join()
+            else:
+                self._job_maker_wrapper(
+                    0,
+                    data,
+                    results,
+                    job_maker,
+                )
 
             return results.values()
 

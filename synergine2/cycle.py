@@ -23,7 +23,7 @@ class CycleManager(object):
     ):
         if process_manager is None:
             process_manager = ProcessManager(
-                process_count=multiprocessing.cpu_count(),
+                process_count=config.get('use_x_cores', multiprocessing.cpu_count()),
                 chunk_manager=ChunkManager(multiprocessing.cpu_count()),
             )
 
