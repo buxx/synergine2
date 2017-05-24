@@ -219,6 +219,8 @@ class XYZSubjects(Subjects):
 
         try:
             self.xyz.get(value.position, []).remove(value)
+            if not self.xyz[value.position]:
+                del self.xyz[value.position]
         except ValueError:
             pass
 

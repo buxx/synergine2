@@ -60,6 +60,24 @@ class TestProcessing(BaseTest):
         # Goal is 4950
         assert final_result == 4950
 
+    def test_non_parallel_jobs_with_scalar(self):
+        chunk_manager = ChunkManager(1)
+        process_manager = ProcessManager(
+            process_count=1,
+            chunk_manager=chunk_manager,
+        )
+
+        data = list(range(100))
+        results = process_manager.chunk_and_execute_jobs(
+            data,
+            job_maker=self._make_job_with_scalar,
+        )
+        process_id, final_result = results[0]
+
+        assert len(results) == 1
+        assert process_id == os.getpid()
+        assert final_result == 4950
+
     def test_parallel_jobs_with_objects(self):
         chunk_manager = ChunkManager(4)
         process_manager = ProcessManager(

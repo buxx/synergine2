@@ -1,6 +1,7 @@
 # coding: utf-8
 import time
 
+from synergine2.base import BaseObject
 from synergine2.config import Config
 from synergine2.cycle import CycleManager
 from synergine2.log import SynergineLogger
@@ -9,7 +10,7 @@ from synergine2.terminals import TerminalManager
 from synergine2.terminals import TerminalPackage
 
 
-class Core(object):
+class Core(BaseObject):
     def __init__(
         self,
         config: Config,

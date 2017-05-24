@@ -51,7 +51,7 @@ class TerminalPackage(BaseObject):
         ))
 
 
-class Terminal(object):
+class Terminal(BaseObject):
     # Default behaviour is to do nothing.
     # DEFAULT_SLEEP is sleep time between each queue read
     default_sleep = 1
@@ -140,7 +140,7 @@ class Terminal(object):
                         handler(event)
 
 
-class TerminalManager(object):
+class TerminalManager(BaseObject):
     def __init__(
         self,
         config: Config,
