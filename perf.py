@@ -52,9 +52,9 @@ def main():
     args = parser.parse_args()
 
     host_cores = multiprocessing.cpu_count()
-    retry = 1
-    cycles = 100
-    subject_counts = [1, 10, 100, 1000]
+    retry = 3
+    cycles = 200
+    subject_counts = [1, 10, 100, 1000, 5000]
     complexities = [100, 2000]
     max_cores = args.max_cores or host_cores
 
