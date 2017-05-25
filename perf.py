@@ -8,6 +8,7 @@ import multiprocessing
 import os
 
 import time
+from collections import OrderedDict
 
 from sandbox.perf.simulation import ComputeSubject
 from synergine2.config import Config
@@ -51,16 +52,18 @@ def main():
     args = parser.parse_args()
 
     host_cores = multiprocessing.cpu_count()
-    retry = 5
-    cycles = 200
-    subject_counts = [1, 10, 100, 1000, 2000, 5000]
+    retry = 1
+    cycles = 100
+    subject_counts = [1, 10, 100, 1000]
     complexities = [100, 2000]
     max_cores = args.max_cores or host_cores
 
     results = []
-    datas = {}
+    datas = OrderedDict()
 
     for core_i in range(max_cores):
+        # if core_i == 0:
+        #     continue
         core_count = core_i + 1
         for subject_count in subject_counts:
             for complexity in complexities:

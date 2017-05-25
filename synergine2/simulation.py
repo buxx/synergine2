@@ -43,6 +43,11 @@ class Subject(object):
             self.id,
         )
 
+    def __getstate__(self):
+        self_dict = self.__dict__.copy()
+        del self_dict['simulation']
+        return self_dict
+
     def initialize(self):
         for mechanism_class in get_mechanisms_classes(self):
             self.mechanisms[mechanism_class] = mechanism_class(
