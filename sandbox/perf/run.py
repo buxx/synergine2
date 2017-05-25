@@ -3,12 +3,11 @@ import logging
 import os
 import sys
 
-from sandbox.perf.simulation import ComputeSubject
-
 synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_ath)
 
 
+from sandbox.perf.simulation import ComputeSubject
 from synergine2.config import Config
 from synergine2.core import Core
 from synergine2.cycle import CycleManager

@@ -17,7 +17,7 @@ class ProcessManager(object):
 
     def __getstate__(self):
         self_dict = self.__dict__.copy()
-        del self_dict['pool']
+        self_dict['pool'] = None
         return self_dict
 
     def chunk_and_execute_jobs(self, data: list, job_maker: types.FunctionType) -> list:
@@ -38,3 +38,7 @@ class ProcessManager(object):
             results = [job_maker(data, 0, 1)]
 
         return results
+
+    def __del__(self):
+        if self.pool:
+            self.pool.terminate()

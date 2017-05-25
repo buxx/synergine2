@@ -98,7 +98,7 @@ def main():
                 ))
                 datas.setdefault(complexity, {}).setdefault(subject_count, {})[core_count] = result['duration_cycle']
 
-    for d_complexity, c_values in datas.items():
+    for d_complexity, c_values in sorted(datas.items(), key=lambda e: int(e[0])):
         data_file_name = 'DATA_{}'.format(str(d_complexity))
         try:
             os.unlink(data_file_name)
