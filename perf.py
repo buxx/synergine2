@@ -51,13 +51,10 @@ def main():
     args = parser.parse_args()
 
     host_cores = multiprocessing.cpu_count()
-    retry = 1
-    cycles = 10
-    # subject_counts = [10, 100, 1000, 2000, 5000]
-    subject_counts = [1, 5]
-    # complexities = [100, 20000]
-    # complexities = [1, 100]
-    complexities = [1]
+    retry = 5
+    cycles = 200
+    subject_counts = [1, 10, 100, 1000, 2000, 5000]
+    complexities = [100, 2000]
     max_cores = args.max_cores or host_cores
 
     results = []
@@ -67,8 +64,10 @@ def main():
         core_count = core_i + 1
         for subject_count in subject_counts:
             for complexity in complexities:
-                print('CORES: {}, SUBJECTS: {}, COMPLEXITY: {}'.format(
-                    core_count, subject_count, complexity,
+                print('COMPLEXITY: {}, SUBJECTS: {}, CORES: {}'.format(
+                    complexity,
+                    subject_count,
+                    core_count,
                 ), end='')
 
                 durations = []
@@ -105,7 +104,7 @@ def main():
         with open(data_file_name, 'w+') as file:
             file.writelines(['# (COMPLEXITY {}) SUBJECTS CORES_{}\n'.format(
                 str(d_complexity),
-                ' CORES_'.join(map(str, c_values.keys())),
+                ' CORES_'.join(map(str, range(1, max_cores+1))),
             )])
             for d_subject_count, d_cores in c_values.items():
                 line = '{} {}\n'.format(
@@ -114,11 +113,34 @@ def main():
                 )
                 file.writelines([line])
 
-    """
-    gnuplot -p -e "set title \"COMPLEXITY_1\";
-    plot 'DATA_1' using 1:2 title 'CORE_1' with lines,
-    'DATA_1' using 1:3 title 'CORE_2' with lines"
-    """
+        """
+        subj_core = []
+            for subj, core_v in c_values.items():
+                for core_nb in core_v.keys():
+                    subj_core.append((subj, core_nb))
+            file.writelines(['# (COMPLEXITY {}) SUBJECTS CORES_{}\n'.format(
+                str(d_complexity),
+                ' '.join([
+                    'SUBJ_{}_COR_{}'.format(
+                        subj, core_nb,
+                    ) for subj, core_nb in subj_core
+                ])
+            )])
+        """
+
+    for d_complexity, c_values in datas.items():
+        print('')
+        print('gnuplot -p -e "set title \\"COMPLEXITY_{}\\"; plot {}"'.format(
+            str(d_complexity),
+            ','.join([
+                ' \'DATA_{}\' using 1:{} title \'CORE_{}\' with lines'.format(
+                    d_complexity,
+                    d_core+1,
+                    d_core,
+                ) for d_core in range(1, max_cores+1)
+            ])
+        ))
+
 
 if __name__ == '__main__':
     main()
