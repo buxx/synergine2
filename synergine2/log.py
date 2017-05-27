@@ -1,14 +1,28 @@
 # coding: utf-8
 import logging
-
 import sys
 import typing
+
+STREAM_HANDLER_TAG = '__STREAM_HANDLER__'
 
 
 class SynergineLogger(logging.getLoggerClass()):
     @property
     def is_debug(self) -> bool:
         return self.isEnabledFor(logging.DEBUG)
+
+    def __getstate__(self):
+        # Multiprocessing fail if stream handler present. Remove it if exist.
+        # TODO Bug when want to store STREAM_HANDLER_TAG instead stream handler. str still in handlers after
+        # __setstate__ ...
+        self.handlers = []
+
+        return self.__dict__.copy()
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        # TODO: This handler is hardcoded, it must depend of real context
+        self.handlers.append(logging.StreamHandler(sys.stdout))
 
 
 def get_default_logger(name: str='synergine', level: int=logging.ERROR) -> SynergineLogger:

@@ -1,6 +1,7 @@
 # coding: utf-8
 import multiprocessing
 
+from synergine2.base import BaseObject
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.processing import ProcessManager
@@ -13,7 +14,7 @@ from synergine2.simulation import Event
 from synergine2.utils import ChunkManager
 
 
-class CycleManager(object):
+class CycleManager(BaseObject):
     def __init__(
             self,
             config: Config,

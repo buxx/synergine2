@@ -2,10 +2,11 @@
 import types
 from multiprocessing import Pool
 
+from synergine2.base import BaseObject
 from synergine2.utils import ChunkManager
 
 
-class ProcessManager(object):
+class ProcessManager(BaseObject):
     def __init__(
             self,
             process_count: int,

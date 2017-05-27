@@ -20,6 +20,8 @@ class EngulfSubjects(XYZSubjects):
         if isinstance(value, Cell):
             try:
                 self.cell_xyz.get(value.position, []).remove(value)
+                if not self.cell_xyz[value.position]:
+                    del self.cell_xyz[value.position]
             except ValueError:
                 pass
 

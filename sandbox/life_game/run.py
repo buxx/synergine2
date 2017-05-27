@@ -4,14 +4,13 @@ import sys
 
 import logging
 
-from synergine2.config import Config
-from synergine2.log import get_default_logger
-
 synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_ath)
 
 import collections
 
+from synergine2.config import Config
+from synergine2.log import get_default_logger
 from sandbox.life_game.simulation import Cell, LotOfCellsSignalBehaviour, LifeGame, \
     EmptyPositionWithLotOfCellAroundEvent
 from sandbox.life_game.simulation import Empty

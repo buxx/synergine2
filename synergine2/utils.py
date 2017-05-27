@@ -1,6 +1,7 @@
+from synergine2.base import BaseObject
 
 
-class ChunkManager(object):
+class ChunkManager(BaseObject):
     def __init__(self, chunks_numbers: int):
         self._chunks_numbers = chunks_numbers
 

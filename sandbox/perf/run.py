@@ -19,17 +19,15 @@ from synergine2.terminals import TerminalManager
 def main():
     seed(42)
 
-    config = Config(dict(complexity=100))
+    config = Config(dict(complexity=10000))
     logger = get_default_logger(level=logging.ERROR)
-    logger = logging.getLogger()
-    logger.is_debug = False
 
     simulation = Simulation(config)
     subjects = Subjects(simulation=simulation)
     subjects.extend([ComputeSubject(
         config=config,
         simulation=simulation,
-    ) for i in range(10)])
+    ) for i in range(500)])
     simulation.subjects = subjects
 
     core = Core(

@@ -57,7 +57,7 @@ class GrassSpotablePositionsMechanism(SimulationMechanism):
 
         for position in positions_chunks[process_number]:
             arounds = get_around_positions_of_positions(position)
-            from_subject = self.simulation.subjects.grass_xyz[position]
+            from_subject = self.simulation.subjects.grass_xyz[position][0]
             around_data = {
                 'from_subject': from_subject,
                 'around': [],

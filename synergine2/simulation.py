@@ -7,7 +7,7 @@ from synergine2.config import Config
 from synergine2.utils import get_mechanisms_classes
 
 
-class Subject(object):
+class Subject(BaseObject):
     collections = []
     behaviours_classes = []
     behaviour_selector_class = None  # type: typing.Type[SubjectBehaviourSelector]
@@ -42,11 +42,6 @@ class Subject(object):
             type(self).__name__,
             self.id,
         )
-
-    def __getstate__(self):
-        self_dict = self.__dict__.copy()
-        del self_dict['simulation']
-        return self_dict
 
     def initialize(self):
         for mechanism_class in get_mechanisms_classes(self):
@@ -98,7 +93,7 @@ class Subjects(list):
             self.adds.append(p_object)
 
 
-class Simulation(object):
+class Simulation(BaseObject):
     accepted_subject_class = Subjects
     behaviours_classes = []
 
