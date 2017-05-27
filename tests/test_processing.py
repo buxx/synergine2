@@ -12,8 +12,8 @@ class MyFakeClass(object):
 
 
 class TestProcessing(BaseTest):
-    @staticmethod
-    def _make_job_with_scalar(
+    def make_job_with_scalar(
+            self,
             data_chunk: list,
             process_number: int,
             process_count: int,
@@ -22,8 +22,8 @@ class TestProcessing(BaseTest):
         result = sum(data_chunk)
         return current_pid, result
 
-    @staticmethod
-    def _make_job_with_object(
+    def make_job_with_object(
+            self,
             data_chunk: list,
             process_number: int,
             process_count: int,
@@ -46,7 +46,7 @@ class TestProcessing(BaseTest):
 
         results = process_manager.chunk_and_execute_jobs(
             data,
-            job_maker=self._make_job_with_scalar,
+            job_maker=self.make_job_with_scalar,
         )
 
         for process_id, result in results:
@@ -70,7 +70,7 @@ class TestProcessing(BaseTest):
         data = list(range(100))
         results = process_manager.chunk_and_execute_jobs(
             data,
-            job_maker=self._make_job_with_scalar,
+            job_maker=self.make_job_with_scalar,
         )
         process_id, final_result = results[0]
 
@@ -91,7 +91,7 @@ class TestProcessing(BaseTest):
 
         results = process_manager.chunk_and_execute_jobs(
             data,
-            job_maker=self._make_job_with_object,
+            job_maker=self.make_job_with_object,
         )
 
         for process_id, result_object in results:
