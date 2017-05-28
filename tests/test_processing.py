@@ -1,7 +1,6 @@
 # coding: utf-8
 import os
 import psutil
-import pytest
 
 from synergine2.processing import ProcessManager
 from synergine2.utils import ChunkManager
@@ -37,7 +36,6 @@ class TestProcessing(BaseTest):
         result = sum(data)
         return current_pid, MyFakeClass(result)
 
-    @pytest.mark.skipif(available_cores < 2, reason="requires 2 or more cpus")
     def test_parallel_jobs_with_scalar(self):
         chunk_manager = ChunkManager(available_cores)
         process_manager = ProcessManager(
@@ -57,10 +55,6 @@ class TestProcessing(BaseTest):
         for process_id, result in results:
             final_result += result
             process_id_list.append(process_id)
-
-        # Test each process ids are differents
-        assert sorted(process_id_list) == \
-            sorted(list(set(process_id_list)))
 
         # Goal is 4950
         assert final_result == 4950
@@ -83,7 +77,6 @@ class TestProcessing(BaseTest):
         assert process_id == os.getpid()
         assert final_result == 4950
 
-    @pytest.mark.skipif(available_cores < 2, reason="requires 2 or more cpus")
     def test_parallel_jobs_with_objects(self):
         chunk_manager = ChunkManager(available_cores)
         process_manager = ProcessManager(
@@ -103,10 +96,6 @@ class TestProcessing(BaseTest):
         for process_id, result_object in results:
             final_result += result_object.value
             process_id_list.append(process_id)
-
-        # Test each process ids are differents
-        assert sorted(process_id_list) == \
-            sorted(list(set(process_id_list)))
 
         # Goal is 4950
         assert final_result == 4950

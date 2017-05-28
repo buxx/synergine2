@@ -148,7 +148,7 @@ class TestTerminals(BaseTest):
         packages = []
         for i in range(1000):
             packages.extend(terminals_manager.receive())
-            if len(packages) == 1:
+            if len(packages) == 2:
                 break
             time.sleep(0.01)
 
