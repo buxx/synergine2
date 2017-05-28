@@ -1,6 +1,9 @@
 # coding: utf-8
 import os
 
+import multiprocessing
+import pytest
+
 from synergine2.processing import ProcessManager
 from synergine2.utils import ChunkManager
 from tests import BaseTest
@@ -33,10 +36,11 @@ class TestProcessing(BaseTest):
         result = sum(data)
         return current_pid, MyFakeClass(result)
 
+    @pytest.mark.skipif(multiprocessing.cpu_count() < 2, reason="requires 2 or more cpus")
     def test_parallel_jobs_with_scalar(self):
-        chunk_manager = ChunkManager(4)
+        chunk_manager = ChunkManager(2)
         process_manager = ProcessManager(
-            process_count=4,
+            process_count=2,
             chunk_manager=chunk_manager,
         )
 
