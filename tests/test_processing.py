@@ -2,6 +2,8 @@
 import os
 
 import multiprocessing
+
+import psutil
 import pytest
 
 from synergine2.processing import ProcessManager
@@ -36,7 +38,7 @@ class TestProcessing(BaseTest):
         result = sum(data)
         return current_pid, MyFakeClass(result)
 
-    @pytest.mark.skipif(multiprocessing.cpu_count() < 2, reason="requires 2 or more cpus")
+    @pytest.mark.skipif(len(psutil.Process().cpu_affinity()) < 2, reason="requires 2 or more cpus")
     def test_parallel_jobs_with_scalar(self):
         chunk_manager = ChunkManager(2)
         process_manager = ProcessManager(
@@ -82,6 +84,7 @@ class TestProcessing(BaseTest):
         assert process_id == os.getpid()
         assert final_result == 4950
 
+    @pytest.mark.skipif(len(psutil.Process().cpu_affinity()) < 2, reason="requires 2 or more cpus")
     def test_parallel_jobs_with_objects(self):
         chunk_manager = ChunkManager(4)
         process_manager = ProcessManager(

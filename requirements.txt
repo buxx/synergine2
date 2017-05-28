@@ -4,6 +4,7 @@ cocos2d==0.6.4
 coverage==4.4.1
 execnet==1.4.1
 packaging==16.8
+psutil==5.2.2
 py==1.4.31
 pyglet==1.2.4
 pymlconf==0.7.0

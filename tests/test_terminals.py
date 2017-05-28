@@ -143,10 +143,10 @@ class TestTerminals(BaseTest):
         an_other_event = AnOtherEvent(168)
         terminals_manager.send(TerminalPackage(events=[an_event, an_other_event]))
 
-        # We wait max 2s (see time.sleep) to consider
+        # We wait max 10s (see time.sleep) to consider
         # process have finished. If not, it will fail
         packages = []
-        for i in range(200):
+        for i in range(1000):
             packages.extend(terminals_manager.receive())
             if len(packages) == 1:
                 break
