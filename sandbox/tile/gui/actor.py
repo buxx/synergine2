@@ -1,0 +1,33 @@
+# coding: utf-8
+import pyglet
+
+from sandbox.tile.gui.animation import ANIMATION_WALK
+from sandbox.tile.gui.animation import ANIMATION_CRAWL
+from synergine2_cocos2d.actor import Actor
+
+
+class Man(Actor):
+    animation_image_paths = {
+        ANIMATION_WALK: [
+            'actors/man.png',
+            'actors/man_w1.png',
+            'actors/man_w2.png',
+            'actors/man_w3.png',
+            'actors/man_w4.png',
+            'actors/man_w5.png',
+            'actors/man_w6.png',
+            'actors/man_w7.png',
+            'actors/man_w8.png',
+            'actors/man_w9.png',
+            'actors/man_w10.png',
+        ],
+        ANIMATION_CRAWL: [
+            'actors/man_c1.png',
+            'actors/man_c2.png',
+            'actors/man_c3.png',
+            'actors/man_c4.png',
+        ]
+    }
+
+    def __init__(self):
+        super().__init__(pyglet.resource.image('actors/man.png'))
