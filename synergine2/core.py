@@ -18,7 +18,7 @@ class Core(BaseObject):
         simulation: Simulation,
         cycle_manager: CycleManager,
         terminal_manager: TerminalManager=None,
-        cycles_per_seconds: int=1,
+        cycles_per_seconds: float=1.0,
     ):
         self.config = config
         self.logger = logger
