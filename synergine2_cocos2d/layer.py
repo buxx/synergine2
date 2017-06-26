@@ -1,7 +1,6 @@
 # coding: utf-8
-import typing
-
 import cocos
+
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2_cocos2d.middleware import MapMiddleware
@@ -35,7 +34,7 @@ class LayerManager(object):
 
         self.background_sprite = self.middleware.get_background_sprite()
         self.ground_layer = self.middleware.get_ground_layer()
-        self.subject_layer = cocos.layer.Layer()  # TODO: RectMapLayer
+        self.subject_layer = cocos.layer.Layer()
         self.top_layer = self.middleware.get_top_layer()
 
         self.main_layer.add(self.background_sprite)
@@ -49,7 +48,7 @@ class LayerManager(object):
             0 + (self.background_sprite.height / 2),
         )
         self.ground_layer.set_view(0, 0, self.ground_layer.px_width, self.ground_layer.px_height)
-        # self.subject_layer.set_view(0, 0, self.decoration_layers[0].px_width, self.decoration_layers[0].px_height)
+        self.subject_layer.position = 0, 0
         self.top_layer.set_view(0, 0, self.top_layer.px_width, self.top_layer.px_height)
 
         self.main_scene.position = - self.ground_layer.px_width / 2, - self.ground_layer.px_height / 2
