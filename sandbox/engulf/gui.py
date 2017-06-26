@@ -6,7 +6,7 @@ from cocos.actions import MoveTo, Repeat, ScaleBy, Reverse, RotateTo
 from cocos.sprite import Sprite
 from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo as MoveToEvent, EatEvent, AttackEvent, EatenEvent
 from sandbox.engulf.subject import Cell, Grass, PreyCell, PredatorCell
-from synergine2.terminals import TerminalPackage
+from synergine2.terminals import TerminalPackage, Terminal
 from synergine2_cocos2d.gui import Gui, GridLayerMixin
 from synergine2_cocos2d.gui import MainLayer as BaseMainLayer
 
@@ -85,9 +85,10 @@ class GrassLayer(GridLayerMixin, BaseMainLayer):
 
 
 class MainLayer(GridLayerMixin, BaseMainLayer):
-    def __init__(self, game: 'Game', terminal, *args, **kwargs):
+    def __init__(self, game: 'Game', terminal: Terminal, *args, **kwargs):
         super().__init__(terminal, *args, **kwargs)
         self.game = game
+        self.terminal = terminal
 
         self.cells = CellsLayer(game=game, terminal=terminal)
         self.add(self.cells)

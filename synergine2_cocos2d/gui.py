@@ -10,6 +10,8 @@ from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
+from synergine2_cocos2d.layer import LayerManager
+from synergine2_cocos2d.middleware import TMXMiddleware
 
 
 class GridManager(object):
@@ -72,10 +74,8 @@ class GridLayerMixin(object):
 class MainLayer(ScrollableLayer):
     is_event_handler = True
 
-    def __init__(self, terminal: Terminal, scroll_step: int=100):
+    def __init__(self, scroll_step: int=100):
         super().__init__()
-
-        self.terminal = terminal
         self.scroll_step = scroll_step
         self.grid_manager = GridManager(self, 32, border=2)
 
@@ -114,18 +114,22 @@ class Gui(object):
             read_queue_interval: float= 1/60.0,
     ):
         self.config = config
-        self.logger = logger,
+        self.logger = logger
         self._read_queue_interval = read_queue_interval
         self.terminal = terminal
         self.cycle_duration = self.config.core.cycle_duration
         cocos.director.director.init()
 
     def run(self):
+        self.before_run()
         pyglet.clock.schedule_interval(
             lambda *_, **__: self.terminal.read(),
             self._read_queue_interval,
         )
         cocos.director.director.run(self.get_main_scene())
+
+    def before_run(self) -> None:
+        pass
 
     def get_main_scene(self) -> cocos.cocosnode.CocosNode:
         raise NotImplementedError()
@@ -135,3 +139,36 @@ class Gui(object):
 
     def after_received(self, package: TerminalPackage):
         pass
+
+
+class TMXGui(Gui):
+    def __init__(
+        self,
+        config: Config,
+        logger: SynergineLogger,
+        terminal: Terminal,
+        read_queue_interval: float = 1 / 60.0,
+        map_dir_path: str=None,
+    ):
+        assert map_dir_path
+        super(TMXGui, self).__init__(
+            config,
+            logger,
+            terminal,
+            read_queue_interval,
+        )
+        self.map_dir_path = map_dir_path
+        self.layer_manager = LayerManager(
+            self.config,
+            self.logger,
+            middleware=TMXMiddleware(
+                self.config,
+                self.logger,
+                self.map_dir_path,
+            ),
+        )
+        self.layer_manager.init()
+        self.layer_manager.center()
+
+    def get_main_scene(self) -> cocos.cocosnode.CocosNode:
+        return self.layer_manager.main_scene
