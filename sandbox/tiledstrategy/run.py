@@ -22,7 +22,7 @@ def main(map_dir_path: str, seed_value: int=42):
 
     config = Config()
     config.load_files(['sandbox/engulf/config.yaml'])
-    logger = get_default_logger(level=logging.DEBUG)
+    logger = get_default_logger(level=logging.ERROR)
 
     simulation = TiledStrategySimulation(config)
     subjects = TiledStrategySubjects(simulation=simulation)
