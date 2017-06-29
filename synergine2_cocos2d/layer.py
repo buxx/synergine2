@@ -7,6 +7,9 @@ from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2_cocos2d.middleware import MapMiddleware
 
+if False:
+    from synergine2_cocos2d.gui import Actor
+
 
 class LayerManager(object):
     def __init__(
@@ -89,3 +92,10 @@ class LayerManager(object):
         self.subject_layer.position = 0, 0
         self.top_layer.set_view(0, 0, self.top_layer.px_width, self.top_layer.px_height)
 
+    def add_subject(self, subject: 'Actor') -> None:
+        self.subject_layer.add(subject)
+        self.edit_layer.collman.add(subject)
+
+    def remove_subject(self, subject: 'Actor') -> None:
+        self.subject_layer.remove(subject)
+        self.edit_layer.collman.remove_tricky(subject)

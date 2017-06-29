@@ -3,11 +3,13 @@ import weakref
 
 import cocos
 import pyglet
-from pyglet.window import key as wkey, mouse
+from pyglet.window import mouse
 
-from cocos import collision_model, euclid
+from cocos import collision_model
+from cocos import euclid
 from cocos.director import director
-from cocos.layer import ScrollableLayer, Layer
+from cocos.layer import ScrollableLayer
+from cocos.layer import Layer
 from cocos.sprite import Sprite
 
 from synergine2.config import Config
@@ -16,6 +18,39 @@ from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import TMXMiddleware
+
+
+class Actor(cocos.sprite.Sprite):
+    def __init__(
+        self,
+        image,
+        position=(0, 0),
+        rotation=0,
+        scale=1,
+        opacity=255,
+        color=(255, 255, 255),
+        anchor=None,
+        **kwargs
+    ):
+        super().__init__(
+            image,
+            position,
+            rotation,
+            scale,
+            opacity,
+            color,
+            anchor,
+            **kwargs
+        )
+        self.cshape = collision_model.AARectShape(
+            euclid.Vector2(0.0, 0.0),
+            self.width,
+            self.height,
+        )
+
+    def update_position(self, new_position: euclid.Vector2) -> None:
+        self.position = new_position
+        self.cshape.center = new_position
 
 
 class GridManager(object):
@@ -75,29 +110,11 @@ class GridLayerMixin(object):
         super().__init__(*args, **kwargs)
 
 
-class ProbeQuad(cocos.cocosnode.CocosNode):
-
-    def __init__(self, r, color4):
-        super(ProbeQuad, self).__init__()
-        self.color4 = color4
-        self.vertexes = [(r, 0, 0), (0, r, 0), (-r, 0, 0), (0, -r, 0)]
-
-    def draw(self):
-        pyglet.gl.glPushMatrix()
-        self.transform()
-        pyglet.gl.glBegin(pyglet.gl.GL_QUADS)
-        pyglet.gl.glColor4ub(*self.color4)
-        for v in self.vertexes:
-            pyglet.gl.glVertex3i(*v)
-        pyglet.gl.glEnd()
-        pyglet.gl.glPopMatrix()
-
-
 class MinMaxRect(cocos.cocosnode.CocosNode):
     def __init__(self, layer_manager: LayerManager):
         super(MinMaxRect, self).__init__()
         self.layer_manager = layer_manager
-        self.color3 = (0, 0, 255)
+        self.color3 = (20, 20, 20)
         self.vertexes = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
         self.visible = False
 
@@ -106,6 +123,29 @@ class MinMaxRect(cocos.cocosnode.CocosNode):
         sminx, sminy = self.layer_manager.scrolling_manager.world_to_screen(wminx, wminy)
         smaxx, smaxy = self.layer_manager.scrolling_manager.world_to_screen(wmaxx, wmaxy)
         self.vertexes = [(sminx, sminy), (sminx, smaxy), (smaxx, smaxy), (smaxx, sminy)]
+
+    def draw(self):
+        if not self.visible:
+            return
+        pyglet.gl.glLineWidth(1)  # deprecated
+        pyglet.gl.glColor3ub(*self.color3)
+        pyglet.gl.glBegin(pyglet.gl.GL_LINE_STRIP)
+        for v in self.vertexes:
+            pyglet.gl.glVertex2f(*v)
+        pyglet.gl.glVertex2f(*self.vertexes[0])
+        pyglet.gl.glEnd()
+
+        # rectangle
+        pyglet.gl.glColor4f(0, 0, 0, 0.5)
+        pyglet.gl.glBegin(pyglet.gl.GL_QUADS)
+        pyglet.gl.glVertex3f(self.vertexes[0][0], self.vertexes[0][1], 0)
+        pyglet.gl.glVertex3f(self.vertexes[1][0], self.vertexes[1][1], 0)
+        pyglet.gl.glVertex3f(self.vertexes[2][0], self.vertexes[2][1], 0)
+        pyglet.gl.glVertex3f(self.vertexes[3][0], self.vertexes[3][1], 0)
+        pyglet.gl.glEnd()
+
+    def set_vertexes_from_minmax(self, minx, maxx, miny, maxy):
+        self.vertexes = [(minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)]
 
 
 class EditLayer(cocos.layer.Layer):
@@ -164,7 +204,6 @@ class EditLayer(cocos.layer.Layer):
         self.wdrag_start_point = (0, 0)
         self.elastic_box = None  # type: MinMaxRect
         self.elastic_box_wminmax = 0, 0, 0, 0
-        self.mouse_mark = None  # type: ProbeQuad
         self.selection = {}
         self.screen_mouse = (0, 0)
         self.world_mouse = (0, 0)
@@ -187,8 +226,6 @@ class EditLayer(cocos.layer.Layer):
             gsize,
             gsize,
         )
-        for actor in worldview.actors:
-            self.collman.add(actor)
 
         self.schedule(self.update)
 
@@ -198,9 +235,6 @@ class EditLayer(cocos.layer.Layer):
         if self.elastic_box is None:
             self.elastic_box = MinMaxRect(self.layer_manager)
             scene.add(self.elastic_box, z=10)
-        if self.mouse_mark is None:
-            self.mouse_mark = ProbeQuad(4, (0, 0, 0, 255))
-            scene.add(self.mouse_mark, z=11)
 
     def update(self, dt):
         mx = self.buttons['right'] - self.buttons['left']
@@ -296,7 +330,6 @@ class EditLayer(cocos.layer.Layer):
             self.autoscrolling = sdx != 0.0 or sdy != 0.0
             if self.autoscrolling:
                 self.autoscrolling_sdelta = (sdx / border, sdy / border)
-        self.mouse_mark.position = self.layer_manager.scrolling_manager.world_to_screen(*self.world_mouse)
 
     def update_autoscroll(self, dt):
         fraction_sdx, fraction_sdy = self.autoscrolling_sdelta
@@ -525,36 +558,10 @@ class MainLayer(ScrollableLayer):
         self.scroll_step = scroll_step
         self.grid_manager = GridManager(self, 32, border=2)
 
-        self.actors = []  # TODO type list of ? Sprite ?
         self.width = width
         self.height = height
         self.px_width = width
         self.px_height = height
-
-        # Set scene center on center of screen
-        window_size = director.get_window_size()
-        self.position = window_size[0] // 2, window_size[1] // 2
-
-    def on_key_press(self, key, modifiers):
-        if key == wkey.LEFT:
-            self.position = (self.position[0] + self.scroll_step, self.position[1])
-
-        if key == wkey.RIGHT:
-            self.position = (self.position[0] - self.scroll_step, self.position[1])
-
-        if key == wkey.UP:
-            self.position = (self.position[0], self.position[1] - self.scroll_step)
-
-        if key == wkey.DOWN:
-            self.position = (self.position[0], self.position[1] + self.scroll_step)
-
-        if key == wkey.A:
-            if self.scale >= 0.3:
-                self.scale -= 0.2
-
-        if key == wkey.Z:
-            if self.scale <= 4:
-                self.scale += 0.2
 
 
 class Gui(object):
@@ -570,12 +577,21 @@ class Gui(object):
         self._read_queue_interval = read_queue_interval
         self.terminal = terminal
         self.cycle_duration = self.config.core.cycle_duration
+
         cocos.director.director.init(
             width=640,
             height=480,
             vsync=True,
             resizable=True,
         )
+
+        # Enable blending
+        pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
+        pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
+
+        # Enable transparency
+        pyglet.gl.glEnable(pyglet.gl.GL_ALPHA_TEST)
+        pyglet.gl.glAlphaFunc(pyglet.gl.GL_GREATER, .1)
 
     def run(self):
         self.before_run()
