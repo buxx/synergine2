@@ -11,3 +11,9 @@ class Game(TMXGui):
         man = Actor('man.png')
         man.update_position(euclid.Vector2(100.0, 100.0))
         self.layer_manager.add_subject(man)
+        self.layer_manager.set_selectable(man)
+
+        man2 = Actor('man.png')
+        man2.update_position(euclid.Vector2(200.0, 200.0))
+        self.layer_manager.add_subject(man2)
+        self.layer_manager.set_selectable(man2)

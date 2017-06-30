@@ -94,8 +94,12 @@ class LayerManager(object):
 
     def add_subject(self, subject: 'Actor') -> None:
         self.subject_layer.add(subject)
-        self.edit_layer.collman.add(subject)
 
     def remove_subject(self, subject: 'Actor') -> None:
         self.subject_layer.remove(subject)
-        self.edit_layer.collman.remove_tricky(subject)
+
+    def set_selectable(self, subject: 'Actor') -> None:
+        self.edit_layer.collision_manager.add(subject)
+
+    def unset_selectable(self, subject: 'Actor') -> None:
+        self.edit_layer.collision_manager.remove_tricky(subject)

@@ -218,7 +218,7 @@ class EditLayer(cocos.layer.Layer):
         # TODO: Hardcoded here, should be obtained from level properties or calc
         # from available actors or current actors in worldview
         gsize = 32 * 1.25
-        self.collman = collision_model.CollisionManagerGrid(
+        self.collision_manager = collision_model.CollisionManagerGrid(
             -gsize,
             self.wwidth + gsize,
             -gsize,
@@ -429,7 +429,7 @@ class EditLayer(cocos.layer.Layer):
         del self.selection[actor]
 
     def end_drag_selection(self, wx, wy, modify_selection):
-        new_selection = self.collman.objs_into_box(*self.elastic_box_wminmax)
+        new_selection = self.collision_manager.objs_into_box(*self.elastic_box_wminmax)
         if not modify_selection:
             # new_selected becomes the current selected
             self.selection.clear()
@@ -512,7 +512,7 @@ class EditLayer(cocos.layer.Layer):
         self.drag_moving = False
 
     def single_actor_from_mouse(self):
-        under_mouse = self.collman.objs_touching_point(*self.world_mouse)
+        under_mouse = self.collision_manager.objs_touching_point(*self.world_mouse)
         if len(under_mouse) == 0:
             return None
         # return the one with the center most near to mouse, if tie then
@@ -533,10 +533,10 @@ class EditLayer(cocos.layer.Layer):
         self.selection_in_collman = bool_value
         if bool_value:
             for actor in self.selection:
-                self.collman.add(actor)
+                self.collision_manager.add(actor)
         else:
             for actor in self.selection:
-                self.collman.remove_tricky(actor)
+                self.collision_manager.remove_tricky(actor)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         # TODO: check if mouse over scroller viewport?
