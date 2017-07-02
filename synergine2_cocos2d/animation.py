@@ -20,6 +20,7 @@ class AnimatedInterface(object):
         raise NotImplementedError()
 
 
+# TODO: regarder pyglet.image.Animation
 class Animate(cocos.actions.IntervalAction):
     def __init__(
         self,

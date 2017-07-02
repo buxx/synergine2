@@ -64,3 +64,4 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
 
     def update_image(self, new_image: pyglet.image.TextureRegion):
         self.image = new_image
+        self.image_anchor = new_image.width // 2, new_image.height // 2

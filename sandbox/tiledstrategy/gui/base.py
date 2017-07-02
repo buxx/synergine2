@@ -2,6 +2,7 @@
 import random
 
 from sandbox.tiledstrategy.gui.animation import ANIMATION_WALK
+from sandbox.tiledstrategy.gui.animation import ANIMATION_CRAWL
 from synergine2_cocos2d.animation import Animate
 from synergine2_cocos2d.gui import TMXGui
 
@@ -21,4 +22,8 @@ class Game(TMXGui):
             self.layer_manager.set_selectable(man)
             man.scale = 1
 
-            man.do(Animate(ANIMATION_WALK, 10, 4))
+            if x % 2:
+                man.do(Animate(ANIMATION_WALK, 10, 4))
+            else:
+                # TODO: Problème de zone selectable, elle reste a la taille de image debout.
+                man.do(Animate(ANIMATION_CRAWL, 20, 4))

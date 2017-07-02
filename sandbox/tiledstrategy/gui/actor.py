@@ -1,9 +1,8 @@
 # coding: utf-8
-import typing
-
 import pyglet
 
 from sandbox.tiledstrategy.gui.animation import ANIMATION_WALK
+from sandbox.tiledstrategy.gui.animation import ANIMATION_CRAWL
 from synergine2_cocos2d.actor import Actor
 
 
@@ -21,6 +20,12 @@ class Man(Actor):
             'actors/man_w8.png',
             'actors/man_w9.png',
             'actors/man_w10.png',
+        ],
+        ANIMATION_CRAWL: [
+            'actors/man_c1.png',
+            'actors/man_c2.png',
+            'actors/man_c3.png',
+            'actors/man_c4.png',
         ]
     }
 
