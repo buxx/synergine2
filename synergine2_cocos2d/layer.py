@@ -8,7 +8,7 @@ from synergine2.log import SynergineLogger
 from synergine2_cocos2d.middleware import MapMiddleware
 
 if False:
-    from synergine2_cocos2d.gui import Actor
+    from synergine2_cocos2d.actor import Actor
 
 
 class LayerManager(object):
@@ -49,6 +49,8 @@ class LayerManager(object):
             }
         )
         self.edit_layer = EditLayer(
+            self.config,
+            self.logger,
             self,
             self.main_layer,
             **{

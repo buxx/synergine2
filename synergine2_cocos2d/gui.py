@@ -1,56 +1,22 @@
 # coding: utf-8
 import weakref
 
-import cocos
 import pyglet
 from pyglet.window import mouse
 
+import cocos
 from cocos import collision_model
 from cocos import euclid
 from cocos.director import director
-from cocos.layer import ScrollableLayer
 from cocos.layer import Layer
+from cocos.layer import ScrollableLayer
 from cocos.sprite import Sprite
-
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import TMXMiddleware
-
-
-class Actor(cocos.sprite.Sprite):
-    def __init__(
-        self,
-        image,
-        position=(0, 0),
-        rotation=0,
-        scale=1,
-        opacity=255,
-        color=(255, 255, 255),
-        anchor=None,
-        **kwargs
-    ):
-        super().__init__(
-            image,
-            position,
-            rotation,
-            scale,
-            opacity,
-            color,
-            anchor,
-            **kwargs
-        )
-        self.cshape = collision_model.AARectShape(
-            euclid.Vector2(0.0, 0.0),
-            self.width,
-            self.height,
-        )
-
-    def update_position(self, new_position: euclid.Vector2) -> None:
-        self.position = new_position
-        self.cshape.center = new_position
 
 
 class GridManager(object):
@@ -153,6 +119,8 @@ class EditLayer(cocos.layer.Layer):
 
     def __init__(
         self,
+        config: Config,
+        logger: SynergineLogger,
         layer_manager: LayerManager,
         worldview,
         bindings=None,
@@ -168,7 +136,10 @@ class EditLayer(cocos.layer.Layer):
     ):
         super(EditLayer, self).__init__()
 
+        self.config = config
+        self.logger = logger
         self.layer_manager = layer_manager
+
         self.bindings = bindings
         buttons = {}
         modifiers = {}
@@ -389,7 +360,9 @@ class EditLayer(cocos.layer.Layer):
         self.autoscrolling = False
 
     def on_mouse_press(self, x, y, buttons, modifiers):
-        pass
+        if self.logger.is_debug:
+            rx, ry = self.layer_manager.scrolling_manager.screen_to_world(x, y)
+            self.logger.debug('GUI click: x: {}, y: {}, rx: {}, ry: {}'.format(x, y, rx, ry))
 
     def on_mouse_release(self, sx, sy, button, modifiers):
         # should we handle here mod_restricted_mov ?
