@@ -39,6 +39,7 @@ class Animate(cocos.actions.IntervalAction):
         self.current_step = 0  # typ: int
         self.target = typing.cast(AnimatedInterface, self.target)
         self.direction = direction
+        self.reshape = False
 
     def __reversed__(self):
         return self.__class__(
@@ -48,10 +49,19 @@ class Animate(cocos.actions.IntervalAction):
             self.direction * -1,
         )
 
+    def set_need_to_reshape(self) -> None:
+        # TODO: Maybe inanimate_image is not the more appropriate image to refer ?
+        inanimate_image = self.target.get_inanimate_image()
+        for position, animation_image in enumerate(self.animation_images):
+            if animation_image.width != inanimate_image.width or animation_image.height != inanimate_image.height:
+                self.reshape = True
+                return
+
     def start(self):
         super().start()
         self.animation_images = self.target.get_images_for_animation(self.animation_name)
         self.step_interval = self.cycle_duration / len(self.animation_images)
+        self.set_need_to_reshape()
 
     def stop(self):
         self.target.update_image(self.target.get_inanimate_image())
@@ -70,6 +80,9 @@ class Animate(cocos.actions.IntervalAction):
 
         self.target.update_image(new_image)
         self.last_step_elapsed = self._elapsed
+
+        if self.reshape:
+            self.target.need_update_cshape = True
 
     def is_time_for_new_image(self) -> bool:
         return self._elapsed - self.last_step_elapsed >= self.step_interval

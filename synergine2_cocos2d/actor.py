@@ -7,6 +7,7 @@ import cocos
 from cocos import collision_model
 from cocos import euclid
 from synergine2_cocos2d.animation import AnimatedInterface
+from synergine2_cocos2d.layer import LayerManager
 
 
 class Actor(AnimatedInterface, cocos.sprite.Sprite):
@@ -34,13 +35,18 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
             anchor,
             **kwargs
         )
-        self.cshape = collision_model.AARectShape(
-            euclid.Vector2(0.0, 0.0),
-            self.width,
-            self.height,
-        )
+        self.cshape = None  # type: collision_model.AARectShape
+        self.update_cshape()
         self.build_animation_images()
         self.current_image = image
+        self.need_update_cshape = False
+
+    def update_cshape(self) -> None:
+        self.cshape = collision_model.AARectShape(
+            euclid.Vector2(self.position[0], self.position[1]),
+            self.width // 2,
+            self.height // 2,
+        )
 
     def update_position(self, new_position: euclid.Vector2) -> None:
         self.position = new_position

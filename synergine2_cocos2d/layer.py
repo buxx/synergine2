@@ -101,7 +101,7 @@ class LayerManager(object):
         self.subject_layer.remove(subject)
 
     def set_selectable(self, subject: 'Actor') -> None:
-        self.edit_layer.collision_manager.add(subject)
+        self.edit_layer.set_selectable(subject)
 
     def unset_selectable(self, subject: 'Actor') -> None:
-        self.edit_layer.collision_manager.remove_tricky(subject)
+        self.edit_layer.unset_selectable(subject)

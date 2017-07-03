@@ -25,5 +25,4 @@ class Game(TMXGui):
             if x % 2:
                 man.do(Animate(ANIMATION_WALK, 10, 4))
             else:
-                # TODO: Problème de zone selectable, elle reste a la taille de image debout.
                 man.do(Animate(ANIMATION_CRAWL, 20, 4))

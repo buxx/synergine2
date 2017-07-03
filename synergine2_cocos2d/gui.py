@@ -15,6 +15,7 @@ from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
+from synergine2_cocos2d.actor import Actor
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import TMXMiddleware
 
@@ -199,6 +200,24 @@ class EditLayer(cocos.layer.Layer):
         )
 
         self.schedule(self.update)
+        self.selectable_actors = []
+
+    def set_selectable(self, actor: Actor) -> None:
+        self.selectable_actors.append(actor)
+        self.collision_manager.add(actor)
+
+    def unset_selectable(self, actor: Actor) -> None:
+        self.selectable_actors.remove(actor)
+        self.collision_manager.remove_tricky(actor)
+
+    def draw(self, *args, **kwargs) -> None:
+        for actor in self.selectable_actors:
+            if actor.need_update_cshape:
+                if self.collision_manager.knows(actor):
+                    self.collision_manager.remove_tricky(actor)
+                    actor.update_cshape()
+                    self.collision_manager.add(actor)
+                    actor.need_update_cshape = False
 
     def on_enter(self):
         super(EditLayer, self).on_enter()
