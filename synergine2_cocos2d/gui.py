@@ -109,7 +109,8 @@ class GridManager(object):
         return cell_x, cell_y
 
     def get_pixel_position_of_grid_position(self, grid_position: typing.Tuple[int, int]) -> typing.Tuple[int, int]:
-        return grid_position[0] * self.cell_width, grid_position[1] * self.cell_height
+        return grid_position[0] * self.cell_width + self.cell_width,\
+               grid_position[1] * self.cell_height + self.cell_height
 
 
 class MinMaxRect(cocos.cocosnode.CocosNode):
