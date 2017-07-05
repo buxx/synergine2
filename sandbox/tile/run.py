@@ -8,10 +8,10 @@ from random import seed
 synergine2_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_path)
 
-from sandbox.tiledstrategy.simulation.base import TiledStrategySimulation, TiledStrategySubjects
+from sandbox.tile.simulation.base import TiledStrategySimulation, TiledStrategySubjects
 from synergine2.log import get_default_logger
 from synergine2.config import Config
-from sandbox.tiledstrategy.terminal.base import CocosTerminal
+from sandbox.tile.terminal.base import CocosTerminal
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
 from synergine2.terminals import TerminalManager

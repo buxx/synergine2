@@ -15,7 +15,7 @@ class CocosTerminal(Terminal):
         self.map_dir_path = map_dir_path
 
     def run(self):
-        from sandbox.tiledstrategy.gui.base import Game
+        from sandbox.tile.gui.base import Game
         self.gui = Game(
             self.config,
             self.logger,

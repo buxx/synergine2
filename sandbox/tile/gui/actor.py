@@ -1,8 +1,8 @@
 # coding: utf-8
 import pyglet
 
-from sandbox.tiledstrategy.gui.animation import ANIMATION_WALK
-from sandbox.tiledstrategy.gui.animation import ANIMATION_CRAWL
+from sandbox.tile.gui.animation import ANIMATION_WALK
+from sandbox.tile.gui.animation import ANIMATION_CRAWL
 from synergine2_cocos2d.actor import Actor
 
 
