@@ -40,7 +40,6 @@ class LayerManager(object):
         from synergine2_cocos2d.gui import EditLayer
         from synergine2_cocos2d.gui import GridManager
 
-        # TODO: Values from tmx map
         self.middleware.init()
 
         self.grid_manager = GridManager(
