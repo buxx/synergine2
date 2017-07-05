@@ -41,13 +41,14 @@ class LayerManager(object):
         from synergine2_cocos2d.gui import GridManager
 
         # TODO: Values from tmx map
-        self.grid_manager = GridManager(
-            8,
-            8,
-            100,
-            100,
-        )
         self.middleware.init()
+
+        self.grid_manager = GridManager(
+            self.middleware.get_cell_width(),
+            self.middleware.get_cell_height(),
+            self.middleware.get_world_width(),
+            self.middleware.get_world_height(),
+        )
 
         self.main_scene = cocos.scene.Scene()
         self.scrolling_manager = cocos.layer.ScrollingManager()

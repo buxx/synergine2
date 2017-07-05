@@ -33,6 +33,18 @@ class MapMiddleware(object):
     def get_top_layer(self) -> cocos.tiles.RectMapLayer:
         raise NotImplementedError()
 
+    def get_world_height(self) -> int:
+        raise NotImplementedError()
+
+    def get_world_width(self) -> int:
+        raise NotImplementedError()
+
+    def get_cell_height(self) -> int:
+        raise NotImplementedError()
+
+    def get_cell_width(self) -> int:
+        raise NotImplementedError()
+
 
 class TMXMiddleware(MapMiddleware):
     def get_background_sprite(self) -> cocos.sprite.Sprite:
@@ -48,3 +60,15 @@ class TMXMiddleware(MapMiddleware):
     def get_top_layer(self) -> cocos.tiles.RectMapLayer:
         assert self.tmx
         return self.tmx['top']
+
+    def get_world_height(self) -> int:
+        return len(self.tmx['ground'].cells[0])
+
+    def get_world_width(self) -> int:
+        return len(self.tmx['ground'].cells)
+
+    def get_cell_height(self) -> int:
+        return self.tmx['ground'].cells[0][0].size[1]
+
+    def get_cell_width(self) -> int:
+        return self.tmx['ground'].cells[0][0].size[0]
