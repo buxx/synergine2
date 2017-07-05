@@ -7,7 +7,6 @@ import cocos
 from cocos import collision_model
 from cocos import euclid
 from synergine2_cocos2d.animation import AnimatedInterface
-from synergine2_cocos2d.layer import LayerManager
 
 
 class Actor(AnimatedInterface, cocos.sprite.Sprite):
@@ -47,10 +46,11 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
             self.width // 2,
             self.height // 2,
         )
+        self.need_update_cshape = False
 
     def update_position(self, new_position: euclid.Vector2) -> None:
         self.position = new_position
-        self.cshape.center = new_position
+        self.cshape.center = new_position  # Note: if remove: strange behaviour: drag change actor position with anomaly
 
     def build_animation_images(self) -> None:
         """

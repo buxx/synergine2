@@ -1,5 +1,7 @@
 # coding: utf-8
+import typing
 import weakref
+from math import floor
 
 import pyglet
 from pyglet.window import mouse
@@ -16,65 +18,98 @@ from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.actor import Actor
+from synergine2_cocos2d.exception import OuterWorldPosition
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import TMXMiddleware
+
+
+# class GridManager(object):
+#     def __init__(
+#         self,
+#         layer: Layer,
+#         square_width: int,
+#         border: int=0,
+#     ):
+#         self.layer = layer
+#         self.square_width = square_width
+#         self.border = border
+#
+#     @property
+#     def final_width(self):
+#         return self.square_width + self.border
+#
+#     def scale_sprite(self, sprite: Sprite):
+#         sprite.scale_x = self.final_width / sprite.image.width
+#         sprite.scale_y = self.final_width / sprite.image.height
+#
+#     def position_sprite(self, sprite: Sprite, grid_position):
+#         grid_x = grid_position[0]
+#         grid_y = grid_position[1]
+#         sprite.position = grid_x * self.final_width, grid_y * self.final_width
+#
+#     def get_window_position(self, grid_position_x, grid_position_y):
+#         grid_x = grid_position_x
+#         grid_y = grid_position_y
+#         return grid_x * self.final_width, grid_y * self.final_width
+#
+#     def get_grid_position(self, window_x, window_y, z=0) -> tuple:
+#         window_size = director.get_window_size()
+#
+#         window_center_x = window_size[0] // 2
+#         window_center_y = window_size[1] // 2
+#
+#         window_relative_x = window_x - window_center_x
+#         window_relative_y = window_y - window_center_y
+#
+#         real_width = self.final_width * self.layer.scale
+#
+#         return int(window_relative_x // real_width),\
+#                int(window_relative_y // real_width),\
+#                z
+#
+#
+# class GridLayerMixin(object):
+#     def __init__(self, *args, **kwargs):
+#         square_width = kwargs.pop('square_width', 32)
+#         square_border = kwargs.pop('square_border', 2)
+#         self.grid_manager = GridManager(
+#             self,
+#             square_width=square_width,
+#             border=square_border,
+#         )
+#         super().__init__(*args, **kwargs)
 
 
 class GridManager(object):
     def __init__(
         self,
-        layer: Layer,
-        square_width: int,
-        border: int=0,
-    ):
-        self.layer = layer
-        self.square_width = square_width
-        self.border = border
+        cell_width: int,
+        cell_height: int,
+        world_width: int,
+        world_height: int,
+    ) -> None:
+        self.cell_width = cell_width
+        self.cell_height = cell_height
+        self.world_width = world_width
+        self.world_height = world_height
 
-    @property
-    def final_width(self):
-        return self.square_width + self.border
+    def get_grid_position(self, pixel_position: typing.Tuple[int, int]) -> typing.Tuple[int, int]:
+        pixel_x, pixel_y = pixel_position
 
-    def scale_sprite(self, sprite: Sprite):
-        sprite.scale_x = self.final_width / sprite.image.width
-        sprite.scale_y = self.final_width / sprite.image.height
+        cell_x = int(floor(pixel_x / self.cell_width))
+        cell_y = int(floor(pixel_y / self.cell_height))
 
-    def position_sprite(self, sprite: Sprite, grid_position):
-        grid_x = grid_position[0]
-        grid_y = grid_position[1]
-        sprite.position = grid_x * self.final_width, grid_y * self.final_width
+        if cell_x > self.world_width or cell_y > self.world_height or cell_x < 0 or cell_y < 0:
+            raise OuterWorldPosition('Position "{}" is outer world ({}x{})'.format(
+                (cell_x, cell_y),
+                self.world_width,
+                self.world_height,
+            ))
 
-    def get_window_position(self, grid_position_x, grid_position_y):
-        grid_x = grid_position_x
-        grid_y = grid_position_y
-        return grid_x * self.final_width, grid_y * self.final_width
+        return cell_x, cell_y
 
-    def get_grid_position(self, window_x, window_y, z=0) -> tuple:
-        window_size = director.get_window_size()
-
-        window_center_x = window_size[0] // 2
-        window_center_y = window_size[1] // 2
-
-        window_relative_x = window_x - window_center_x
-        window_relative_y = window_y - window_center_y
-
-        real_width = self.final_width * self.layer.scale
-
-        return int(window_relative_x // real_width),\
-               int(window_relative_y // real_width),\
-               z
-
-
-class GridLayerMixin(object):
-    def __init__(self, *args, **kwargs):
-        square_width = kwargs.pop('square_width', 32)
-        square_border = kwargs.pop('square_border', 2)
-        self.grid_manager = GridManager(
-            self,
-            square_width=square_width,
-            border=square_border,
-        )
-        super().__init__(*args, **kwargs)
+    def get_pixel_position_of_grid_position(self, grid_position: typing.Tuple[int, int]) -> typing.Tuple[int, int]:
+        return grid_position[0] * self.cell_width, grid_position[1] * self.cell_height
 
 
 class MinMaxRect(cocos.cocosnode.CocosNode):
@@ -123,6 +158,7 @@ class EditLayer(cocos.layer.Layer):
         config: Config,
         logger: SynergineLogger,
         layer_manager: LayerManager,
+        grid_manager: GridManager,
         worldview,
         bindings=None,
         fastness=None,
@@ -135,11 +171,13 @@ class EditLayer(cocos.layer.Layer):
         mod_modify_selection=None,
         mod_restricted_mov=None,
     ):
+        # TODO: Clean init params
         super(EditLayer, self).__init__()
 
         self.config = config
         self.logger = logger
         self.layer_manager = layer_manager
+        self.grid_manager = grid_manager
 
         self.bindings = bindings
         buttons = {}
@@ -217,7 +255,6 @@ class EditLayer(cocos.layer.Layer):
                     self.collision_manager.remove_tricky(actor)
                     actor.update_cshape()
                     self.collision_manager.add(actor)
-                    actor.need_update_cshape = False
 
     def on_enter(self):
         super(EditLayer, self).on_enter()
@@ -265,8 +302,10 @@ class EditLayer(cocos.layer.Layer):
             for actor in self.selection:
                 old_pos = self.selection[actor].center
                 new_pos = old_pos + dpos
+                grid_pos = self.grid_manager.get_grid_position(new_pos)
+                grid_pixel_pos = self.grid_manager.get_pixel_position_of_grid_position(grid_pos)
                 # TODO: clamp new_pos so actor into world boundaries ?
-                actor.update_position(new_pos)
+                actor.update_position(grid_pixel_pos)
 
         scroller = self.weak_scroller()
 
@@ -541,6 +580,7 @@ class MainLayer(ScrollableLayer):
     def __init__(
         self,
         layer_manager: LayerManager,
+        grid_manager: GridManager,
         width: int,
         height: int,
         scroll_step: int=100,
@@ -548,7 +588,7 @@ class MainLayer(ScrollableLayer):
         super().__init__()
         self.layer_manager = layer_manager
         self.scroll_step = scroll_step
-        self.grid_manager = GridManager(self, 32, border=2)
+        self.grid_manager = grid_manager
 
         self.width = width
         self.height = height

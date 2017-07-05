@@ -9,6 +9,7 @@ from synergine2_cocos2d.middleware import MapMiddleware
 
 if False:
     from synergine2_cocos2d.actor import Actor
+    from synergine2_cocos2d.gui import GridManager
 
 
 class LayerManager(object):
@@ -22,6 +23,7 @@ class LayerManager(object):
         self.logger = logger
         self.middleware = middleware
 
+        self.grid_manager = None  # type: GridManager
         self.scrolling_manager = None  # type: cocos.layer.ScrollingManager
         self.main_scene = None  # type: cocos.scene.Scene
         self.main_layer = None  # type: cocos.layer.Layer
@@ -33,9 +35,18 @@ class LayerManager(object):
         self.top_layer = None  # type: cocos.tiles.RectMapLayer
 
     def init(self) -> None:
+        # TODO: cyclic import
         from synergine2_cocos2d.gui import MainLayer
         from synergine2_cocos2d.gui import EditLayer
+        from synergine2_cocos2d.gui import GridManager
 
+        # TODO: Values from tmx map
+        self.grid_manager = GridManager(
+            8,
+            8,
+            100,
+            100,
+        )
         self.middleware.init()
 
         self.main_scene = cocos.scene.Scene()
@@ -43,6 +54,7 @@ class LayerManager(object):
 
         self.main_layer = MainLayer(
             self,
+            self.grid_manager,
             **{
                 'width': 1200,  # Note: world size
                 'height': 1000,  # Note: world size
@@ -52,6 +64,7 @@ class LayerManager(object):
             self.config,
             self.logger,
             self,
+            self.grid_manager,
             self.main_layer,
             **{
                 'bindings': {
