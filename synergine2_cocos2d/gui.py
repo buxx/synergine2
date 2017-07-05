@@ -303,10 +303,14 @@ class EditLayer(cocos.layer.Layer):
             for actor in self.selection:
                 old_pos = self.selection[actor].center
                 new_pos = old_pos + dpos
-                grid_pos = self.grid_manager.get_grid_position(new_pos)
-                grid_pixel_pos = self.grid_manager.get_pixel_position_of_grid_position(grid_pos)
-                # TODO: clamp new_pos so actor into world boundaries ?
-                actor.update_position(grid_pixel_pos)
+
+                try:
+                    grid_pos = self.grid_manager.get_grid_position(new_pos)
+                    grid_pixel_pos = self.grid_manager.get_pixel_position_of_grid_position(grid_pos)
+                    actor.update_position(grid_pixel_pos)
+                except OuterWorldPosition:
+                    # don't update position
+                    pass
 
         scroller = self.weak_scroller()
 
