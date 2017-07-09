@@ -15,8 +15,10 @@ from cocos.layer import ScrollableLayer
 from cocos.sprite import Sprite
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
+from synergine2.simulation import Subject
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
+from synergine2.xyz import XYZSubjectMixin
 from synergine2_cocos2d.actor import Actor
 from synergine2_cocos2d.exception import OuterWorldPosition
 from synergine2_cocos2d.layer import LayerManager
@@ -601,6 +603,47 @@ class MainLayer(ScrollableLayer):
         self.px_height = height
 
 
+class SubjectMapper(object):
+    def __init__(
+        self,
+        actor_class: typing.Type[Actor],
+    ) -> None:
+        self.actor_class = actor_class
+
+    def append(
+        self,
+        subject: XYZSubjectMixin,
+        layer_manager: LayerManager,
+    ) -> None:
+        actor = self.actor_class()
+        pixel_position = layer_manager.grid_manager.get_pixel_position_of_grid_position((
+            subject.position[0],
+            subject.position[1],
+        ))
+        actor.update_position(euclid.Vector2(*pixel_position))
+
+        # TODO: Selectable nature must be configurable
+        layer_manager.add_subject(actor)
+        layer_manager.set_selectable(actor)
+
+
+class SubjectMapperFactory(object):
+    def __init__(self) -> None:
+        self.mapping = {}  # type: typing.Dict[typing.Type[XYZSubjectMixin], SubjectMapper]
+
+    def register_mapper(self, subject_class: typing.Type[XYZSubjectMixin], mapper: SubjectMapper) -> None:
+        if subject_class not in self.mapping:
+            self.mapping[subject_class] = mapper
+        else:
+            raise ValueError('subject_class already register with "{}"'.format(str(self.mapping[subject_class])))
+
+    def get_subject_mapper(self, subject: XYZSubjectMixin) -> SubjectMapper:
+        for subject_class, mapper in self.mapping.items():
+            if isinstance(subject, subject_class):
+                return mapper
+        raise KeyError('No mapper for subject "{}"'.format(str(subject)))
+
+
 class Gui(object):
     def __init__(
             self,
@@ -629,6 +672,8 @@ class Gui(object):
         # Enable transparency
         pyglet.gl.glEnable(pyglet.gl.GL_ALPHA_TEST)
         pyglet.gl.glAlphaFunc(pyglet.gl.GL_GREATER, .1)
+
+        self.subject_mapper_factory = SubjectMapperFactory()
 
     def run(self):
         self.before_run()
@@ -682,3 +727,13 @@ class TMXGui(Gui):
 
     def get_main_scene(self) -> cocos.cocosnode.CocosNode:
         return self.layer_manager.main_scene
+
+    def before_received(self, package: TerminalPackage):
+        super().before_received(package)
+        if package.subjects:  # They are new subjects in the simulation
+            for subject in package.subjects:
+                self.append_subject(subject)
+
+    def append_subject(self, subject: XYZSubjectMixin) -> None:
+        subject_mapper = self.subject_mapper_factory.get_subject_mapper(subject)
+        subject_mapper.append(subject, self.layer_manager)

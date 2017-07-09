@@ -5,10 +5,13 @@ import sys
 import logging
 from random import seed
 
+from sandbox.tile.simulation.subject import Man
+
 synergine2_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_path)
 
-from sandbox.tile.simulation.base import TiledStrategySimulation, TiledStrategySubjects
+from sandbox.tile.simulation.base import TileStrategySimulation
+from sandbox.tile.simulation.base import TileStrategySubjects
 from synergine2.log import get_default_logger
 from synergine2.config import Config
 from sandbox.tile.terminal.base import CocosTerminal
@@ -24,9 +27,17 @@ def main(map_dir_path: str, seed_value: int=42):
     config.load_files(['sandbox/engulf/config.yaml'])
     logger = get_default_logger(level=logging.ERROR)
 
-    simulation = TiledStrategySimulation(config)
-    subjects = TiledStrategySubjects(simulation=simulation)
-    # TODO: Create subjects
+    simulation = TileStrategySimulation(config)
+    subjects = TileStrategySubjects(simulation=simulation)
+
+    man = Man(
+        config=config,
+        simulation=simulation,
+        position=(0, 0),
+    )
+    man.position = 0, 0
+    subjects.append(man)
+
     simulation.subjects = subjects
 
     core = Core(
@@ -53,7 +64,7 @@ def main(map_dir_path: str, seed_value: int=42):
     core.run()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run TiledStrategy')
+    parser = argparse.ArgumentParser(description='Run TileStrategy')
     parser.add_argument('map_dir_path', help='map directory path')
     parser.add_argument('--seed', dest='seed', default=42)
 
