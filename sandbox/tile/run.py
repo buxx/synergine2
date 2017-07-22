@@ -30,13 +30,13 @@ def main(map_dir_path: str, seed_value: int=42):
     simulation = TileStrategySimulation(config)
     subjects = TileStrategySubjects(simulation=simulation)
 
-    man = Man(
-        config=config,
-        simulation=simulation,
-        position=(0, 0),
-    )
-    man.position = 0, 0
-    subjects.append(man)
+    for position in ((0, 0), (5, 3), (10, 6)):
+        man = Man(
+            config=config,
+            simulation=simulation,
+            position=position,
+        )
+        subjects.append(man)
 
     simulation.subjects = subjects
 
