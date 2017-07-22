@@ -9,77 +9,18 @@ from pyglet.window import mouse
 import cocos
 from cocos import collision_model
 from cocos import euclid
-from cocos.director import director
-from cocos.layer import Layer
 from cocos.layer import ScrollableLayer
-from cocos.sprite import Sprite
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
-from synergine2.simulation import Subject
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2.xyz import XYZSubjectMixin
 from synergine2_cocos2d.actor import Actor
 from synergine2_cocos2d.exception import OuterWorldPosition
+from synergine2_cocos2d.gl import rectangle_positions_type
+from synergine2_cocos2d.gl import draw_rectangle
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import TMXMiddleware
-
-
-# class GridManager(object):
-#     def __init__(
-#         self,
-#         layer: Layer,
-#         square_width: int,
-#         border: int=0,
-#     ):
-#         self.layer = layer
-#         self.square_width = square_width
-#         self.border = border
-#
-#     @property
-#     def final_width(self):
-#         return self.square_width + self.border
-#
-#     def scale_sprite(self, sprite: Sprite):
-#         sprite.scale_x = self.final_width / sprite.image.width
-#         sprite.scale_y = self.final_width / sprite.image.height
-#
-#     def position_sprite(self, sprite: Sprite, grid_position):
-#         grid_x = grid_position[0]
-#         grid_y = grid_position[1]
-#         sprite.position = grid_x * self.final_width, grid_y * self.final_width
-#
-#     def get_window_position(self, grid_position_x, grid_position_y):
-#         grid_x = grid_position_x
-#         grid_y = grid_position_y
-#         return grid_x * self.final_width, grid_y * self.final_width
-#
-#     def get_grid_position(self, window_x, window_y, z=0) -> tuple:
-#         window_size = director.get_window_size()
-#
-#         window_center_x = window_size[0] // 2
-#         window_center_y = window_size[1] // 2
-#
-#         window_relative_x = window_x - window_center_x
-#         window_relative_y = window_y - window_center_y
-#
-#         real_width = self.final_width * self.layer.scale
-#
-#         return int(window_relative_x // real_width),\
-#                int(window_relative_y // real_width),\
-#                z
-#
-#
-# class GridLayerMixin(object):
-#     def __init__(self, *args, **kwargs):
-#         square_width = kwargs.pop('square_width', 32)
-#         square_border = kwargs.pop('square_border', 2)
-#         self.grid_manager = GridManager(
-#             self,
-#             square_width=square_width,
-#             border=square_border,
-#         )
-#         super().__init__(*args, **kwargs)
 
 
 class GridManager(object):
@@ -111,8 +52,28 @@ class GridManager(object):
         return cell_x, cell_y
 
     def get_pixel_position_of_grid_position(self, grid_position: typing.Tuple[int, int]) -> typing.Tuple[int, int]:
-        return grid_position[0] * self.cell_width + self.cell_width,\
-               grid_position[1] * self.cell_height + self.cell_height
+        return grid_position[0] * self.cell_width + (self.cell_width // 2),\
+               grid_position[1] * self.cell_height + (self.cell_height // 2)
+
+    def get_rectangle_positions(
+        self,
+        grid_position: typing.Tuple[int, int],
+    ) -> rectangle_positions_type:
+        """
+        A<---D
+        |    |
+        B--->C
+        :param grid_position:grid position to exploit
+        :return: grid pixel corners positions
+        """
+        grid_x, grid_y = grid_position
+
+        a = grid_x * self.cell_width, grid_y * self.cell_height + self.cell_height
+        b = grid_x * self.cell_width, grid_y * self.cell_height
+        c = grid_x * self.cell_width + self.cell_width, grid_y * self.cell_height
+        d = grid_x * self.cell_width + self.cell_width, grid_y * self.cell_height + self.cell_height
+
+        return a, d, c, b
 
 
 class MinMaxRect(cocos.cocosnode.CocosNode):
@@ -120,6 +81,7 @@ class MinMaxRect(cocos.cocosnode.CocosNode):
         super(MinMaxRect, self).__init__()
         self.layer_manager = layer_manager
         self.color3 = (20, 20, 20)
+        self.color3f = (0, 0, 0, 0.2)
         self.vertexes = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
         self.visible = False
 
@@ -132,22 +94,12 @@ class MinMaxRect(cocos.cocosnode.CocosNode):
     def draw(self):
         if not self.visible:
             return
-        pyglet.gl.glLineWidth(1)  # deprecated
-        pyglet.gl.glColor3ub(*self.color3)
-        pyglet.gl.glBegin(pyglet.gl.GL_LINE_STRIP)
-        for v in self.vertexes:
-            pyglet.gl.glVertex2f(*v)
-        pyglet.gl.glVertex2f(*self.vertexes[0])
-        pyglet.gl.glEnd()
 
-        # rectangle
-        pyglet.gl.glColor4f(0, 0, 0, 0.5)
-        pyglet.gl.glBegin(pyglet.gl.GL_QUADS)
-        pyglet.gl.glVertex3f(self.vertexes[0][0], self.vertexes[0][1], 0)
-        pyglet.gl.glVertex3f(self.vertexes[1][0], self.vertexes[1][1], 0)
-        pyglet.gl.glVertex3f(self.vertexes[2][0], self.vertexes[2][1], 0)
-        pyglet.gl.glVertex3f(self.vertexes[3][0], self.vertexes[3][1], 0)
-        pyglet.gl.glEnd()
+        draw_rectangle(
+            self.vertexes,
+            self.color3,
+            self.color3f,
+        )
 
     def set_vertexes_from_minmax(self, minx, maxx, miny, maxy):
         self.vertexes = [(minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)]
@@ -258,6 +210,15 @@ class EditLayer(cocos.layer.Layer):
                     self.collision_manager.remove_tricky(actor)
                     actor.update_cshape()
                     self.collision_manager.add(actor)
+
+        for actor, cshape in self.selection.items():
+            grid_position = self.grid_manager.get_grid_position(actor.position)
+            rect_positions = self.grid_manager.get_rectangle_positions(grid_position)
+
+            draw_rectangle(
+                self.layer_manager.scrolling_manager.world_to_screen_positions(rect_positions),
+                (0, 81, 211),
+            )
 
     def on_enter(self):
         super(EditLayer, self).on_enter()
@@ -425,9 +386,14 @@ class EditLayer(cocos.layer.Layer):
         self.autoscrolling = False
 
     def on_mouse_press(self, x, y, buttons, modifiers):
-        if self.logger.is_debug:
-            rx, ry = self.layer_manager.scrolling_manager.screen_to_world(x, y)
-            self.logger.debug('GUI click: x: {}, y: {}, rx: {}, ry: {}'.format(x, y, rx, ry))
+        rx, ry = self.layer_manager.scrolling_manager.screen_to_world(x, y)
+        self.logger.info(
+            'GUI click: x: {}, y: {}, rx: {}, ry: {} ({}|{})'.format(x, y, rx, ry, buttons, modifiers)
+        )
+
+        actor = self.single_actor_from_mouse()
+        if actor:
+            self.selection_add(actor)
 
     def on_mouse_release(self, sx, sy, button, modifiers):
         # should we handle here mod_restricted_mov ?

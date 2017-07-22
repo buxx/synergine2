@@ -1,4 +1,6 @@
 # coding: utf-8
+import typing
+
 from pyglet.window import key
 
 import cocos
@@ -10,6 +12,38 @@ from synergine2_cocos2d.middleware import MapMiddleware
 if False:
     from synergine2_cocos2d.actor import Actor
     from synergine2_cocos2d.gui import GridManager
+
+
+class ScrollingManager(cocos.layer.ScrollingManager):
+    def world_to_screen_positions(
+        self,
+        positions: typing.List[typing.Tuple[int, int]],
+    ) -> typing.List[typing.Tuple[int, int]]:
+        screen_positions = []
+
+        for position in positions:
+            scx, scy = self.world_to_screen(
+                position[0],
+                position[1],
+            )
+            screen_positions.append((scx, scy))
+
+        return screen_positions
+
+    def screen_to_world_positions(
+        self,
+        positions: typing.List[typing.Tuple[int, int]],
+    ) -> typing.List[typing.Tuple[int, int]]:
+        world_positions = []
+
+        for position in positions:
+            wx, wy = self.screen_to_world(
+                position[0],
+                position[1],
+            )
+            world_positions.append((wx, wy))
+
+        return world_positions
 
 
 class LayerManager(object):
@@ -24,7 +58,7 @@ class LayerManager(object):
         self.middleware = middleware
 
         self.grid_manager = None  # type: GridManager
-        self.scrolling_manager = None  # type: cocos.layer.ScrollingManager
+        self.scrolling_manager = None  # type: ScrollingManager
         self.main_scene = None  # type: cocos.scene.Scene
         self.main_layer = None  # type: cocos.layer.Layer
         self.edit_layer = None  # TODO type
@@ -50,7 +84,7 @@ class LayerManager(object):
         )
 
         self.main_scene = cocos.scene.Scene()
-        self.scrolling_manager = cocos.layer.ScrollingManager()
+        self.scrolling_manager = ScrollingManager()
 
         self.main_layer = MainLayer(
             self,
