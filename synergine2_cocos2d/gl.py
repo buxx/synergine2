@@ -38,3 +38,18 @@ def draw_rectangle(
         pyglet.gl.glVertex3f(positions[2][0], positions[2][1], 0)
         pyglet.gl.glVertex3f(positions[3][0], positions[3][1], 0)
         pyglet.gl.glEnd()
+
+
+def draw_line(
+    from_position: typing.Tuple[int, int],
+    to_position: typing.Tuple[int, int],
+    color: rgb_type,
+    width: typing.Optional[int]=1,
+):
+    pyglet.gl.glColor3ub(*color)
+    pyglet.gl.glLineWidth(width)
+    pyglet.graphics.draw(
+        4,
+        pyglet.gl.GL_LINES,
+        ("v2f", (0, 0, 0, 0, from_position[0], from_position[1], to_position[0], to_position[1]))
+    )

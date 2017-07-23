@@ -3,6 +3,7 @@ import pyglet
 
 from sandbox.tile.gui.animation import ANIMATION_WALK
 from sandbox.tile.gui.animation import ANIMATION_CRAWL
+from synergine2.simulation import Subject
 from synergine2_cocos2d.actor import Actor
 
 
@@ -29,5 +30,5 @@ class Man(Actor):
         ]
     }
 
-    def __init__(self):
-        super().__init__(pyglet.resource.image('actors/man.png'))
+    def __init__(self, subject: Subject) -> None:
+        super().__init__(pyglet.resource.image('actors/man.png'), subject=subject)

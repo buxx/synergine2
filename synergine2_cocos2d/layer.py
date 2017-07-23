@@ -12,6 +12,7 @@ from synergine2_cocos2d.middleware import MapMiddleware
 if False:
     from synergine2_cocos2d.actor import Actor
     from synergine2_cocos2d.gui import GridManager
+    from synergine2_cocos2d.interaction import InteractionManager
 
 
 class ScrollingManager(cocos.layer.ScrollingManager):
@@ -52,10 +53,12 @@ class LayerManager(object):
         config: Config,
         logger: SynergineLogger,
         middleware: MapMiddleware,
+        interaction_manager: 'InteractionManager',
     ) -> None:
         self.config = config
         self.logger = logger
         self.middleware = middleware
+        self.interaction_manager = interaction_manager
 
         self.grid_manager = None  # type: GridManager
         self.scrolling_manager = None  # type: ScrollingManager

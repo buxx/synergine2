@@ -5,11 +5,13 @@ from sandbox.tile.gui.animation import ANIMATION_WALK
 from sandbox.tile.gui.animation import ANIMATION_CRAWL
 from synergine2_cocos2d.animation import Animate
 from synergine2_cocos2d.gui import TMXGui
+from synergine2_cocos2d.interaction import MoveActorInteraction
 
 
 class Game(TMXGui):
     def before_run(self) -> None:
-        pass
+        self.layer_manager.interaction_manager.register(MoveActorInteraction, self.layer_manager)
+
         # Test
         # from sandbox.tile.gui.actor import Man
         # from cocos import euclid

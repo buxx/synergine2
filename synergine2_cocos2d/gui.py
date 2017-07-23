@@ -5,6 +5,7 @@ from math import floor
 
 import pyglet
 from pyglet.window import mouse
+from pyglet.window import key
 
 import cocos
 from cocos import collision_model
@@ -17,10 +18,14 @@ from synergine2.terminals import TerminalPackage
 from synergine2.xyz import XYZSubjectMixin
 from synergine2_cocos2d.actor import Actor
 from synergine2_cocos2d.exception import OuterWorldPosition
+from synergine2_cocos2d.exception import InteractionNotFound
 from synergine2_cocos2d.gl import rectangle_positions_type
 from synergine2_cocos2d.gl import draw_rectangle
+from synergine2_cocos2d.interaction import InteractionManager
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import TMXMiddleware
+from synergine2_cocos2d.middleware import TMXMiddlewareMapMiddleware
+from synergine2_cocos2d.user_action import UserAction
 
 
 class GridManager(object):
@@ -176,6 +181,7 @@ class EditLayer(cocos.layer.Layer):
         self.sright = None
         self.sbottom = None
         self.s_top = None
+        self.user_action_pending = None  # UserAction
 
         # opers that change cshape must ensure it goes to False,
         # selection opers must ensure it goes to True
@@ -204,6 +210,11 @@ class EditLayer(cocos.layer.Layer):
         self.collision_manager.remove_tricky(actor)
 
     def draw(self, *args, **kwargs) -> None:
+        self.draw_update_cshapes()
+        self.draw_selection()
+        self.draw_interactions()
+
+    def draw_update_cshapes(self) -> None:
         for actor in self.selectable_actors:
             if actor.need_update_cshape:
                 if self.collision_manager.knows(actor):
@@ -211,6 +222,7 @@ class EditLayer(cocos.layer.Layer):
                     actor.update_cshape()
                     self.collision_manager.add(actor)
 
+    def draw_selection(self) -> None:
         for actor, cshape in self.selection.items():
             grid_position = self.grid_manager.get_grid_position(actor.position)
             rect_positions = self.grid_manager.get_rectangle_positions(grid_position)
@@ -219,6 +231,14 @@ class EditLayer(cocos.layer.Layer):
                 self.layer_manager.scrolling_manager.world_to_screen_positions(rect_positions),
                 (0, 81, 211),
             )
+
+    def draw_interactions(self) -> None:
+        if self.user_action_pending:
+            try:
+                interaction = self.layer_manager.interaction_manager.get_for_user_action(self.user_action_pending)
+                interaction.draw_pending()
+            except InteractionNotFound:
+                pass
 
     def on_enter(self):
         super(EditLayer, self).on_enter()
@@ -365,6 +385,13 @@ class EditLayer(cocos.layer.Layer):
 
     def on_key_press(self, k, m):
         binds = self.bindings
+
+        # TODO: Clarify code
+        # Actions available if actor selected
+        if self.selection:
+            if k == key.M:
+                self.user_action_pending = UserAction.ORDER_MOVE
+
         if k in binds:
             self.buttons[binds[k]] = 1
             self.modifiers[binds[k]] = 1
@@ -391,9 +418,24 @@ class EditLayer(cocos.layer.Layer):
             'GUI click: x: {}, y: {}, rx: {}, ry: {} ({}|{})'.format(x, y, rx, ry, buttons, modifiers)
         )
 
-        actor = self.single_actor_from_mouse()
-        if actor:
-            self.selection_add(actor)
+        if mouse.LEFT:
+            # Non action pending case
+            if not self.user_action_pending:
+                actor = self.single_actor_from_mouse()
+                if actor:
+                    self.selection.clear()
+                    self.selection_add(actor)
+            # Action pending case
+            else:
+                try:
+                    interaction = self.layer_manager.interaction_manager.get_for_user_action(self.user_action_pending)
+                    interaction.execute()
+                except InteractionNotFound:
+                    pass
+
+        if mouse.RIGHT:
+            if self.user_action_pending:
+                self.user_action_pending = None
 
     def on_mouse_release(self, sx, sy, button, modifiers):
         # should we handle here mod_restricted_mov ?
@@ -423,6 +465,7 @@ class EditLayer(cocos.layer.Layer):
         else:
             # new_selected becomes the current selected
             self.selection.clear()
+            self.user_action_pending = None
             if under_mouse_unique is not None:
                 self.selection_add(under_mouse_unique)
 
@@ -581,11 +624,10 @@ class SubjectMapper(object):
         subject: XYZSubjectMixin,
         layer_manager: LayerManager,
     ) -> None:
-        actor = self.actor_class()
-        pixel_position = layer_manager.grid_manager.get_pixel_position_of_grid_position((
-            subject.position[0],
-            subject.position[1],
-        ))
+        actor = self.actor_class(subject)
+        pixel_position = layer_manager.grid_manager.get_pixel_position_of_grid_position(
+            (subject.position[0], subject.position[1]),
+        )
         actor.update_position(euclid.Vector2(*pixel_position))
 
         # TODO: Selectable nature must be configurable
@@ -631,6 +673,20 @@ class Gui(object):
             resizable=True,
         )
 
+        self.interaction_manager = InteractionManager(
+            config=self.config,
+            logger=self.logger,
+            terminal=self.terminal,
+        )
+        self.layer_manager = LayerManager(
+            self.config,
+            self.logger,
+            middleware=self.get_layer_middleware(),
+            interaction_manager=self.interaction_manager,
+        )
+        self.layer_manager.init()
+        self.layer_manager.center()
+
         # Enable blending
         pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
         pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
@@ -640,6 +696,9 @@ class Gui(object):
         pyglet.gl.glAlphaFunc(pyglet.gl.GL_GREATER, .1)
 
         self.subject_mapper_factory = SubjectMapperFactory()
+
+    def get_layer_middleware(self) -> MapMiddleware:
+        raise NotImplementedError()
 
     def run(self):
         self.before_run()
@@ -672,24 +731,20 @@ class TMXGui(Gui):
         map_dir_path: str=None,
     ):
         assert map_dir_path
+        self.map_dir_path = map_dir_path
         super(TMXGui, self).__init__(
             config,
             logger,
             terminal,
             read_queue_interval,
         )
-        self.map_dir_path = map_dir_path
-        self.layer_manager = LayerManager(
+
+    def get_layer_middleware(self) -> MapMiddleware:
+        return TMXMiddleware(
             self.config,
             self.logger,
-            middleware=TMXMiddleware(
-                self.config,
-                self.logger,
-                self.map_dir_path,
-            ),
+            self.map_dir_path,
         )
-        self.layer_manager.init()
-        self.layer_manager.center()
 
     def get_main_scene(self) -> cocos.cocosnode.CocosNode:
         return self.layer_manager.main_scene

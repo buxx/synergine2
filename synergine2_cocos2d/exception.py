@@ -11,3 +11,7 @@ class PositionException(WorldException):
 
 class OuterWorldPosition(PositionException):
     pass
+
+
+class InteractionNotFound(Exception):
+    pass

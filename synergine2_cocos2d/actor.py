@@ -6,6 +6,7 @@ import pyglet
 import cocos
 from cocos import collision_model
 from cocos import euclid
+from synergine2.simulation import Subject
 from synergine2_cocos2d.animation import AnimatedInterface
 
 
@@ -16,6 +17,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
     def __init__(
         self,
         image: pyglet.image.TextureRegion,
+        subject: Subject,
         position=(0, 0),
         rotation=0,
         scale=1,
@@ -34,6 +36,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
             anchor,
             **kwargs
         )
+        self.subject = subject
         self.cshape = None  # type: collision_model.AARectShape
         self.update_cshape()
         self.build_animation_images()
