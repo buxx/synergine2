@@ -24,7 +24,7 @@ from synergine2_cocos2d.gl import draw_rectangle
 from synergine2_cocos2d.interaction import InteractionManager
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import TMXMiddleware
-from synergine2_cocos2d.middleware import TMXMiddlewareMapMiddleware
+from synergine2_cocos2d.middleware import MapMiddleware
 from synergine2_cocos2d.user_action import UserAction
 
 
