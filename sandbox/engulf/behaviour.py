@@ -4,11 +4,13 @@ from random import choice
 
 from sandbox.engulf.const import COLLECTION_GRASS, COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_PREY
 from sandbox.engulf.exceptions import NotFoundWhereToGo
-from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour, SubjectBehaviourSelector
 from synergine2.simulation import Event
+from synergine2.simulation import SubjectBehaviour, SimulationMechanism, SimulationBehaviour, SubjectBehaviourSelector
 from synergine2.utils import ChunkManager
-from synergine2.xyz import ProximitySubjectMechanism, DIRECTIONS, DIRECTION_SLIGHTLY, get_direction_from_north_degree
-from synergine2.xyz_utils import get_around_positions_of_positions, get_position_for_direction
+from synergine2_xyz.xyz import DIRECTIONS, DIRECTION_SLIGHTLY, \
+    get_direction_from_north_degree
+from synergine2_xyz.mechanism import ProximitySubjectMechanism
+from synergine2_xyz.utils import get_around_positions_of_positions, get_position_for_direction
 
 # Import for typing hint
 if False:

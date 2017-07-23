@@ -1,12 +1,10 @@
 # coding: utf-8
-from math import sqrt
-from math import degrees
 from math import acos
+from math import degrees
+from math import sqrt
 
 from synergine2.exceptions import SynergineException
-from synergine2.simulation import SubjectMechanism, Subjects, Subject
-from synergine2.simulation import Simulation as BaseSimulation
-
+from synergine2.simulation import Subject
 
 """
 
@@ -133,6 +131,10 @@ class XYZSubjectMixin(object, metaclass=XYZSubjectMixinMetaClass):
         self._position = value
 
 
+class XYZSubject(XYZSubjectMixin, Subject):
+    pass
+
+
 class ProximityMixin(object):
     distance = 1
     feel_collections = [COLLECTION_XYZ]
@@ -185,65 +187,13 @@ class ProximityMixin(object):
 
     @classmethod
     def get_distance_of(cls, position, subject: XYZSubjectMixin):
-        from synergine2.xyz_utils import get_distance_between_points  # cyclic import
+        from synergine2_xyz.utils import get_distance_between_points  # cyclic import
         return get_distance_between_points(
             position,
             subject.position,
         )
 
     def acceptable_subject(self, subject: Subject) -> bool:
-        return True
-
-
-class ProximitySubjectMechanism(ProximityMixin, SubjectMechanism):
-    def run(self):
-        return self.get_for_position(
-            position=self.subject.position,
-            simulation=self.simulation,
-            exclude_subject=self.subject,
-        )
-
-
-class XYZSubjects(Subjects):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # TODO: accept multiple subjects as same position
-        # TODO: init xyz with given list
-        self.xyz = {}
-
-    def have_to_check_position_is_possible(self) -> bool:
-        return True
-
-    def remove(self, value: XYZSubjectMixin):
-        super().remove(value)
-
-        try:
-            self.xyz.get(value.position, []).remove(value)
-            if not self.xyz[value.position]:
-                del self.xyz[value.position]
-        except ValueError:
-            pass
-
-    def append(self, p_object: XYZSubjectMixin):
-        super().append(p_object)
-
-        if self.have_to_check_position_is_possible() \
-           and not self.simulation.is_possible_subject_position(p_object, p_object.position):
-            raise PositionNotPossible('Position {} for {} is not possible'.format(
-                str(p_object.position),
-                str(p_object),
-            ))
-
-        self.xyz.setdefault(p_object.position, []).append(p_object)
-
-
-class XYZSimulation(BaseSimulation):
-    accepted_subject_class = XYZSubjects
-
-    def is_possible_subject_position(self, subject: XYZSubjectMixin, position: tuple) -> bool:
-        return self.is_possible_position(position)
-
-    def is_possible_position(self, position: tuple) -> bool:
         return True
 
 

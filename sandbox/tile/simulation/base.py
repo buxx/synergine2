@@ -1,8 +1,7 @@
 # coding: utf-8
-from synergine2.simulation import Subject
-from synergine2.xyz import XYZSimulation
-from synergine2.xyz import XYZSubjectMixin
-from synergine2.xyz import XYZSubjects
+from synergine2_xyz.simulation import XYZSimulation
+from synergine2_xyz.xyz import XYZSubject
+from synergine2_xyz.subjects import XYZSubjects
 
 
 class TileStrategySimulation(XYZSimulation):
@@ -15,5 +14,5 @@ class TileStrategySubjects(XYZSubjects):
     pass
 
 
-class BaseSubject(XYZSubjectMixin, Subject):
+class BaseSubject(XYZSubject):
     pass

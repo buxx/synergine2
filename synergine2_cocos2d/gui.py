@@ -4,8 +4,8 @@ import weakref
 from math import floor
 
 import pyglet
-from pyglet.window import mouse
 from pyglet.window import key
+from pyglet.window import mouse
 
 import cocos
 from cocos import collision_model
@@ -15,17 +15,17 @@ from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
-from synergine2.xyz import XYZSubjectMixin
 from synergine2_cocos2d.actor import Actor
-from synergine2_cocos2d.exception import OuterWorldPosition
 from synergine2_cocos2d.exception import InteractionNotFound
-from synergine2_cocos2d.gl import rectangle_positions_type
+from synergine2_cocos2d.exception import OuterWorldPosition
 from synergine2_cocos2d.gl import draw_rectangle
+from synergine2_cocos2d.gl import rectangle_positions_type
 from synergine2_cocos2d.interaction import InteractionManager
 from synergine2_cocos2d.layer import LayerManager
-from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.middleware import MapMiddleware
+from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.user_action import UserAction
+from synergine2_xyz.xyz import XYZSubjectMixin
 
 
 class GridManager(object):

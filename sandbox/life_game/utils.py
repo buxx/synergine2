@@ -1,9 +1,9 @@
 # coding: utf-8
-from sandbox.life_game.simulation import Empty
 from sandbox.life_game.simulation import Cell
+from sandbox.life_game.simulation import Empty
 from synergine2.simulation import Simulation
-from synergine2.xyz import XYZSubjects
-from synergine2.xyz_utils import get_positions_from_str_representation
+from synergine2_xyz.subjects import XYZSubjects
+from synergine2_xyz.utils import get_positions_from_str_representation
 
 
 def get_subjects_from_str_representation(

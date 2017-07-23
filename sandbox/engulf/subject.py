@@ -4,7 +4,7 @@ from sandbox.engulf.behaviour import GrowUp, SearchGrass, EatGrass, Explore, Cel
 from sandbox.engulf.const import COLLECTION_CELL, COLLECTION_ALIVE, COLLECTION_EATABLE, COLLECTION_GRASS, \
     COLLECTION_PREY, COLLECTION_PREDATOR
 from synergine2.simulation import Subject
-from synergine2.xyz import XYZSubjectMixin
+from synergine2_xyz.xyz import XYZSubjectMixin
 
 
 class Cell(XYZSubjectMixin, Subject):

@@ -7,6 +7,10 @@ from synergine2.config import Config
 from synergine2.utils import get_mechanisms_classes
 
 
+class Intention(object):
+    pass
+
+
 class Subject(BaseObject):
     collections = []
     behaviours_classes = []
@@ -25,6 +29,7 @@ class Subject(BaseObject):
         self.simulation = simulation
         self.behaviours = {}
         self.mechanisms = {}
+        self.intentions = []  # type: typing.List[Intention]
         self.behaviour_selector = None  # type: SubjectBehaviourSelector
         if self.behaviour_selector_class:
             self.behaviour_selector = self.behaviour_selector_class()

@@ -1,5 +1,5 @@
 # coding: utf-8
-from synergine2.xyz import XYZException
+from synergine2_xyz.xyz import XYZException
 
 
 class NotFoundWhereToGo(XYZException):

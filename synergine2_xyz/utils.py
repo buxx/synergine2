@@ -1,8 +1,8 @@
 # coding: utf-8
-from math import sqrt
 import collections
+from math import sqrt
 
-from synergine2.xyz import DIRECTION_MODIFIERS
+from synergine2_xyz.xyz import DIRECTION_MODIFIERS
 
 
 def get_positions_from_str_representation(str_representation):

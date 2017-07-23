@@ -1,14 +1,15 @@
 # coding: utf-8
 import collections
+
 from sandbox.life_game.simulation import Cell
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.utils import get_subjects_from_str_representation
 from synergine2.config import Config
 from synergine2.cycle import CycleManager
 from synergine2.log import SynergineLogger
-from synergine2.xyz import XYZSubjects
-from synergine2.xyz import XYZSimulation
-from synergine2.xyz_utils import get_str_representation_from_positions
+from synergine2_xyz.simulation import XYZSimulation
+from synergine2_xyz.subjects import XYZSubjects
+from synergine2_xyz.utils import get_str_representation_from_positions
 from tests import BaseTest
 from tests import str_kwargs
 

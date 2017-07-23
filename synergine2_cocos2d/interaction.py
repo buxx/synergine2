@@ -1,10 +1,12 @@
 # coding: utf-8
 import typing
 
+from synergine2_xyz.move import RequestMoveBehaviour
+
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
-from synergine2.terminals import Terminal, TerminalPackage
-from synergine2_cocos2d.event import GuiRequestMoveEvent
+from synergine2.terminals import Terminal
+from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.exception import InteractionNotFound
 from synergine2_cocos2d.gl import draw_line
 from synergine2_cocos2d.layer import LayerManager
@@ -70,6 +72,7 @@ class Interaction(object):
 
 class MoveActorInteraction(Interaction):
     gui_action = UserAction.ORDER_MOVE
+    request_move_behaviour_class = RequestMoveBehaviour
 
     def draw_pending(self) -> None:
             for actor in self.layer_manager.edit_layer.selection:
@@ -84,7 +87,7 @@ class MoveActorInteraction(Interaction):
 
     def get_package_for_terminal(self) -> TerminalPackage:
         # TODO: MoveEvent ?
-        events = []
+        actions = []
         mouse_grid_position = self.layer_manager.grid_manager.get_grid_position(
             self.layer_manager.scrolling_manager.screen_to_world(
                 *self.layer_manager.edit_layer.screen_mouse,
@@ -92,11 +95,13 @@ class MoveActorInteraction(Interaction):
         )
 
         for actor in self.layer_manager.edit_layer.selection:
-            events.append(GuiRequestMoveEvent(
-                subject_id=actor.subject.id,
-                move_to_position=mouse_grid_position,
+            actions.append((
+                self.request_move_behaviour_class, {
+                    'subject_id': actor.subject.id,
+                    'move_to': mouse_grid_position,
+                }
             ))
 
         return TerminalPackage(
-            events=events
+            simulation_actions=actions,
         )

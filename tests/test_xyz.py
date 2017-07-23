@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 from synergine2.config import Config
 from synergine2.simulation import Subject
-from synergine2.xyz import ProximitySubjectMechanism
-from synergine2.xyz import XYZSubjects
-from synergine2.xyz import XYZSimulation
-from synergine2.xyz import XYZSubjectMixin
-from synergine2.xyz_utils import get_positions_from_str_representation
-from synergine2.xyz_utils import get_str_representation_from_positions
+from synergine2_xyz.mechanism import ProximitySubjectMechanism
+from synergine2_xyz.simulation import XYZSimulation
+from synergine2_xyz.xyz import XYZSubjectMixin
+from synergine2_xyz.subjects import XYZSubjects
+from synergine2_xyz.utils import get_positions_from_str_representation
+from synergine2_xyz.utils import get_str_representation_from_positions
 from tests import BaseTest
 from tests import str_kwargs
 

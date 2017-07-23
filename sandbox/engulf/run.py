@@ -31,12 +31,12 @@ from sandbox.engulf.behaviour import GrassGrownUp, GrassSpawn, MoveTo, EatEvent,
 
 from synergine2.config import Config
 from synergine2.log import get_default_logger
-from sandbox.engulf.subject import Cell, Grass, PreyCell, PredatorCell
+from sandbox.engulf.subject import Grass, PreyCell, PredatorCell
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
 from synergine2.terminals import TerminalManager, Terminal, TerminalPackage
 from sandbox.engulf.simulation import EngulfSubjects, Engulf
-from synergine2.xyz_utils import get_around_positions_of, get_distance_between_points
+from synergine2_xyz.utils import get_around_positions_of, get_distance_between_points
 
 
 class GameTerminal(Terminal):

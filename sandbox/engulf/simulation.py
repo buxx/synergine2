@@ -1,7 +1,9 @@
 # coding: utf-8
 from sandbox.engulf.behaviour import GrassSpawnBehaviour
 from sandbox.engulf.subject import Cell, Grass
-from synergine2.xyz import XYZSubjects, XYZSubjectMixin, XYZSimulation
+from synergine2_xyz.xyz import XYZSubjectMixin
+from synergine2_xyz.subjects import XYZSubjects
+from synergine2_xyz.simulation import XYZSimulation
 
 __author__ = 'bux'
 

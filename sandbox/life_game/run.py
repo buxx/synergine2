@@ -1,8 +1,7 @@
 # coding: utf-8
+import logging
 import os
 import sys
-
-import logging
 
 synergine2_ath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_ath)
@@ -11,7 +10,7 @@ import collections
 
 from synergine2.config import Config
 from synergine2.log import get_default_logger
-from sandbox.life_game.simulation import Cell, LotOfCellsSignalBehaviour, LifeGame, \
+from sandbox.life_game.simulation import Cell, LifeGame, \
     EmptyPositionWithLotOfCellAroundEvent
 from sandbox.life_game.simulation import Empty
 from sandbox.life_game.simulation import CellDieEvent
@@ -19,12 +18,11 @@ from sandbox.life_game.simulation import CellBornEvent
 from sandbox.life_game.utils import get_subjects_from_str_representation
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
-from synergine2.simulation import Simulation
 from synergine2.simulation import Event
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2.terminals import TerminalManager
-from synergine2.xyz_utils import get_str_representation_from_positions
+from synergine2_xyz.utils import get_str_representation_from_positions
 
 
 class SimplePrintTerminal(Terminal):
