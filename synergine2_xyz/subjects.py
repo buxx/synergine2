@@ -1,6 +1,8 @@
 # coding: utf-8
 from synergine2.simulation import Subjects
-from synergine2_xyz.xyz import XYZSubjectMixin, PositionNotPossible
+from synergine2.simulation import Subject
+from synergine2_xyz.xyz import XYZSubjectMixin
+from synergine2_xyz.xyz import PositionNotPossible
 
 
 class XYZSubjects(Subjects):
@@ -34,3 +36,7 @@ class XYZSubjects(Subjects):
             ))
 
         self.xyz.setdefault(p_object.position, []).append(p_object)
+
+
+class XYZSubject(XYZSubjectMixin, Subject):
+    pass

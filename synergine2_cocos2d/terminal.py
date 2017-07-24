@@ -9,6 +9,7 @@ class GameTerminal(Terminal):
 
     def receive(self, package: TerminalPackage):
         self.gui.before_received(package)
+        # TODO: pas d'event après le move: il faut subscribe je crois :p
         super().receive(package)
         self.gui.after_received(package)
 

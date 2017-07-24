@@ -131,10 +131,6 @@ class XYZSubjectMixin(object, metaclass=XYZSubjectMixinMetaClass):
         self._position = value
 
 
-class XYZSubject(XYZSubjectMixin, Subject):
-    pass
-
-
 class ProximityMixin(object):
     distance = 1
     feel_collections = [COLLECTION_XYZ]

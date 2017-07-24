@@ -11,6 +11,17 @@ class Intention(object):
     pass
 
 
+class IntentionManager(object):
+    def __init__(self) -> None:
+        self.intentions = {}  # type: typing.Dict[typing.Type[Intention], Intention]
+
+    def set(self, intention: Intention) -> None:
+        self.intentions[type(intention)] = intention
+
+    def get(self, intention_type: typing.Type[Intention]) -> Intention:
+        return self.intentions[intention_type]
+
+
 class Subject(BaseObject):
     collections = []
     behaviours_classes = []
@@ -29,7 +40,7 @@ class Subject(BaseObject):
         self.simulation = simulation
         self.behaviours = {}
         self.mechanisms = {}
-        self.intentions = []  # type: typing.List[Intention]
+        self.intentions = IntentionManager()
         self.behaviour_selector = None  # type: SubjectBehaviourSelector
         if self.behaviour_selector_class:
             self.behaviour_selector = self.behaviour_selector_class()
@@ -184,7 +195,7 @@ class Event(BaseObject):
 
 class SubjectBehaviour(BaseObject):
     frequency = 1
-    use = []
+    use = []  # type: typing.List[typing.Type[SubjectMechanism]]
 
     def __init__(
             self,

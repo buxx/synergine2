@@ -2,8 +2,8 @@
 import typing
 
 from synergine2.simulation import Simulation as BaseSimulation
-from synergine2_xyz.xyz import XYZSubject
 from synergine2_xyz.subjects import XYZSubjects
+from synergine2_xyz.subjects import XYZSubject
 
 
 class XYZSimulation(BaseSimulation):
