@@ -15,6 +15,7 @@ from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
+from synergine2_cocos2d.actions import MoveTo
 from synergine2_cocos2d.actor import Actor
 from synergine2_cocos2d.exception import InteractionNotFound
 from synergine2_cocos2d.exception import OuterWorldPosition
@@ -25,6 +26,7 @@ from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import MapMiddleware
 from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.user_action import UserAction
+from synergine2_xyz.move import MoveEvent
 from synergine2_xyz.xyz import XYZSubjectMixin
 
 
@@ -739,6 +741,11 @@ class TMXGui(Gui):
             read_queue_interval,
         )
 
+        self.terminal.register_event_handler(
+            MoveEvent,
+            self.move_subject,
+        )
+
     def get_layer_middleware(self) -> MapMiddleware:
         return TMXMiddleware(
             self.config,
@@ -758,3 +765,12 @@ class TMXGui(Gui):
     def append_subject(self, subject: XYZSubjectMixin) -> None:
         subject_mapper = self.subject_mapper_factory.get_subject_mapper(subject)
         subject_mapper.append(subject, self.layer_manager)
+
+    def move_subject(self, event: MoveEvent):
+        actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
+
+        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.position)
+        new_window_position = self.layer_manager.scrolling_manager.world_to_screen(*new_world_position)
+
+        move_action = MoveTo(new_window_position, 0.5)
+        actor.do(move_action)

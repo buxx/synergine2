@@ -1,6 +1,8 @@
 # coding: utf-8
 import typing
 
+from dijkstar import find_path
+
 from synergine2.config import Config
 from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import SubjectBehaviour
@@ -61,18 +63,32 @@ class MoveToMechanism(SubjectMechanism):
             # TODO: MoveToIntention doit être configurable
             move = self.subject.intentions.get(MoveToIntention)
             move = typing.cast(MoveToIntention, move)
-            new_path = move.path or None
+            new_path = None
 
             if not move.path:
-                # TODO: Fake to test
-                new_path = []
-                for i in range(20):
-                    new_path.append((
-                        self.subject.position[0],
-                        self.subject.position[1] + i,
-                    ))
+                # TODO: Must be XYZSimulation !
+                start = '{}.{}'.format(*self.subject.position)
+                end = '{}.{}'.format(*move.move_to)
 
-            next_move = new_path[move.path_progression + 1]
+                found_path = find_path(self.simulation.graph, start, end)
+                move.path = []
+
+                for position in found_path[0]:
+                    x, y = map(int, position.split('.'))
+                    move.path.append((x, y))
+
+                # Note: We are in process, move change will be lost
+                new_path = move.path
+
+                # move.path = []
+                # new_path = move.path
+                # for i in range(20):
+                #     move.path.append((
+                #         self.subject.position[0],
+                #         self.subject.position[1] + i,
+                #     ))
+
+            next_move = move.path[move.path_progression + 1]
             # TODO: fin de path
             if not self.simulation.is_possible_position(next_move):
                 # TODO: refaire le path
@@ -82,7 +98,9 @@ class MoveToMechanism(SubjectMechanism):
                 'new_path': new_path,
             }
 
-        except KeyError:
+        except IndexError:  # TODO: Specialize ? No movement left
+            return None
+        except KeyError:  # TODO: Specialize ? No MoveIntention
             return None
 
 
@@ -127,7 +145,7 @@ class MoveToBehaviour(SubjectBehaviour):
             # TODO: progression et lorsque "vraiment avance d'une case" envoyer le Move
             # pour le moment on move direct
             # TODO: fin de path
-            move.path_progression += 1  # BUG: ca progresse pas ?
+            move.path_progression += 1
             new_position = move.path[move.path_progression]
             self.subject.position = new_position
 

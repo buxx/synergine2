@@ -47,6 +47,16 @@ class ScrollingManager(cocos.layer.ScrollingManager):
         return world_positions
 
 
+class SubjectLayer(cocos.layer.ScrollableLayer):
+    def __init__(self, parallax: int=1):
+        super().__init__(parallax)
+        self.subjects_index = {}
+
+    def add_subject(self, actor: 'Actor') -> None:
+        self.add(actor)
+        self.subjects_index[actor.subject.id] = actor
+
+
 class LayerManager(object):
     def __init__(
         self,
@@ -68,7 +78,7 @@ class LayerManager(object):
 
         self.background_sprite = None  # type: cocos.sprite.Sprite
         self.ground_layer = None  # type: cocos.tiles.RectMapLayer
-        self.subject_layer = None  # type: cocos.layer.ScrollableLayer
+        self.subject_layer = None  # type: SubjectLayer
         self.top_layer = None  # type: cocos.tiles.RectMapLayer
 
     def init(self) -> None:
@@ -130,7 +140,7 @@ class LayerManager(object):
 
         self.background_sprite = self.middleware.get_background_sprite()
         self.ground_layer = self.middleware.get_ground_layer()
-        self.subject_layer = cocos.layer.ScrollableLayer()
+        self.subject_layer = SubjectLayer()
         self.top_layer = self.middleware.get_top_layer()
 
         self.main_layer.add(self.background_sprite)
@@ -145,7 +155,7 @@ class LayerManager(object):
         self.top_layer.set_view(0, 0, self.top_layer.px_width, self.top_layer.px_height)
 
     def add_subject(self, subject: 'Actor') -> None:
-        self.subject_layer.add(subject)
+        self.subject_layer.add_subject(subject)
 
     def remove_subject(self, subject: 'Actor') -> None:
         self.subject_layer.remove(subject)
