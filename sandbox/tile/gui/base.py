@@ -1,9 +1,4 @@
 # coding: utf-8
-import random
-
-from sandbox.tile.gui.animation import ANIMATION_WALK
-from sandbox.tile.gui.animation import ANIMATION_CRAWL
-from synergine2_cocos2d.animation import Animate
 from synergine2_cocos2d.gui import TMXGui
 from synergine2_cocos2d.interaction import MoveActorInteraction
 

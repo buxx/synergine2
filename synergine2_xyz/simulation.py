@@ -43,7 +43,7 @@ class XYZSimulation(BaseSimulation):
                 for neighbor in neighbors:
                     neighbor_x, neighbor_y = map(int, neighbor.split('.'))
 
-                    if neighbor_x > 39 or neighbor_x < 0:
+                    if neighbor_x > 69 or neighbor_x < 0:
                         continue
 
                     if neighbor_y > 69 or neighbor_y < 0:
@@ -51,6 +51,7 @@ class XYZSimulation(BaseSimulation):
 
                     # TODO: Voir https://pypi.python.org/pypi/Dijkstar/2.2
                     self.graph.add_edge(position, neighbor, 1)
+        pass
 
     def is_possible_subject_position(self, subject: XYZSubject, position: tuple) -> bool:
         return self.is_possible_position(position)

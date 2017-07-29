@@ -17,6 +17,8 @@ from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.actions import MoveTo
 from synergine2_cocos2d.actor import Actor
+from synergine2_cocos2d.animation import Animate
+from synergine2_cocos2d.animation import ANIMATION_WALK
 from synergine2_cocos2d.exception import InteractionNotFound
 from synergine2_cocos2d.exception import OuterWorldPosition
 from synergine2_cocos2d.gl import draw_rectangle
@@ -774,3 +776,5 @@ class TMXGui(Gui):
 
         move_action = MoveTo(new_window_position, 0.5)
         actor.do(move_action)
+        # TODO: values
+        actor.do(Animate(ANIMATION_WALK, 0.5, 1))

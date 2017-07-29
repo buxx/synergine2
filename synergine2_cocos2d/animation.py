@@ -4,6 +4,9 @@ import typing
 import pyglet
 import cocos
 
+ANIMATION_WALK = 'WALK'
+ANIMATION_CRAWL = 'CRAWL'
+
 
 class AnimatedInterface(object):
     def get_images_for_animation(self, animation_name: str) -> typing.List[pyglet.image.TextureRegion]:
