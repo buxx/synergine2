@@ -4,6 +4,7 @@ cocos2d==0.6.4
 coverage==4.4.1
 Dijkstar==2.2
 execnet==1.4.1
+numpy==1.13.1
 packaging==16.8
 psutil==5.2.2
 py==1.4.31

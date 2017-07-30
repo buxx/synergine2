@@ -29,6 +29,7 @@ from synergine2_cocos2d.middleware import MapMiddleware
 from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.user_action import UserAction
 from synergine2_xyz.move import MoveEvent
+from synergine2_xyz.utils import get_angle
 from synergine2_xyz.xyz import XYZSubjectMixin
 
 
@@ -771,10 +772,11 @@ class TMXGui(Gui):
     def move_subject(self, event: MoveEvent):
         actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
 
-        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.position)
+        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
         new_window_position = self.layer_manager.scrolling_manager.world_to_screen(*new_world_position)
 
         move_action = MoveTo(new_window_position, 0.5)
         actor.do(move_action)
         # TODO: values
         actor.do(Animate(ANIMATION_WALK, 0.5, 1))
+        actor.rotation = get_angle(event.from_position, event.to_position)

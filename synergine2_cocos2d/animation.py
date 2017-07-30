@@ -4,6 +4,9 @@ import typing
 import pyglet
 import cocos
 
+if False:
+    from synergine2_cocos2d.actor import Actor
+
 ANIMATION_WALK = 'WALK'
 ANIMATION_CRAWL = 'CRAWL'
 

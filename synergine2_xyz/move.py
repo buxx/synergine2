@@ -73,7 +73,7 @@ class MoveToMechanism(SubjectMechanism):
                 found_path = find_path(self.simulation.graph, start, end)
                 move.path = []
 
-                for position in found_path[0]:
+                for position in found_path[0][1:]:
                     x, y = map(int, position.split('.'))
                     move.path.append((x, y))
 
@@ -105,10 +105,18 @@ class MoveToMechanism(SubjectMechanism):
 
 
 class MoveEvent(Event):
-    def __init__(self, subject_id: int, position: tuple, *args, **kwargs):
+    def __init__(
+        self,
+        subject_id: int,
+        from_position: typing.Tuple[int, int],
+        to_position: typing.Tuple[int, int],
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.subject_id = subject_id
-        self.position = position
+        self.from_position = from_position
+        self.to_position = to_position
 
     def repr_debug(self) -> str:
         return '{}: subject_id:{}, position:{}'.format(
@@ -147,9 +155,10 @@ class MoveToBehaviour(SubjectBehaviour):
             # TODO: fin de path
             move.path_progression += 1
             new_position = move.path[move.path_progression]
+            previous_position = self.subject.position
             self.subject.position = new_position
 
-            return [MoveEvent(self.subject.id, new_position)]
+            return [MoveEvent(self.subject.id, previous_position, new_position)]
 
         except KeyError:
             # TODO: log ? Il devrait y avoir un move puisque data du run/mechanism !

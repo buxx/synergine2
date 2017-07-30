@@ -1,6 +1,9 @@
 # coding: utf-8
 import collections
+import typing
 from math import sqrt
+
+import numpy
 
 from synergine2_xyz.xyz import DIRECTION_MODIFIERS
 
@@ -215,3 +218,13 @@ def get_position_for_direction(from_position: tuple, direction: int) -> tuple:
         from_position[1] + modifier[1],
         from_position[2] + modifier[2],
     )
+
+
+def get_angle(a: typing.Tuple[int, int], b: typing.Tuple[int, int]) -> int:
+    b = (b[0] - a[0], b[1] - a[1])
+    a = 0, 1
+
+    ang1 = numpy.arctan2(*a[::-1])
+    ang2 = numpy.arctan2(*b[::-1])
+
+    return numpy.rad2deg((ang1 - ang2) % (2 * numpy.pi))
