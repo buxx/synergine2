@@ -24,10 +24,12 @@ def main(map_dir_path: str, seed_value: int=42):
     seed(seed_value)
 
     config = Config()
-    config.load_files(['sandbox/engulf/config.yaml'])
+    config.load_files(['sandbox/engulf/config.yaml'])  # TODO: heu ... engulf ??
     logger = get_default_logger(level=logging.ERROR)
 
-    simulation = TileStrategySimulation(config)
+    map_file_path = 'sandbox/tile/{}.tmx'.format(os.path.join(map_dir_path, os.path.basename(map_dir_path)))
+
+    simulation = TileStrategySimulation(config, map_file_path=map_file_path)
     subjects = TileStrategySubjects(simulation=simulation)
 
     for position in ((0, 0), (5, 3), (10, 6)):

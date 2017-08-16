@@ -1,8 +1,6 @@
 # coding: utf-8
 import typing
 
-from dijkstar import find_path
-
 from synergine2.config import Config
 from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import SubjectBehaviour
@@ -66,16 +64,10 @@ class MoveToMechanism(SubjectMechanism):
             new_path = None
 
             if not move.path:
-                # TODO: Must be XYZSimulation !
-                start = '{}.{}'.format(*self.subject.position)
-                end = '{}.{}'.format(*move.move_to)
-
-                found_path = find_path(self.simulation.graph, start, end)
-                move.path = []
-
-                for position in found_path[0][1:]:
-                    x, y = map(int, position.split('.'))
-                    move.path.append((x, y))
+                move.path = self.simulation.physics.found_path(
+                    start=self.subject.position,
+                    end=move.move_to,
+                )
 
                 # Note: We are in process, move change will be lost
                 new_path = move.path
