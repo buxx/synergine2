@@ -3,18 +3,37 @@ import typing
 
 import tmx
 
+from synergine2_xyz.exceptions import ImproperlyConfiguredMap
 
-class UnconstructedTile(object):
+
+class XYZTile(object):
+    def __init__(self, tile: tmx.Tile) -> None:
+        self.tile = tile
+
+    def property(self, name: str) -> typing.Union[str, int, float]:
+        for property in self.tile.properties:
+            if property.name == name:
+                return property.value
+
+        raise ImproperlyConfiguredMap('Tile with id "{}" don\'t contains "{}" property'.format(
+            self.tile.id,
+            name,
+        ))
+
+
+class UnconstructedTile(XYZTile):
     pass
 
 
 class TMXMap(object):
+    xyz_tile_class = XYZTile
+
     def __init__(self, map_file_path: str) -> None:
         self.tmx_map = tmx.TileMap.load(map_file_path)
         self.tmx_layers = {}  # type: typing.Dict[str, tmx.Layer]
-        self.tmx_layer_tiles = {}  # type: typing.Dict[str, typing.Dict[str, tmx.Tile]]
+        self.tmx_layer_tiles = {}  # type: typing.Dict[str, typing.Dict[str, XYZTile]]
         self.tmx_tilesets = {}  # type: typing.Dict[str, tmx.Tileset]
-        self.tmx_tiles = {}  # type: typing.Dict[int, tmx.Tile]
+        self.tmx_tiles = {}  # type: typing.Dict[int, XYZTile]
         self._load()
 
     @property
@@ -24,6 +43,13 @@ class TMXMap(object):
     @property
     def width(self) -> int:
         return self.tmx_map.width
+
+    def get_default_tileset(self) -> tmx.Tileset:
+        return list(self.tmx_tilesets.values())[0]
+
+    def get_default_tile(self) -> XYZTile:
+        tileset = self.get_default_tileset()
+        return self.xyz_tile_class(tileset.tiles[0])
 
     def _load(self) -> None:
         self._load_layers()
@@ -38,11 +64,11 @@ class TMXMap(object):
         for tileset in self.tmx_map.tilesets:
             self.tmx_tilesets[tileset.name] = tileset
             for tile in tileset.tiles:
-                self.tmx_tiles[tileset.firstgid + tile.id] = tile
+                self.tmx_tiles[tileset.firstgid + tile.id] = self.xyz_tile_class(tile)
 
     def _load_tiles(self) -> None:
         for layer_name, layer in self.tmx_layers.items():
-            x, y = -1, -1
+            x, y = -1, 0
             self.tmx_layer_tiles[layer_name] = {}
 
             # no tiles
@@ -59,9 +85,10 @@ class TMXMap(object):
                 position_key = '{}.{}'.format(x, y)
 
                 if not layer_tile.gid:
-                    tile = None
+                    tile = self.get_default_tile()
                 elif not layer_tile.gid in self.tmx_tiles:
-                    tile = UnconstructedTile()
+                    # tile = UnconstructedTile()
+                    tile = self.get_default_tile()
                 else:
                     tile = self.tmx_tiles[layer_tile.gid]
 
@@ -73,5 +100,8 @@ class TMXMap(object):
     def tileset(self, name: str) -> tmx.Tileset:
         return self.tmx_tilesets[name]
 
-    def tile(self, gid: int) -> tmx.Tile:
+    def tile(self, gid: int) -> XYZTile:
         return self.tmx_tiles[gid]
+
+    def layer_tiles(self, name: str) -> typing.Dict[str, XYZTile]:
+        return self.tmx_layer_tiles[name]

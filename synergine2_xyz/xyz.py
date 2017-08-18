@@ -1,4 +1,5 @@
 # coding: utf-8
+import typing
 from math import acos
 from math import degrees
 from math import sqrt
@@ -201,3 +202,12 @@ def get_direction_from_north_degree(degree: float):
         degree,
         DIRECTION_FROM_NORTH_DEGREES,
     ))
+
+
+def get_neighbor_positions(position: typing.Tuple[int, int]) -> typing.List[typing.Tuple[int, int]]:
+    neighbors = []
+
+    for modifier_x, modifier_y, modifier_z in DIRECTION_MODIFIERS.values():
+        neighbors.append((position[0] + modifier_x, position[1] + modifier_y))
+
+    return neighbors

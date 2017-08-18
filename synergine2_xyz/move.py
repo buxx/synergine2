@@ -67,6 +67,7 @@ class MoveToMechanism(SubjectMechanism):
                 move.path = self.simulation.physics.found_path(
                     start=self.subject.position,
                     end=move.move_to,
+                    subject=self.subject,
                 )
 
                 # Note: We are in process, move change will be lost
