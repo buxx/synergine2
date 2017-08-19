@@ -27,6 +27,7 @@ class UnconstructedTile(XYZTile):
 
 class TMXMap(object):
     xyz_tile_class = XYZTile
+    transform_zero_y_to_bottom = True
 
     def __init__(self, map_file_path: str) -> None:
         self.tmx_map = tmx.TileMap.load(map_file_path)
@@ -68,7 +69,10 @@ class TMXMap(object):
 
     def _load_tiles(self) -> None:
         for layer_name, layer in self.tmx_layers.items():
-            x, y = -1, 0
+            x = -1
+            y = 0 if not self.transform_zero_y_to_bottom else self.height - 1
+            y_modifier = 1 if not self.transform_zero_y_to_bottom else -1
+
             self.tmx_layer_tiles[layer_name] = {}
 
             # no tiles
@@ -80,7 +84,7 @@ class TMXMap(object):
 
                 if x == self.width:
                     x = 0
-                    y += 1
+                    y += y_modifier
 
                 position_key = '{}.{}'.format(x, y)
 

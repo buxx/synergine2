@@ -32,7 +32,7 @@ def main(map_dir_path: str, seed_value: int=42):
     simulation = TileStrategySimulation(config, map_file_path=map_file_path)
     subjects = TileStrategySubjects(simulation=simulation)
 
-    for position in ((0, 0), (5, 3), (10, 6)):
+    for position in ((0, 2),):
         man = Man(
             config=config,
             simulation=simulation,

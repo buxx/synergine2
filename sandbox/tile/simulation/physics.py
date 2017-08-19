@@ -23,6 +23,6 @@ class TileMoveCostComputer(MoveCostComputer):
 
         if not tile.property('traversable_by_man'):
             # TODO: revoir la lib disjkstar because les mecs traverses quand meme ...
-            return 1000000000000000000000000
+            return 100
 
         return 1.0
