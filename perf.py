@@ -9,6 +9,7 @@ import os
 
 import time
 from collections import OrderedDict
+from random import randint
 
 from sandbox.perf.simulation import ComputeSubject
 from synergine2.config import Config
@@ -18,7 +19,7 @@ from synergine2.simulation import Simulation, Subjects
 
 
 def simulate(complexity, subject_count, cycle_count, cores):
-    config = Config(dict(complexity=complexity, use_x_cores=cores))
+    config = Config(dict(complexity=complexity, core=dict(use_x_cores=cores)))
     simulation = Simulation(config)
 
     subjects = Subjects(simulation=simulation)
@@ -26,6 +27,7 @@ def simulate(complexity, subject_count, cycle_count, cores):
         subjects.append(ComputeSubject(
             config=config,
             simulation=simulation,
+            data=[randint(0, 1000) for i in range(1000)]
         ))
 
     simulation.subjects = subjects
@@ -53,8 +55,8 @@ def main():
 
     host_cores = multiprocessing.cpu_count()
     retry = 3
-    cycles = 200
-    subject_counts = [1, 10, 100, 1000, 5000]
+    cycles = 10
+    subject_counts = [100, 500]
     complexities = [100, 2000]
     max_cores = args.max_cores or host_cores
 

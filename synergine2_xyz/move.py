@@ -112,10 +112,11 @@ class MoveEvent(Event):
         self.to_position = to_position
 
     def repr_debug(self) -> str:
-        return '{}: subject_id:{}, position:{}'.format(
+        return '{}: subject_id:{}, from_position:{} to_position: {}'.format(
             type(self).__name__,
             self.subject_id,
-            self.position,
+            self.from_position,
+            self.to_position,
         )
 
 

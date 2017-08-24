@@ -11,7 +11,7 @@ from synergine2.simulation import Simulation
 from synergine2.simulation import SubjectBehaviour
 from synergine2.simulation import SubjectMechanism
 from synergine2.simulation import Event
-from synergine2.utils import ChunkManager
+from synergine2.utils import ChunkManager, time_it
 
 
 class CycleManager(BaseObject):
@@ -24,7 +24,8 @@ class CycleManager(BaseObject):
     ):
         if process_manager is None:
             process_manager = ProcessManager(
-                process_count=config.get('use_x_cores', multiprocessing.cpu_count()),
+                # TODO: Changer de config de merde (core.use_x_cores)
+                process_count=config.get('core', {}).get('use_x_cores', multiprocessing.cpu_count()),
                 chunk_manager=ChunkManager(multiprocessing.cpu_count()),
             )
 
@@ -47,8 +48,13 @@ class CycleManager(BaseObject):
         events = []
         # TODO: gestion des behaviours non parallelisables
         # TODO: Proposer des ordres d'execution
-        events.extend(self._get_subjects_events())
-        events.extend(self._get_simulation_events())
+        with time_it() as elapsed_time:
+            events.extend(self._get_subjects_events())
+        print('Cycle subjects events duration: {}s'.format(elapsed_time.get_final_time()))
+
+        with time_it() as elapsed_time:
+            events.extend(self._get_simulation_events())
+        print('Cycle simulation events duration: {}s'.format(elapsed_time.get_final_time()))
 
         self.logger.info('Cycle {} generate {} events'.format(
             str(self.current_cycle),
@@ -221,12 +227,14 @@ class CycleManager(BaseObject):
             behaviours_data = {}
 
             for mechanism in mechanisms:
-                mechanism_data = mechanism.run()
+                with time_it() as elapsed_time:
+                    mechanism_data = mechanism.run()
                 if self.logger.is_debug:
-                    self.logger.info('Subject {}: {} mechanisms produce data: {}'.format(
+                    self.logger.debug('Subject {}: {} mechanisms produce data: {} in {}s'.format(
                         str(subject.id),
                         type(mechanism).__name__,
                         str(mechanism_data),
+                        elapsed_time.get_final_time(),
                     ))
 
                 mechanisms_data[type(mechanism)] = mechanism_data
@@ -254,13 +262,15 @@ class CycleManager(BaseObject):
                 ))
 
                 # We identify behaviour data with it's class to be able to intersect it after subprocess data collect
-                behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
+                with time_it() as elapsed_time:
+                    behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
 
                 if self.logger.is_debug:
-                    self.logger.debug('Subject {}: behaviour {} produce data: {}'.format(
+                    self.logger.debug('Subject {}: behaviour {} produce data: {} in {}s'.format(
                         str(type(behaviour)),
                         str(subject.id),
                         str(behaviour_data),
+                        elapsed_time.get_final_time(),
                     ))
 
                 if behaviour_data:

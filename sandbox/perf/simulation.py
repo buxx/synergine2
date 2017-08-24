@@ -1,5 +1,6 @@
 import random
 
+from synergine2.config import Config
 from synergine2.simulation import SubjectMechanism, SubjectBehaviour, Event, Subject
 
 
@@ -53,3 +54,12 @@ class ComputeBehaviour(SubjectBehaviour):
 
 class ComputeSubject(Subject):
     behaviours_classes = [ComputeBehaviour]
+
+    def __init__(
+        self,
+        config: Config,
+        simulation: 'Simulation',
+        data,
+    ):
+        super().__init__(config, simulation)
+        self.data = data

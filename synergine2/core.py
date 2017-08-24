@@ -8,6 +8,7 @@ from synergine2.log import SynergineLogger
 from synergine2.simulation import Simulation
 from synergine2.terminals import TerminalManager
 from synergine2.terminals import TerminalPackage
+from synergine2.utils import time_it
 
 
 class Core(BaseObject):
@@ -50,7 +51,12 @@ class Core(BaseObject):
                         subject_actions=package.subject_actions,
                     ))
 
-                events.extend(self.cycle_manager.next())
+                with time_it() as elapsed_time:
+                    events.extend(self.cycle_manager.next())
+                # TODO: There is a problem with logger: when "pickled" we remove it's handler
+                self.logger.info('Cycle duration: {}s'.format(elapsed_time.get_final_time()))
+                print('Cycle duration: {}s'.format(elapsed_time.get_final_time()))
+
                 cycle_package = TerminalPackage(
                     events=events,
                     add_subjects=self.simulation.subjects.adds,

@@ -1,0 +1,5 @@
+core:
+    cycle_duration: 0.125
+    use_x_cores: 1
+terminals:
+    sync: True

@@ -5,11 +5,10 @@ import sys
 import logging
 from random import seed
 
-from sandbox.tile.simulation.subject import Man
-
 synergine2_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_path)
 
+from sandbox.tile.simulation.subject import Man
 from sandbox.tile.simulation.base import TileStrategySimulation
 from sandbox.tile.simulation.base import TileStrategySubjects
 from synergine2.log import get_default_logger
@@ -24,8 +23,8 @@ def main(map_dir_path: str, seed_value: int=42):
     seed(seed_value)
 
     config = Config()
-    config.load_files(['sandbox/engulf/config.yaml'])  # TODO: heu ... engulf ??
-    logger = get_default_logger(level=logging.ERROR)
+    config.load_files(['sandbox/tile/config.yaml'])
+    logger = get_default_logger(level=logging.DEBUG)
 
     map_file_path = 'sandbox/tile/{}.tmx'.format(os.path.join(map_dir_path, os.path.basename(map_dir_path)))
 

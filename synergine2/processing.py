@@ -25,8 +25,10 @@ class ProcessManager(BaseObject):
         chunks = self._chunk_manager.make_chunks(data)
 
         if self._process_count > 1:
+            print('USE POOL')
             results = self.pool.starmap(job_maker, [(chunk, i, self._process_count) for i, chunk in enumerate(chunks)])
         else:
+            print('USE MONO')
             results = [job_maker(data, 0, 1)]
 
         return results
