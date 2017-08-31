@@ -24,6 +24,7 @@ class CycleManager(BaseObject):
     ):
         if process_manager is None:
             process_manager = ProcessManager(
+                config=config,
                 # TODO: Changer de config de merde (core.use_x_cores)
                 process_count=config.get('core', {}).get('use_x_cores', multiprocessing.cpu_count()),
                 chunk_manager=ChunkManager(multiprocessing.cpu_count()),
