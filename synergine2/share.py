@@ -1,7 +1,8 @@
 # coding: utf-8
+import pickle
 import typing
 
-import pylibmc
+import redis
 
 from synergine2.exceptions import SynergineException
 
@@ -12,13 +13,15 @@ class SharedDataManager(object):
     start of processes. Processes will only be able to access shared memory filled here before start.
     """
     def __init__(self):
-        self._mc = pylibmc.Client(['127.0.0.1'], binary=True, behaviors={"tcp_nodelay": True, "ketama": True})
+        self._r = redis.StrictRedis(host='localhost', port=6379, db=0)  # TODO: configs
+        # TODO: Il faut écrire dans REDIS que lorsque l'on veut passer à l'étape processes, genre de commit
+        # sinon on va ecrire dans redis a chaque fois qu'on modifie une shared data c'est pas optimal.
 
     def set(self, key: str, value: typing.Any) -> None:
-        self._mc.set(key, value)
+        self._r.set(key, pickle.dumps(value))
 
     def get(self, key) -> typing.Any:
-        return self._mc.get(key)
+        return pickle.loads(self._r.get(key))
 
     def create(
         self,

@@ -21,6 +21,7 @@ class MyFakeClass(object):
 
 
 class TestProcessing(BaseTest):
+    @pytest.mark.timeout(10)
     def make_job_with_scalar(
             self,
             data: list,
@@ -28,6 +29,7 @@ class TestProcessing(BaseTest):
         result = sum(data)
         return result
 
+    @pytest.mark.timeout(10)
     def make_job_with_object(
             self,
             data: list,
@@ -50,6 +52,7 @@ class TestProcessing(BaseTest):
 
         assert sum(results) == 39600
 
+    @pytest.mark.timeout(10)
     def test_non_parallel_jobs_with_scalar(self):
         # TODO: process manager utilise actuellement un cpu quand même, changer ca
         process_manager = ProcessManager(
@@ -66,6 +69,7 @@ class TestProcessing(BaseTest):
         assert len(results) == 1
         assert final_result == 4950
 
+    @pytest.mark.timeout(10)
     def test_parallel_jobs_with_objects(self):
         process_manager = ProcessManager(
             config=Config({}),
@@ -84,12 +88,14 @@ class TestProcessing(BaseTest):
 
         assert final_result == 39600
 
+    @pytest.mark.timeout(10)
     def test_shared_memory_with_shared_manager(self):
         shared = SharedDataManager()
         shared.set('counter', 42)
 
         def job(*args, **kwargs):
-            return shared.get('counter') + 1
+            counter = shared.get('counter') or 0
+            return counter + 1
 
         process_manager = ProcessManager(
             config=Config({}),
@@ -102,6 +108,7 @@ class TestProcessing(BaseTest):
 
         assert results[0] == 43
 
+    @pytest.mark.timeout(10)
     def test_share_data_with_function(self):
         shared = SharedDataManager()
 
@@ -109,7 +116,8 @@ class TestProcessing(BaseTest):
             counter = shared.create('counter', 0)
 
         def job(*args, **kwargs):
-            return shared.get('counter') + 1
+            counter = shared.get('counter') or 0
+            return counter + 1
 
         process_manager = ProcessManager(
             config=Config({}),
@@ -130,13 +138,15 @@ class TestProcessing(BaseTest):
 
         process_manager.terminate()
 
+    @pytest.mark.timeout(10)
     def test_after_created_shared_data(self):
         shared = SharedDataManager()
 
         shared.set('foo_1', 0)
 
         def job(key):
-            return shared.get('foo_{}'.format(key)) + 1
+            value = shared.get('foo_{}'.format(key)) or 0
+            return value + 1
 
         process_manager = ProcessManager(
             config=Config({}),
