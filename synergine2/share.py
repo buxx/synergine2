@@ -5,6 +5,7 @@ import typing
 import redis
 
 from synergine2.exceptions import SynergineException
+from synergine2.exceptions import UnknownSharedData
 
 
 class SharedDataManager(object):
@@ -12,16 +13,36 @@ class SharedDataManager(object):
     This object is designed to own shared memory between processes. It must be feed (with set method) before
     start of processes. Processes will only be able to access shared memory filled here before start.
     """
-    def __init__(self):
+    def __init__(self, clear: bool=True):
         self._r = redis.StrictRedis(host='localhost', port=6379, db=0)  # TODO: configs
-        # TODO: Il faut écrire dans REDIS que lorsque l'on veut passer à l'étape processes, genre de commit
-        # sinon on va ecrire dans redis a chaque fois qu'on modifie une shared data c'est pas optimal.
+
+        self._data = {}
+        self._modified_keys = set()
+
+        if clear:
+            self._r.flushdb()
 
     def set(self, key: str, value: typing.Any) -> None:
-        self._r.set(key, pickle.dumps(value))
+        self._data[key] = value
+        self._modified_keys.add(key)
 
     def get(self, key) -> typing.Any:
-        return pickle.loads(self._r.get(key))
+        if key not in self._data:
+            b_value = self._r.get(key)
+            if b_value is None:
+                # We not allow None value storage
+                raise UnknownSharedData('No shared data for key "{}"'.format(key))
+            self._data[key] = pickle.loads(b_value)
+
+        return self._data[key]
+
+    def commit(self) -> None:
+        for key in self._modified_keys:
+            self._r.set(key, pickle.dumps(self.get(key)))
+        self._modified_keys = set()
+
+    def refresh(self) -> None:
+        self._data = {}
 
     def create(
         self,

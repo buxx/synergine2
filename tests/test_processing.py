@@ -92,8 +92,10 @@ class TestProcessing(BaseTest):
     def test_shared_memory_with_shared_manager(self):
         shared = SharedDataManager()
         shared.set('counter', 42)
+        shared.commit()
 
         def job(*args, **kwargs):
+            shared.refresh()
             counter = shared.get('counter') or 0
             return counter + 1
 
@@ -116,6 +118,7 @@ class TestProcessing(BaseTest):
             counter = shared.create('counter', 0)
 
         def job(*args, **kwargs):
+            shared.refresh()
             counter = shared.get('counter') or 0
             return counter + 1
 
@@ -127,11 +130,13 @@ class TestProcessing(BaseTest):
 
         foo = Foo()
         foo.counter = 42
+        shared.commit()
 
         results = process_manager.make_them_work(None)
         assert results[0] == 43
 
         foo.counter = 45
+        shared.commit()
 
         results = process_manager.make_them_work(None)
         assert results[0] == 46
@@ -145,6 +150,7 @@ class TestProcessing(BaseTest):
         shared.set('foo_1', 0)
 
         def job(key):
+            shared.refresh()
             value = shared.get('foo_{}'.format(key)) or 0
             return value + 1
 
@@ -155,11 +161,13 @@ class TestProcessing(BaseTest):
         )
 
         shared.set('foo_1', 42)
+        shared.commit()
 
         results = process_manager.make_them_work('1')
         assert results[0] == 43
 
         shared.set('foo_2', 52)
+        shared.commit()
 
         results = process_manager.make_them_work('2')
         assert results[0] == 53

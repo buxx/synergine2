@@ -13,3 +13,7 @@ class NotYetImplemented(SynergineException):
 
 class ConfigurationError(SynergineException):
     pass
+
+
+class UnknownSharedData(SynergineException):
+    pass
