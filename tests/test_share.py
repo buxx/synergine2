@@ -12,6 +12,21 @@ class TestShare(BaseTest):
         shared = SharedDataManager()
 
         class Foo(object):
+            counter = shared.create('counter', value=0)
+
+        foo = Foo()
+        foo.counter = 42
+
+        assert shared.get('counter') == 42
+
+        foo.counter = 48
+
+        assert shared.get('counter') == 48
+
+    def test_default_value(self):
+        shared = SharedDataManager()
+
+        class Foo(object):
             counter = shared.create('counter', 0)
 
         foo = Foo()
@@ -28,8 +43,8 @@ class TestShare(BaseTest):
 
         class Foo(object):
             counter = shared.create(
-                '{id}_counter',
-                0,
+                ['{id}', 'counter'],
+                value=0,
                 indexes=[],
             )
 
@@ -40,11 +55,11 @@ class TestShare(BaseTest):
         foo = Foo()
         foo.counter = 42
 
-        assert shared.get('{}_counter'.format(foo.id)) == 42
+        assert shared.get(foo.id, 'counter') == 42
 
         foo.counter = 48
 
-        assert shared.get('{}_counter'.format(foo.id)) == 48
+        assert shared.get(foo.id, 'counter') == 48
 
     def test_multiple_uses(self):
         shared = SharedDataManager()

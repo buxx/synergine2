@@ -2,6 +2,7 @@
 import pickle
 import typing
 
+import collections
 import redis
 
 from synergine2.exceptions import SynergineException
@@ -42,7 +43,9 @@ class SharedDataManager(object):
         self._data[key] = value
         self._modified_keys.add(key)
 
-    def get(self, key) -> typing.Any:
+    def get(self, *key_args: typing.Union[str, float, int]) -> typing.Any:
+        key = '_'.join([str(v) for v in key_args])
+
         if key not in self._data:
             b_value = self._r.get(key)
             if b_value is None:
@@ -71,10 +74,13 @@ class SharedDataManager(object):
 
     def create(
         self,
-        key: str,
-        value,
+        key_args: typing.Union[str, typing.List[typing.Union[str, int, float]]],
+        value: typing.Any,
         indexes: typing.List[SharedDataIndex]=None,
     ):
+        key = key_args
+        if not isinstance(key, str):
+            key = '_'.join(key_args)
         indexes = indexes or []
 
         def get_key(obj):
