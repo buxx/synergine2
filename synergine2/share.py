@@ -8,6 +8,22 @@ from synergine2.exceptions import SynergineException
 from synergine2.exceptions import UnknownSharedData
 
 
+class SharedDataIndex(object):
+    def __init__(
+        self,
+        shared_data_manager: 'SharedDataManager',
+        key: str,
+    ) -> None:
+        self.shared_data_manager = shared_data_manager
+        self.key = key
+
+    def add(self, value: typing.Any) -> None:
+        raise NotImplementedError()
+
+    def remove(self, value: typing.Any) -> None:
+        raise NotImplementedError()
+
+
 class SharedDataManager(object):
     """
     This object is designed to own shared memory between processes. It must be feed (with set method) before
@@ -44,12 +60,23 @@ class SharedDataManager(object):
     def refresh(self) -> None:
         self._data = {}
 
+    def make_index(
+        self,
+        shared_data_index_class: typing.Type[SharedDataIndex],
+        key: str,
+        *args: typing.Any,
+        **kwargs: typing.Any
+    ) -> SharedDataIndex:
+        return shared_data_index_class(self, key, *args, **kwargs)
+
     def create(
         self,
         key: str,
         value,
-        indexes=None,
+        indexes: typing.List[SharedDataIndex]=None,
     ):
+        indexes = indexes or []
+
         def get_key(obj):
             return key
 
@@ -66,7 +93,17 @@ class SharedDataManager(object):
             return self.get(key)
 
         def fset(self_, value_):
+            try:
+                previous_value = self.get(key_formatter(self_))
+                for index in indexes:
+                    index.remove(previous_value)
+            except UnknownSharedData:
+                pass  # If no shared data, no previous value to remove
+
             self.set(key_formatter(self_), value_)
+
+            for index in indexes:
+                index.add(value_)
 
         def fdel(self_):
             raise SynergineException('You cannot delete a shared data')
