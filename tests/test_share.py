@@ -2,14 +2,13 @@
 import pytest
 
 from synergine2.exceptions import UnknownSharedData
-from synergine2.share import SharedDataManager
-from synergine2.share import SharedDataIndex
+from synergine2 import share
 from tests import BaseTest
 
 
 class TestShare(BaseTest):
     def test_simple_share_with_class(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             counter = shared.create('counter', value=0)
@@ -24,7 +23,7 @@ class TestShare(BaseTest):
         assert shared.get('counter') == 48
 
     def test_default_value(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             counter = shared.create('counter', 0)
@@ -39,7 +38,7 @@ class TestShare(BaseTest):
         assert shared.get('counter') == 48
 
     def test_dynamic_key(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             counter = shared.create(
@@ -62,7 +61,7 @@ class TestShare(BaseTest):
         assert shared.get(foo.id, 'counter') == 48
 
     def test_multiple_uses(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             position = shared.create(
@@ -87,7 +86,7 @@ class TestShare(BaseTest):
         assert shared.get('{}_position'.format(foo2.id)) == (3, 4, 5)
 
     def test_update_dict_with_pointer(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             data = shared.create('data', {})
@@ -101,7 +100,7 @@ class TestShare(BaseTest):
         assert shared.get('data') == {'foo': 'buz'}
 
     def test_refresh_without_commit(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             counter = shared.create('counter', 0)
@@ -116,7 +115,7 @@ class TestShare(BaseTest):
             shared.get('counter')
 
     def test_commit(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             counter = shared.create('counter', 0)
@@ -130,7 +129,7 @@ class TestShare(BaseTest):
         assert shared.get('counter') == 42
 
     def test_commit_then_refresh(self):
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             counter = shared.create('counter', 0)
@@ -145,7 +144,7 @@ class TestShare(BaseTest):
         assert shared.get('counter') == 42
 
     def test_position_index(self):
-        class ListIndex(SharedDataIndex):
+        class ListIndex(share.SharedDataIndex):
             def add(self, value):
                 try:
                     values = self.shared_data_manager.get(self.key)
@@ -160,13 +159,49 @@ class TestShare(BaseTest):
                 values.remove(value)
                 self.shared_data_manager.set(self.key, values)
 
-        shared = SharedDataManager()
+        shared = share.SharedDataManager()
 
         class Foo(object):
             position = shared.create(
                 '{id}_position',
                 (0, 0, 0),
                 indexes=[shared.make_index(ListIndex, 'positions')],
+            )
+
+            @property
+            def id(self):
+                return id(self)
+
+        with pytest.raises(UnknownSharedData):
+            shared.get('positions')
+
+        foo = Foo()
+        foo.position = (0, 1, 2)
+
+        assert shared.get('{}_position'.format(foo.id)) == (0, 1, 2)
+        assert shared.get('positions') == [(0, 1, 2)]
+
+        foo2 = Foo()
+        foo2.position = (3, 4, 5)
+
+        assert shared.get('{}_position'.format(foo.id)) == (0, 1, 2)
+        assert shared.get('{}_position'.format(foo2.id)) == (3, 4, 5)
+        assert shared.get('positions') == [(0, 1, 2), (3, 4, 5)]
+
+        foo2.position = (6, 7, 8)
+        assert shared.get('{}_position'.format(foo2.id)) == (6, 7, 8)
+        assert shared.get('positions') == [(0, 1, 2), (6, 7, 8)]
+
+
+class TestIndexes(BaseTest):
+    def test_list_index(self):
+        shared = share.SharedDataManager()
+
+        class Foo(object):
+            position = shared.create(
+                '{id}_position',
+                (0, 0, 0),
+                indexes=[shared.make_index(share.ListIndex, 'positions')],
             )
 
             @property

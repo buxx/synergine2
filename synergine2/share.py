@@ -122,3 +122,18 @@ class SharedDataManager(object):
 
         return shared_property
 
+
+class ListIndex(SharedDataIndex):
+    def add(self, value):
+        try:
+            values = self.shared_data_manager.get(self.key)
+        except UnknownSharedData:
+            values = []
+
+        values.append(value)
+        self.shared_data_manager.set(self.key, values)
+
+    def remove(self, value):
+        values = self.shared_data_manager.get(self.key)
+        values.remove(value)
+        self.shared_data_manager.set(self.key, values)
