@@ -18,6 +18,9 @@ STOP_SIGNAL = '__STOP_SIGNAL__'
 
 
 class TerminalPackage(BaseObject):
+    """
+    TODO: Update this class considering shared data across processes
+    """
     def __init__(
             self,
             subjects: [Subject]=None,

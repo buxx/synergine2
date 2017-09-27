@@ -46,7 +46,7 @@ class Physics(object):
         self.move_cost_computer = self.move_cost_computer_class(config)
 
     def load(self) -> None:
-        raise NotImplementedError()
+        pass
 
     def position_to_key(self, position: typing.Tuple[int, int]) -> str:
         return '{}.{}'.format(*position)

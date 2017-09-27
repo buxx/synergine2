@@ -19,7 +19,7 @@ class XYZSimulation(BaseSimulation):
         self.physics.load()
 
     def create_physics(self) -> Physics:
-        raise NotImplementedError()
+        return Physics(self.config)
 
     def is_possible_subject_position(self, subject: XYZSubject, position: tuple) -> bool:
         return self.is_possible_position(position)

@@ -24,6 +24,8 @@ class TestProcessing(BaseTest):
     @pytest.mark.timeout(10)
     def make_job_with_scalar(
             self,
+            worker_id: int,
+            process_count: int,
             data: list,
     ):
         result = sum(data)
@@ -32,6 +34,8 @@ class TestProcessing(BaseTest):
     @pytest.mark.timeout(10)
     def make_job_with_object(
             self,
+            worker_id: int,
+            process_count: int,
             data: list,
     ):
         data = [o.value for o in data]
@@ -149,7 +153,7 @@ class TestProcessing(BaseTest):
 
         shared.set('foo_1', 0)
 
-        def job(key):
+        def job(worker_id, processes_count, key):
             shared.refresh()
             value = shared.get('foo_{}'.format(key)) or 0
             return value + 1

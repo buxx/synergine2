@@ -1,17 +1,23 @@
 # coding: utf-8
 import multiprocessing
+import typing
 
 from synergine2.base import BaseObject
 from synergine2.config import Config
+from synergine2.exceptions import SynergineException
 from synergine2.log import SynergineLogger
 from synergine2.processing import ProcessManager
-from synergine2.simulation import SimulationMechanism
-from synergine2.simulation import SimulationBehaviour
+from synergine2.share import shared
+from synergine2.simulation import Subject
 from synergine2.simulation import Simulation
 from synergine2.simulation import SubjectBehaviour
 from synergine2.simulation import SubjectMechanism
 from synergine2.simulation import Event
-from synergine2.utils import ChunkManager, time_it
+from synergine2.utils import time_it
+
+
+JOB_TYPE_SUBJECTS = 0
+JOB_TYPE_SIMULATION = 1
 
 
 class CycleManager(BaseObject):
@@ -22,20 +28,107 @@ class CycleManager(BaseObject):
             simulation: Simulation,
             process_manager: ProcessManager=None,
     ):
+        # TODO: reproduire le mechanisme d'index de behaviour/etc pour simulation
+        self.config = config
+        self.logger = logger
+        self.simulation = simulation
+        self.current_cycle = -1
+        self.first_cycle = True
+
+        self.subject_mechanisms_cache = {}  # type: typing.Dict[int, typing.Dict[str, SubjectMechanism]]
+        self.subject_behaviours_cache = {}  # type: typing.Dict[int, typing.Dict[str, SubjectBehaviour]]
+
+        # TODO NOW: Les processes devront maintenir une liste des subjects qui sont nouveaux.ne connaissent pas
+        # Attention a ce qu'in ne soient pas "expose" quand on créer ces subjects au sein du process.
+        # Ces subjects ont vocation à adopter l'id du vrau subject tout de suite après leur instanciation
         if process_manager is None:
             process_manager = ProcessManager(
                 config=config,
                 # TODO: Changer de config de merde (core.use_x_cores)
                 process_count=config.get('core', {}).get('use_x_cores', multiprocessing.cpu_count()),
-                chunk_manager=ChunkManager(multiprocessing.cpu_count()),
+                job=self.job,
+            )
+        self.process_manager = process_manager
+
+    def job(self, worker_id: int, process_count: int, job_type: str) -> 'TODO':
+        # ICI: (in process) on doit avoir:
+        # La tranche x:y de sujets à traiter
+        shared.refresh()
+        if job_type == JOB_TYPE_SUBJECTS:
+            return self._job_subjects(worker_id, process_count)
+        if job_type == JOB_TYPE_SIMULATION:
+            return self._job_simulation(worker_id, process_count)
+        raise SynergineException('Unknown job type "{}"'.format(job_type))
+
+    def _job_subjects(self, worker_id: int, process_count: int) -> typing.Dict[int, typing.Dict[str, typing.Any]]:
+        # Determine list of process subject to work with
+        subject_ids = shared.get('subject_ids')
+        chunk_length, rest = divmod(len(subject_ids), process_count)
+
+        from_ = chunk_length * worker_id
+        to_ = from_ + chunk_length
+
+        if worker_id + 1 == process_count:
+            to_ += rest
+
+        subject_ids_to_parse = subject_ids[from_:to_]
+
+        # Build list of subjects for compute them
+        subjects = []
+        for subject_id in subject_ids_to_parse:
+            subject = self.simulation.get_or_create_subject(subject_id)
+            subjects.append(subject)
+
+        results_by_subjects = self._subjects_computing(subjects)
+        return results_by_subjects
+
+    def _job_simulation(self, worker_id: int, process_count: int) -> typing.Dict[int, typing.Dict[str, typing.Any]]:
+        self.logger.info('Simulation computing (worker {})'.format(worker_id))
+
+        mechanisms = self.simulation.mechanisms.values()
+        mechanisms_data = {}
+        behaviours_data = {}
+
+        self.logger.info('{} mechanisms to compute'.format(str(len(mechanisms))))
+        if self.logger.is_debug:
+            self.logger.debug('Mechanisms are: {}'.format(
+                str([m.repr_debug() for m in mechanisms])
+            ))
+
+        for mechanism in mechanisms:
+            mechanism_data = mechanism.run(
+                process_number=worker_id,
+                process_count=process_count,
             )
 
-        self.config = config
-        self.logger = logger
-        self.simulation = simulation
-        self.process_manager = process_manager
-        self.current_cycle = -1
-        self.first_cycle = True
+            if self.logger.is_debug:
+                self.logger.debug('{} mechanism product data: {}'.format(
+                    type(mechanism).__name__,
+                    str(mechanism_data),
+                ))
+
+            mechanisms_data[type(mechanism)] = mechanism_data
+
+        behaviours = self.simulation.behaviours.values()
+        self.logger.info('{} behaviours to compute'.format(str(len(behaviours))))
+
+        if self.logger.is_debug:
+            self.logger.debug('Behaviours are: {}'.format(
+                str([b.repr_debug() for b in behaviours])
+            ))
+
+        for behaviour in behaviours:
+            behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
+            if self.logger.is_debug:
+                self.logger.debug('{} behaviour produce data: {}'.format(
+                    type(behaviour).__name__,
+                    behaviour_data,
+                ))
+
+            if behaviour_data:
+                behaviours_data[type(behaviour)] = behaviour_data
+
+        return behaviours_data
 
     def next(self) -> [Event]:
         if self.first_cycle:
@@ -47,6 +140,8 @@ class CycleManager(BaseObject):
         self.logger.info('Process cycle {}'.format(self.current_cycle))
 
         events = []
+        shared.commit()
+
         # TODO: gestion des behaviours non parallelisables
         # TODO: Proposer des ordres d'execution
         with time_it() as elapsed_time:
@@ -69,10 +164,8 @@ class CycleManager(BaseObject):
 
         self.logger.info('Process simulation events')
 
-        results_by_processes = self.process_manager.execute_jobs(
-            data=self.simulation,
-            job_maker=self.simulation_computing,
-        )
+        # TODO: Think about compute simulation cycle in workers
+        results_by_processes = self.process_manager.make_them_work(JOB_TYPE_SIMULATION)
 
         for process_result in results_by_processes:
             for behaviour_class, behaviour_result in process_result.items():
@@ -107,36 +200,35 @@ class CycleManager(BaseObject):
         results = {}
 
         self.logger.info('Process subjects events')
-
-        results_by_processes = self.process_manager.chunk_and_execute_jobs(
-            data=self.simulation.subjects,
-            job_maker=self.subjects_computing,
-        )
+        results_by_processes = self.process_manager.make_them_work(JOB_TYPE_SUBJECTS)
 
         for process_results in results_by_processes:
             results.update(process_results)
 
         # Duplicate list to prevent conflicts with behaviours subjects manipulations
         for subject in self.simulation.subjects[:]:
-            subject_behaviours = results.get(subject.id, {})
+            subject_behaviours_results = results.get(subject.id, {})
             if subject.behaviour_selector:
                 # TODO: Looging
-                subject_behaviours = subject.behaviour_selector.reduce_behaviours(dict(subject_behaviours))
+                subject_behaviours_results = subject.behaviour_selector.reduce_behaviours(dict(
+                    subject_behaviours_results,
+                ))
 
-            for behaviour_class, behaviour_data in subject_behaviours.items():
+            subject_behaviours = self.get_subject_behaviours(subject)
+            for behaviour_class_name, behaviour_data in subject_behaviours_results.items():
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
                 # (genre se cacher et fuir son pas compatibles)
-                behaviour_events = subject.behaviours[behaviour_class].action(behaviour_data)
+                behaviour_events = subject_behaviours[behaviour_class_name].action(behaviour_data)
 
                 self.logger.info('{} behaviour for subject {} generate {} events'.format(
-                    str(behaviour_class),
+                    str(behaviour_class_name),
                     str(subject.id),
                     str(len(behaviour_events)),
                 ))
 
                 if self.logger.is_debug:
                     self.logger.debug('{} behaviour for subject {} generated events: {}'.format(
-                        str(behaviour_class),
+                        str(behaviour_class_name),
                         str(subject.id),
                         str([e.repr_debug() for e in behaviour_events]),
                     ))
@@ -146,71 +238,17 @@ class CycleManager(BaseObject):
         self.logger.info('Subjects behaviours generate {} events'.format(len(events)))
         return events
 
-    def simulation_computing(
-            self,
-            simulation,
-            process_number,
-            process_count,
-    ):
-        self.logger.info('Simulation computing')
-
-        # TODO: necessaire de passer simulation ?
-        mechanisms = self.get_mechanisms_to_compute(simulation)
-        mechanisms_data = {}
-        behaviours_data = {}
-
-        self.logger.info('{} mechanisms to compute'.format(str(len(mechanisms))))
-        if self.logger.is_debug:
-            self.logger.debug('Mechanisms are: {}'.format(
-                str([m.repr_debug() for m in mechanisms])
-            ))
-
-        for mechanism in mechanisms:
-            mechanism_data = mechanism.run(
-                process_number=process_number,
-                process_count=process_count,
-            )
-
-            if self.logger.is_debug:
-                self.logger.debug('{} mechanism product data: {}'.format(
-                    type(mechanism).__name__,
-                    str(mechanism_data),
-                ))
-
-            mechanisms_data[type(mechanism)] = mechanism_data
-
-        behaviours = self.get_behaviours_to_compute(simulation)
-        self.logger.info('{} behaviours to compute'.format(str(len(behaviours))))
-
-        if self.logger.is_debug:
-            self.logger.debug('Behaviours are: {}'.format(
-                str([b.repr_debug() for b in behaviours])
-            ))
-
-        for behaviour in behaviours:
-            behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
-            if self.logger.is_debug:
-                self.logger.debug('{} behaviour produce data: {}'.format(
-                    type(behaviour).__name__,
-                    behaviour_data,
-                ))
-
-            if behaviour_data:
-                behaviours_data[type(behaviour)] = behaviour_data
-
-        return behaviours_data
-
-    def subjects_computing(
+    def _subjects_computing(
             self,
             subjects,
             process_number=None,
             process_count=None,
-    ):
+    ) -> typing.Dict[int, typing.Dict[str, typing.Any]]:
         results = {}
         self.logger.info('Subjects computing: {} subjects to compute'.format(str(len(subjects))))
 
         for subject in subjects:
-            mechanisms = self.get_mechanisms_to_compute(subject)
+            mechanisms = self.get_subject_mechanisms(subject)
 
             if mechanisms:
                 self.logger.info('Subject {}: {} mechanisms'.format(
@@ -221,13 +259,13 @@ class CycleManager(BaseObject):
                 if self.logger.is_debug:
                     self.logger.info('Subject {}: mechanisms are: {}'.format(
                         str(subject.id),
-                        str([m.repr_debug for m in mechanisms])
+                        str([m.repr_debug for n, m in mechanisms.items()])
                     ))
 
             mechanisms_data = {}
             behaviours_data = {}
 
-            for mechanism in mechanisms:
+            for mechanism_class_name, mechanism in mechanisms.items():
                 with time_it() as elapsed_time:
                     mechanism_data = mechanism.run()
                 if self.logger.is_debug:
@@ -238,7 +276,7 @@ class CycleManager(BaseObject):
                         elapsed_time.get_final_time(),
                     ))
 
-                mechanisms_data[type(mechanism)] = mechanism_data
+                mechanisms_data[mechanism_class_name] = mechanism_data
 
             if mechanisms:
                 if self.logger.is_debug:
@@ -247,7 +285,7 @@ class CycleManager(BaseObject):
                         str(mechanisms_data),
                     ))
 
-            subject_behaviours = self.get_behaviours_to_compute(subject)
+            subject_behaviours = self.get_subject_behaviours(subject)
             if not subject_behaviours:
                 break
 
@@ -256,7 +294,7 @@ class CycleManager(BaseObject):
                 str(len(subject_behaviours)),
             ))
 
-            for behaviour in subject_behaviours:
+            for behaviour_class_name, behaviour in subject_behaviours.items():
                 self.logger.info('Subject {}: run {} behaviour'.format(
                     str(subject.id),
                     str(type(behaviour)),
@@ -275,25 +313,46 @@ class CycleManager(BaseObject):
                     ))
 
                 if behaviour_data:
-                    behaviours_data[type(behaviour)] = behaviour_data
+                    behaviours_data[behaviour_class_name] = behaviour_data
 
             results[subject.id] = behaviours_data
         return results
 
-    def get_mechanisms_to_compute(self, mechanisable) -> [SubjectMechanism, SimulationMechanism]:
+    def get_subject_mechanisms(self, subject: Subject) -> typing.Dict[str, SubjectMechanism]:
         # TODO: Implementer un systeme qui inhibe des mechanisme (ex. someil inhibe l'ouie)
-        return mechanisable.mechanisms.values()
+        # Attention: c'est utilisé dans le main process aussi, pertinent de la faire là ?
+        try:
+            return self.subject_mechanisms_cache[subject.id]
+        except KeyError:
+            mechanisms = {}
+            for mechanism_class_id in shared.get('subject_mechanisms_index')[subject.id]:
+                mechanism_class = self.simulation.index[mechanism_class_id]
+                mechanism = mechanism_class(
+                    self.config,
+                    self.simulation,
+                    subject,
+                )
+                mechanisms[mechanism_class.__name__] = mechanism
+            self.subject_mechanisms_cache[subject.id] = mechanisms
+            return mechanisms
 
-    def get_behaviours_to_compute(self, mechanisable) -> [SubjectBehaviour, SimulationBehaviour]:
+    def get_subject_behaviours(self, subject: Subject) -> typing.Dict[str, SubjectBehaviour]:
         # TODO: Implementer un systeme qui inhibe des behaviours (ex. someil inhibe avoir faim)
-        behaviours = list(mechanisable.behaviours.values())
-
-        for behaviour in behaviours[:]:
-            if behaviour.frequency != 1:
-                if self.current_cycle % behaviour.frequency:
-                    behaviours.remove(behaviour)
-
-        return behaviours
+        # Attention: c'est utilisé dans le main process aussi, pertinent de la faire là ?
+        try:
+            return self.subject_behaviours_cache[subject.id]
+        except KeyError:
+            behaviours = {}
+            for behaviour_class_id in shared.get('subject_behaviours_index')[subject.id]:
+                behaviour_class = self.simulation.index[behaviour_class_id]
+                behaviour = behaviour_class(
+                    self.config,
+                    self.simulation,
+                    subject,
+                )
+                behaviours[behaviour_class.__name__] = behaviour
+            self.subject_behaviours_cache[subject.id] = behaviours
+            return behaviours
 
     def apply_actions(
             self,
@@ -364,3 +423,6 @@ class CycleManager(BaseObject):
 
         self.logger.info('{} events generated'.format(len(events)))
         return events
+
+    def stop(self) -> None:
+        self.process_manager.terminate()

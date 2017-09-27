@@ -48,11 +48,11 @@ class Worker(object):
 
     def work(self, *args, **kwargs):
         while True:
-            message = self.process_read_pipe.recv()
-            if message == STOP:
+            args = self.process_read_pipe.recv()
+            if args == STOP:
                 return
 
-            result = self.real_job(message)
+            result = self.real_job(*args)
             self.local_write_pipe.send(result)
 
 
@@ -76,8 +76,8 @@ class ProcessManager(BaseObject):
     def make_them_work(self, message: typing.Any) -> 'TODO':
         responses = []
 
-        for worker in self.workers:
-            worker.process_write_pipe.send(message)
+        for worker_id, worker in enumerate(self.workers):
+            worker.process_write_pipe.send((worker_id, self._process_count, message))
 
         for worker in self.workers:
             responses.append(worker.local_read_pipe.recv())
@@ -90,31 +90,3 @@ class ProcessManager(BaseObject):
 
         for worker in self.workers:
             worker.process.join()
-
-    #
-    # def chunk_and_execute_jobs(self, data: list, job_maker: types.FunctionType) -> list:
-    #     chunks = self._chunk_manager.make_chunks(data)
-    #
-    #     if self._process_count > 1:
-    #         print('USE POOL')
-    #         results = self.pool.starmap(job_maker, [(chunk, i, self._process_count) for i, chunk in enumerate(chunks)])
-    #     else:
-    #         print('USE MONO')
-    #         results = [job_maker(data, 0, 1)]
-    #
-    #     return results
-    #
-    # def execute_jobs(self, data: object, job_maker: types.FunctionType) -> list:
-    #     # TODO: Is there a reason to make multiprocessing here ? data is not chunked ...
-    #     if self._process_count > 1:
-    #         results = self.pool.starmap(job_maker, [(data, i, self._process_count) for i in range(self._process_count)])
-    #     else:
-    #         results = [job_maker(data, 0, 1)]
-    #
-    #     return results
-    #
-    # def __del__(self):
-    #     # TODO: DEV
-    #     return
-    #     if self.pool:
-    #         self.pool.terminate()

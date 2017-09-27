@@ -4,6 +4,7 @@ import typing
 
 from synergine2.base import BaseObject
 from synergine2.config import Config
+from synergine2.share import shared
 from synergine2.utils import get_mechanisms_classes
 
 
@@ -26,6 +27,7 @@ class Subject(BaseObject):
     collections = []
     behaviours_classes = []
     behaviour_selector_class = None  # type: typing.Type[SubjectBehaviourSelector]
+    intention_manager_class = None  # type: typing.Type[IntentionManager]
 
     def __init__(
         self,
@@ -36,19 +38,42 @@ class Subject(BaseObject):
         self.collections = self.collections[:]
 
         self.config = config
-        self.id = id(self)  # We store object id because it's lost between process
+        self._id = id(self)  # We store object id because it's lost between process
         self.simulation = simulation
-        self.behaviours = {}
-        self.mechanisms = {}
-        self.intentions = IntentionManager()
-        self.behaviour_selector = None  # type: SubjectBehaviourSelector
+        self.intentions = None
+
         if self.behaviour_selector_class:
             self.behaviour_selector = self.behaviour_selector_class()
+        else:
+            self.behaviour_selector = SubjectBehaviourSelector()
 
-        for collection in self.collections:
-            self.simulation.collections[collection].append(self)
+        if self.intention_manager_class:
+            self.intentions = self.intention_manager_class()
+        else:
+            self.intentions = IntentionManager()
 
-        self.initialize()
+        # TODO: Revoir le mechanisme de collection: utilité, usage avec les process, etc
+        # for collection in self.collections:
+        #     self.simulation.collections[collection].append(self)
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    def change_id(self, id_: int) -> None:
+        self._id = id_
+
+    def expose(self) -> None:
+        subject_behaviours_index = shared.get('subject_behaviours_index').setdefault(self._id, [])
+        subject_mechanisms_index = shared.get('subject_mechanisms_index').setdefault(self._id, [])
+        subject_classes = shared.get('subject_classes')
+
+        for behaviour_class in self.behaviours_classes:
+            subject_behaviours_index.append(id(behaviour_class))
+            for mechanism_class in behaviour_class.use:
+                subject_mechanisms_index.append(id(mechanism_class))
+
+        subject_classes[self._id] = id(type(self))
 
     def __str__(self):
         return self.__repr__()
@@ -59,37 +84,35 @@ class Subject(BaseObject):
             self.id,
         )
 
-    def initialize(self):
-        for mechanism_class in get_mechanisms_classes(self):
-            self.mechanisms[mechanism_class] = mechanism_class(
-                config=self.config,
-                simulation=self.simulation,
-                subject=self,
-            )
-
-        for behaviour_class in self.behaviours_classes:
-            self.behaviours[behaviour_class] = behaviour_class(
-                config=self.config,
-                simulation=self.simulation,
-                subject=self,
-            )
-
 
 class Subjects(list):
     """
     TODO: Manage other list methods
     """
+    subject_ids = shared.create('subject_ids', [])
+
     def __init__(self, *args, **kwargs):
         self.simulation = kwargs.pop('simulation')
         self.removes = []
         self.adds = []
         self.track_changes = False
         self.index = {}
+        self._auto_expose = True
         super().__init__(*args, **kwargs)
+
+    @property
+    def auto_expose(self) -> bool:
+        return self._auto_expose
+
+    @auto_expose.setter
+    def auto_expose(self, value: bool) -> None:
+        assert self._auto_expose
+        self._auto_expose = value
 
     def remove(self, value: Subject):
         # Remove from index
         del self.index[value.id]
+        self.subject_ids.remove(value.id)
         # Remove from subjects list
         super().remove(value)
         # Remove from collections
@@ -98,20 +121,28 @@ class Subjects(list):
         # Add to removed listing
         if self.track_changes:
             self.removes.append(value)
+        # TODO: Supprimer des choses du shared ! Sinon fuite mémoire dans la bdd
 
     def append(self, p_object):
         # Add to index
         self.index[p_object.id] = p_object
+        self.subject_ids.append(p_object.id)
         # Add to subjects list
         super().append(p_object)
         # Add to adds list
         if self.track_changes:
             self.adds.append(p_object)
+        if self.auto_expose:
+            p_object.expose()
 
 
 class Simulation(BaseObject):
     accepted_subject_class = Subjects
     behaviours_classes = []
+
+    subject_behaviours_index = shared.create('subject_behaviours_index', {})
+    subject_mechanisms_index = shared.create('subject_mechanisms_index', {})
+    subject_classes = shared.create('subject_classes', {})
 
     def __init__(
         self,
@@ -119,11 +150,38 @@ class Simulation(BaseObject):
     ):
         self.config = config
         self.collections = collections.defaultdict(list)
-        self._subjects = None
+        self._subjects = None  # type: Subjects
+
+        # Should contain all usable class of Behaviors, Mechanisms, SubjectBehaviourSelectors,
+        # IntentionManagers, Subject
+        self._index = {}  # type: typing.Dict[int, type]
+        self._index_locked = False
+
         self.behaviours = {}
         self.mechanisms = {}
 
-        self.initialize()
+        for mechanism_class in get_mechanisms_classes(self):
+            self.mechanisms[mechanism_class.__name__] = mechanism_class(
+                config=self.config,
+                simulation=self,
+            )
+
+        for behaviour_class in self.behaviours_classes:
+            self.behaviours[behaviour_class.__name__] = behaviour_class(
+                config=self.config,
+                simulation=self,
+            )
+
+    def add_to_index(self, class_: type) -> None:
+        assert not self._index_locked
+        self._index[id(class_)] = class_
+
+    @property
+    def index(self) -> typing.Dict[int, type]:
+        return self._index
+
+    def lock_index(self) -> None:
+        self._index_locked = True
 
     @property
     def subjects(self):
@@ -137,21 +195,24 @@ class Simulation(BaseObject):
             ))
         self._subjects = value
 
-    def initialize(self):
-        for mechanism_class in get_mechanisms_classes(self):
-            self.mechanisms[mechanism_class] = mechanism_class(
-                config=self.config,
-                simulation=self,
-            )
+    def get_or_create_subject(self, subject_id: int) -> Subject:
+        try:
+            return self._subjects.index[subject_id]
+        except KeyError:
+            # We should be in process context and subject have to been created
+            subject_class_id = shared.get('subject_classes')[subject_id]
+            subject_class = self.index[subject_class_id]
+            subject = subject_class(self.config, self)
+            subject.change_id(subject_id)
+            self.subjects.append(subject)
+            return subject
 
-        for behaviour_class in self.behaviours_classes:
-            self.behaviours[behaviour_class] = behaviour_class(
-                config=self.config,
-                simulation=self,
-            )
+
+class Mechanism(BaseObject):
+    pass
 
 
-class SubjectMechanism(BaseObject):
+class SubjectMechanism(Mechanism):
     def __init__(
             self,
             config: Config,
@@ -166,7 +227,7 @@ class SubjectMechanism(BaseObject):
         raise NotImplementedError()
 
 
-class SimulationMechanism(BaseObject):
+class SimulationMechanism(Mechanism):
     """If parallelizable behaviour, call """
     parallelizable = False
 
@@ -193,7 +254,12 @@ class Event(BaseObject):
         return self.__class__.__name__
 
 
-class SubjectBehaviour(BaseObject):
+class Behaviour(BaseObject):
+    def run(self, data):
+        raise NotImplementedError()
+
+
+class SubjectBehaviour(Behaviour):
     frequency = 1
     use = []  # type: typing.List[typing.Type[SubjectMechanism]]
 
@@ -226,7 +292,7 @@ class SubjectBehaviour(BaseObject):
         raise NotImplementedError()
 
 
-class SimulationBehaviour(BaseObject):
+class SimulationBehaviour(Behaviour):
     frequency = 1
     use = []
 
@@ -265,4 +331,4 @@ class SubjectBehaviourSelector(BaseObject):
         self,
         behaviours: typing.Dict[typing.Type[SubjectBehaviour], object],
     ) -> typing.Dict[typing.Type[SubjectBehaviour], object]:
-        raise NotImplementedError()
+        return behaviours

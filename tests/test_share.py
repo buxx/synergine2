@@ -1,4 +1,6 @@
 # coding: utf-8
+import pickle
+
 import pytest
 
 from synergine2.exceptions import UnknownSharedData
@@ -98,6 +100,38 @@ class TestShare(BaseTest):
 
         foo.data['foo'] = 'buz'
         assert shared.get('data') == {'foo': 'buz'}
+
+        shared.commit()
+        assert shared.get('data') == {'foo': 'buz'}
+        assert pickle.loads(shared._r.get('data')) == {'foo': 'buz'}
+
+        foo.data['foo'] = 'bAz'
+        shared.commit()
+        assert shared.get('data') == {'foo': 'bAz'}
+        assert pickle.loads(shared._r.get('data')) == {'foo': 'bAz'}
+
+    def test_update_list_with_pointer(self):
+        shared = share.SharedDataManager()
+
+        class Foo(object):
+            data = shared.create('data', [])
+
+        foo = Foo()
+        foo.data = ['foo']
+
+        assert shared.get('data') == ['foo']
+
+        foo.data.append('bar')
+        assert shared.get('data') == ['foo', 'bar']
+
+        shared.commit()
+        assert shared.get('data') == ['foo', 'bar']
+        assert pickle.loads(shared._r.get('data')) == ['foo', 'bar']
+
+        foo.data.append('bAr')
+        shared.commit()
+        assert shared.get('data') == ['foo', 'bar', 'bAr']
+        assert pickle.loads(shared._r.get('data')) == ['foo', 'bar', 'bAr']
 
     def test_refresh_without_commit(self):
         shared = share.SharedDataManager()

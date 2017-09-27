@@ -25,6 +25,40 @@ class SharedDataIndex(object):
         raise NotImplementedError()
 
 
+class TrackedDict(dict):
+    base = dict
+
+    def __init__(self, seq=None, **kwargs):
+        self.key = kwargs.pop('key')
+        self.shared = kwargs.pop('shared')
+        super().__init__(seq, **kwargs)
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self.shared.set(self.key, dict(self))
+
+    def setdefault(self, k, d=None):
+        v = super().setdefault(k, d)
+        self.shared.set(self.key, dict(self))
+        return v
+    # TODO: Cover all methods
+
+
+class TrackedList(list):
+    base = list
+
+    def __init__(self, seq=(), **kwargs):
+        self.key = kwargs.pop('key')
+        self.shared = kwargs.pop('shared')
+        super().__init__(seq)
+
+    def append(self, p_object):
+        super().append(p_object)
+        self.shared.set(self.key, list(self))
+
+    # TODO: Cover all methods
+
+
 class SharedDataManager(object):
     """
     This object is designed to own shared memory between processes. It must be feed (with set method) before
@@ -35,29 +69,67 @@ class SharedDataManager(object):
 
         self._data = {}
         self._modified_keys = set()
+        self._default_values = {}
+        self._special_types = {}  # type: typing.Dict[str, typing.Union[typing.Type[TrackedDict], typing.Type[TrackedList]]]  # nopep8
 
         if clear:
-            self._r.flushdb()
+            self.clear()
+
+    def clear(self) -> None:
+        self._r.flushdb()
+        self._data = {}
+        self._modified_keys = set()
+
+    def reset(self) -> None:
+        for key, value in self._default_values.items():
+            self.set(key, value)
+        self.commit()
+        self._data = {}
 
     def set(self, key: str, value: typing.Any) -> None:
+        try:
+            special_type = self._special_types[key]
+            value = special_type(value, key=key, shared=self)
+        except KeyError:
+            pass
+
         self._data[key] = value
         self._modified_keys.add(key)
 
     def get(self, *key_args: typing.Union[str, float, int]) -> typing.Any:
         key = '_'.join([str(v) for v in key_args])
 
-        if key not in self._data:
+        try:
+            return self._data[key]
+        except KeyError:
             b_value = self._r.get(key)
             if b_value is None:
                 # We not allow None value storage
                 raise UnknownSharedData('No shared data for key "{}"'.format(key))
-            self._data[key] = pickle.loads(b_value)
+
+            value = pickle.loads(b_value)
+            special_type = None
+
+            try:
+                special_type = self._special_types[key]
+            except KeyError:
+                pass
+
+            if special_type:
+                self._data[key] = special_type(value, key=key, shared=self)
+            else:
+                self._data[key] = value
 
         return self._data[key]
 
     def commit(self) -> None:
         for key in self._modified_keys:
-            self._r.set(key, pickle.dumps(self.get(key)))
+            try:
+                special_type = self._special_types[key]
+                value = special_type.base(self.get(key))
+                self._r.set(key, pickle.dumps(value))
+            except KeyError:
+                self._r.set(key, pickle.dumps(self.get(key)))
         self._modified_keys = set()
 
     def refresh(self) -> None:
@@ -83,6 +155,13 @@ class SharedDataManager(object):
             key = '_'.join(key_args)
         indexes = indexes or []
 
+        if type(value) is dict:
+            value = TrackedDict(value, key=key, shared=shared)
+            self._special_types[key] = TrackedDict
+        elif type(value) is list:
+            value = TrackedList(value, key=key, shared=shared)
+            self._special_types[key] = TrackedList
+
         def get_key(obj):
             return key
 
@@ -93,6 +172,7 @@ class SharedDataManager(object):
             key_formatter = get_key_with_id
         else:
             self.set(key, value)
+            self._default_values[key] = value
             key_formatter = get_key
 
         def fget(self_):
@@ -121,6 +201,9 @@ class SharedDataManager(object):
         )
 
         return shared_property
+
+# TODO: Does exist a way to permit overload of SharedDataManager class ?
+shared = SharedDataManager()
 
 
 class ListIndex(SharedDataIndex):
