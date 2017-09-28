@@ -52,13 +52,12 @@ class Subject(BaseObject):
         else:
             self.intentions = IntentionManager()
 
-        # TODO: Revoir le mechanisme de collection: utilité, usage avec les process, etc
-        # for collection in self.collections:
-        #     self.simulation.collections[collection].append(self)
-
     @property
     def id(self) -> int:
-        return self._id
+        try:
+            return self._id
+        except AttributeError:
+            pass
 
     def change_id(self, id_: int) -> None:
         self._id = id_
@@ -74,6 +73,9 @@ class Subject(BaseObject):
                 subject_mechanisms_index.append(id(mechanism_class))
 
         subject_classes[self._id] = id(type(self))
+
+        for collection in self.collections:
+            self.simulation.collections.setdefault(collection, []).append(self.id)
 
     def __str__(self):
         return self.__repr__()
@@ -99,6 +101,10 @@ class Subjects(list):
         self.index = {}
         self._auto_expose = True
         super().__init__(*args, **kwargs)
+
+        if self.auto_expose:
+            for subject in self:
+                subject.expose()
 
     @property
     def auto_expose(self) -> bool:
@@ -135,6 +141,10 @@ class Subjects(list):
         if self.auto_expose:
             p_object.expose()
 
+    def extend(self, iterable):
+        for item in iterable:
+            self.append(item)
+
 
 class Simulation(BaseObject):
     accepted_subject_class = Subjects
@@ -143,13 +153,13 @@ class Simulation(BaseObject):
     subject_behaviours_index = shared.create('subject_behaviours_index', {})
     subject_mechanisms_index = shared.create('subject_mechanisms_index', {})
     subject_classes = shared.create('subject_classes', {})
+    collections = shared.create('collections', {})
 
     def __init__(
         self,
         config: Config,
     ):
         self.config = config
-        self.collections = collections.defaultdict(list)
         self._subjects = None  # type: Subjects
 
         # Should contain all usable class of Behaviors, Mechanisms, SubjectBehaviourSelectors,
@@ -172,9 +182,10 @@ class Simulation(BaseObject):
                 simulation=self,
             )
 
-    def add_to_index(self, class_: type) -> None:
+    def add_to_index(self, *classes: type) -> None:
         assert not self._index_locked
-        self._index[id(class_)] = class_
+        for class_ in classes:
+            self._index[id(class_)] = class_
 
     @property
     def index(self) -> typing.Dict[int, type]:

@@ -1,6 +1,7 @@
 # coding: utf-8
 # -*- coding: utf-8 -*-
 from synergine2.config import Config
+from synergine2.share import shared
 from synergine2.simulation import Subject
 from synergine2_xyz.mechanism import ProximitySubjectMechanism
 from synergine2_xyz.simulation import XYZSimulation
@@ -22,7 +23,13 @@ class MyProximityMechanism(ProximitySubjectMechanism):
 
 class TestXYZ(BaseTest):
     def test_proximity_mechanism_with_one(self):
+        shared.reset()
         simulation = XYZSimulation(Config())
+        simulation.add_to_index(
+            MyProximityMechanism,
+            MySubject,
+        )
+
         subject = MySubject(Config(), simulation, position=(0, 0, 0))
         other_subject = MySubject(Config(), simulation, position=(5, 0, 0))
 
@@ -30,6 +37,7 @@ class TestXYZ(BaseTest):
             [subject, other_subject],
             simulation=simulation,
         )
+        simulation.subjects.auto_expose = False
 
         proximity_mechanism = MyProximityMechanism(
             config=Config(),
@@ -42,13 +50,19 @@ class TestXYZ(BaseTest):
             subject=other_subject,
         )
         assert [{
-            'subject': other_subject,
+            'subject_id': other_subject.id,
             'direction': 90.0,
             'distance': 5.0,
         }] == proximity_mechanism.run()
 
     def test_proximity_mechanism_excluding(self):
+        shared.reset()
         simulation = XYZSimulation(Config())
+        simulation.add_to_index(
+            MyProximityMechanism,
+            MySubject,
+        )
+
         subject = MySubject(Config(), simulation, position=(0, 0, 0))
         other_subject = MySubject(Config(), simulation, position=(11, 0, 0))
 
@@ -56,6 +70,7 @@ class TestXYZ(BaseTest):
             [subject, other_subject],
             simulation=simulation,
         )
+        simulation.subjects.auto_expose = False
 
         proximity_mechanism = MyProximityMechanism(
             config=Config(),
@@ -71,7 +86,13 @@ class TestXYZ(BaseTest):
         assert [] == proximity_mechanism.run()
 
     def test_proximity_mechanism_with_multiple(self):
+        shared.reset()
         simulation = XYZSimulation(Config())
+        simulation.add_to_index(
+            MyProximityMechanism,
+            MySubject,
+        )
+
         subject = MySubject(Config(), simulation, position=(0, 0, 0))
         other_subjects = []
 
@@ -80,6 +101,7 @@ class TestXYZ(BaseTest):
 
         simulation.subjects = XYZSubjects([subject], simulation=simulation)
         simulation.subjects.extend(other_subjects)
+        simulation.subjects.auto_expose = False
 
         proximity_mechanism = MyProximityMechanism(
             config=Config(),
@@ -91,17 +113,17 @@ class TestXYZ(BaseTest):
         assert [
             {
                 'direction': 0,
-                'subject': other_subjects[0],
+                'subject_id': other_subjects[0].id,
                 'distance': 0.0,
             },
             {
                 'direction': 135.0,
-                'subject': other_subjects[1],
+                'subject_id': other_subjects[1].id,
                 'distance': 1.41
             },
             {
                 'direction': 135.0,
-                'subject': other_subjects[2],
+                'subject_id': other_subjects[2].id,
                 'distance': 2.83
             },
         ] == data

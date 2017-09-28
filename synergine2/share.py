@@ -176,7 +176,7 @@ class SharedDataManager(object):
             key_formatter = get_key
 
         def fget(self_):
-            return self.get(key)
+            return self.get(key_formatter(self_))
 
         def fset(self_, value_):
             try:

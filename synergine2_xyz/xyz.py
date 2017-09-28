@@ -5,6 +5,7 @@ from math import degrees
 from math import sqrt
 
 from synergine2.exceptions import SynergineException
+from synergine2.share import shared
 from synergine2.simulation import Subject
 
 """
@@ -115,21 +116,23 @@ class XYZSubjectMixinMetaClass(type):
 
 
 class XYZSubjectMixin(object, metaclass=XYZSubjectMixinMetaClass):
+    position = shared.create(['{id}', 'counter'], (0, 0, 0))
+
     def __init__(self, *args, **kwargs):
         """
         :param position: tuple with (x, y, z)
         """
-        self._position = kwargs.pop('position')
-        self.previous_direction = None
+        position = None
+        try:
+            position = kwargs.pop('position')
+        except KeyError:
+            pass
+
+        self.previous_direction = None  # TODO: shared
         super().__init__(*args, **kwargs)
 
-    @property
-    def position(self):
-        return self._position
-
-    @position.setter
-    def position(self, value):
-        self._position = value
+        if position:
+            self.position = position
 
 
 class ProximityMixin(object):
@@ -152,8 +155,9 @@ class ProximityMixin(object):
             # TODO: Optimiser en calculant directement les positions alentours et
             # en regardant si elles sont occupés dans subjects.xyz par un subject
             # etant dans fell_collection
-            for subject in simulation.collections.get(feel_collection, []):
-                if subject == exclude_subject:
+            for subject_id in simulation.collections.get(feel_collection, []):
+                subject = simulation.get_or_create_subject(subject_id)
+                if subject.id == exclude_subject.id:
                     continue
 
                 if self.have_to_check_position_is_possible() and not simulation.is_possible_position(subject.position):
@@ -175,7 +179,7 @@ class ProximityMixin(object):
                         self.direction_round_decimals,
                     )
                     subjects.append({
-                        'subject': subject,
+                        'subject_id': subject.id,
                         'direction': direction,
                         'distance': distance,
                     })
