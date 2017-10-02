@@ -253,7 +253,7 @@ class SimulationMechanism(Mechanism):
     def repr_debug(self) -> str:
         return self.__class__.__name__
 
-    def run(self, process_id: int=None, process_count: int=None):
+    def run(self, process_number: int=None, process_count: int=None):
         raise NotImplementedError()
 
 

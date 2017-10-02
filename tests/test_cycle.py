@@ -4,6 +4,8 @@ from synergine2.cycle import CycleManager
 from synergine2.log import SynergineLogger
 from synergine2.share import shared
 from synergine2.simulation import Simulation
+from synergine2.simulation import SimulationBehaviour
+from synergine2.simulation import SimulationMechanism
 from synergine2.simulation import Event
 from synergine2.simulation import Subject
 from synergine2.simulation import Subjects
@@ -42,6 +44,30 @@ class MySubjects(Subjects):
     pass
 
 
+class MySimulationMechanism(SimulationMechanism):
+    def run(self, process_number: int = None, process_count: int = None):
+        return process_number + 1000
+
+
+class MySimulationBehaviour(SimulationBehaviour):
+    use = [MySimulationMechanism]
+
+    @classmethod
+    def merge_data(cls, new_data, start_data=None):
+        start_data = start_data or 0
+        return start_data + new_data
+
+    def run(self, data):
+        return data['MySimulationMechanism'] * 2
+
+    def action(self, data) -> [Event]:
+        return [MyEvent(data)]
+
+
+class MySimulation(Simulation):
+    behaviours_classes = [MySimulationBehaviour]
+
+
 class TestCycle(BaseTest):
     def test_subjects_cycle(self):
         shared.reset()
@@ -75,7 +101,6 @@ class TestCycle(BaseTest):
 
     def test_new_subject(self):
         shared.reset()
-        subject_ids = shared.get('subject_ids')
         config = Config({'core': {'use_x_cores': 1}})
         logger = SynergineLogger(name='test')
 
@@ -111,3 +136,27 @@ class TestCycle(BaseTest):
         event_values = [e.value for e in events]
         assert all([s.id * 2 in event_values for s in subjects])
 
+    def test_simulation_events(self):
+        shared.reset()
+        config = Config({'core': {'use_x_cores': 2}})
+        logger = SynergineLogger(name='test')
+
+        simulation = MySimulation(config)
+
+        # Prepare simulation class index
+        simulation.add_to_index(MySimulationBehaviour, MySimulationMechanism)
+
+        subjects = MySubjects(simulation=simulation)
+        simulation.subjects = subjects
+
+        cycle_manager = CycleManager(
+            config=config,
+            logger=logger,
+            simulation=simulation,
+        )
+
+        events = cycle_manager.next()
+        cycle_manager.stop()
+
+        assert 1 == len(events)
+        assert events[0].value == 4002

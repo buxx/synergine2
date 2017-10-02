@@ -107,7 +107,7 @@ class CycleManager(BaseObject):
                     str(mechanism_data),
                 ))
 
-            mechanisms_data[type(mechanism)] = mechanism_data
+            mechanisms_data[mechanism.__class__.__name__] = mechanism_data
 
         behaviours = self.simulation.behaviours.values()
         self.logger.info('{} behaviours to compute'.format(str(len(behaviours))))
@@ -126,7 +126,7 @@ class CycleManager(BaseObject):
                 ))
 
             if behaviour_data:
-                behaviours_data[type(behaviour)] = behaviour_data
+                behaviours_data[id(behaviour.__class__)] = behaviour_data
 
         return behaviours_data
 
@@ -168,7 +168,8 @@ class CycleManager(BaseObject):
         results_by_processes = self.process_manager.make_them_work(JOB_TYPE_SIMULATION)
 
         for process_result in results_by_processes:
-            for behaviour_class, behaviour_result in process_result.items():
+            for behaviour_class_id, behaviour_result in process_result.items():
+                behaviour_class = self.simulation.index[behaviour_class_id]
                 results[behaviour_class] = behaviour_class.merge_data(
                     behaviour_result,
                     results.get(behaviour_class),
@@ -178,7 +179,7 @@ class CycleManager(BaseObject):
 
         # Make events
         for behaviour_class, behaviour_data in results.items():
-            behaviour_events = self.simulation.behaviours[behaviour_class].action(behaviour_data)
+            behaviour_events = self.simulation.behaviours[behaviour_class.__name__].action(behaviour_data)
             self.logger.info('{} behaviour generate {} events'.format(
                 str(behaviour_class),
                 str(len(behaviour_events)),
