@@ -54,7 +54,7 @@ class TestProcessing(BaseTest):
         results = process_manager.make_them_work(data)
         process_manager.terminate()
 
-        assert sum(results) == 39600
+        assert sum(results) == 4950 * available_cores
 
     @pytest.mark.timeout(10)
     def test_non_parallel_jobs_with_scalar(self):
@@ -90,7 +90,7 @@ class TestProcessing(BaseTest):
         for result_object in results:
             final_result += result_object.value
 
-        assert final_result == 39600
+        assert final_result == 4950 * available_cores
 
     @pytest.mark.timeout(10)
     def test_shared_memory_with_shared_manager(self):
