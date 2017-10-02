@@ -43,35 +43,35 @@ class MySubjects(Subjects):
 
 
 class TestCycle(BaseTest):
-    # def test_subjects_cycle(self):
-    #     shared.reset()
-    #     config = Config({'core': {'use_x_cores': 2}})
-    #     logger = SynergineLogger(name='test')
-    #
-    #     simulation = Simulation(config)
-    #     subjects = MySubjects(simulation=simulation)
-    #     simulation.subjects = subjects
-    #
-    #     # Prepare simulation class index
-    #     simulation.add_to_index(MySubjectBehavior)
-    #     simulation.add_to_index(MySubjectMechanism)
-    #     simulation.add_to_index(MySubject)
-    #
-    #     for i in range(3):
-    #         subjects.append(MySubject(config, simulation=simulation))
-    #
-    #     cycle_manager = CycleManager(
-    #         config=config,
-    #         logger=logger,
-    #         simulation=simulation,
-    #     )
-    #
-    #     events = cycle_manager.next()
-    #     cycle_manager.stop()
-    #
-    #     assert 3 == len(events)
-    #     event_values = [e.value for e in events]
-    #     assert all([s.id * 2 in event_values for s in subjects])
+    def test_subjects_cycle(self):
+        shared.reset()
+        config = Config({'core': {'use_x_cores': 2}})
+        logger = SynergineLogger(name='test')
+
+        simulation = Simulation(config)
+        subjects = MySubjects(simulation=simulation)
+        simulation.subjects = subjects
+
+        # Prepare simulation class index
+        simulation.add_to_index(MySubjectBehavior)
+        simulation.add_to_index(MySubjectMechanism)
+        simulation.add_to_index(MySubject)
+
+        for i in range(3):
+            subjects.append(MySubject(config, simulation=simulation))
+
+        cycle_manager = CycleManager(
+            config=config,
+            logger=logger,
+            simulation=simulation,
+        )
+
+        events = cycle_manager.next()
+        cycle_manager.stop()
+
+        assert 3 == len(events)
+        event_values = [e.value for e in events]
+        assert all([s.id * 2 in event_values for s in subjects])
 
     def test_new_subject(self):
         shared.reset()
