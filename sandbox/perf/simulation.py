@@ -1,6 +1,7 @@
 import random
 
 from synergine2.config import Config
+from synergine2.share import shared
 from synergine2.simulation import SubjectMechanism, SubjectBehaviour, Event, Subject
 
 
@@ -40,11 +41,11 @@ class ComputeBehaviour(SubjectBehaviour):
     use = [ComputeMechanism]
 
     def run(self, data):
-        return not data.get(ComputeMechanism).get('mechanism_value') % 2
+        return not data.get('ComputeMechanism').get('mechanism_value') % 2
 
     def action(self, data):
-        mechanism_value = data.get(ComputeMechanism).get('mechanism_value')
-        complexity = data.get(ComputeMechanism).get('complexity')
+        mechanism_value = data.get('ComputeMechanism').get('mechanism_value')
+        complexity = data.get('ComputeMechanism').get('complexity')
 
         if not int(str(mechanism_value)[-1]) % 2:
             compute(complexity)
@@ -54,12 +55,11 @@ class ComputeBehaviour(SubjectBehaviour):
 
 class ComputeSubject(Subject):
     behaviours_classes = [ComputeBehaviour]
+    data = shared.create(['{id}', 'data'], [])
 
     def __init__(
         self,
         config: Config,
         simulation: 'Simulation',
-        data,
     ):
         super().__init__(config, simulation)
-        self.data = data
