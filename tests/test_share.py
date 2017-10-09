@@ -133,6 +133,32 @@ class TestShare(BaseTest):
         assert shared.get('data') == ['foo', 'bar', 'bAr']
         assert pickle.loads(shared._r.get('data')) == ['foo', 'bar', 'bAr']
 
+    def test_update_list_with_pointer__composite_key(self):
+        shared = share.SharedDataManager()
+
+        class Foo(object):
+            data = shared.create(['{id}', 'data'], [])
+
+            def __init__(self):
+                self.id = id(self)
+
+        foo = Foo()
+        foo.data = ['foo']
+
+        assert shared.get(str(id(foo)) + '_data') == ['foo']
+
+        foo.data.append('bar')
+        assert shared.get(str(id(foo)) + '_data') == ['foo', 'bar']
+
+        shared.commit()
+        assert shared.get(str(id(foo)) + '_data') == ['foo', 'bar']
+        assert pickle.loads(shared._r.get(str(id(foo)) + '_data')) == ['foo', 'bar']
+
+        foo.data.append('bAr')
+        shared.commit()
+        assert shared.get(str(id(foo)) + '_data') == ['foo', 'bar', 'bAr']
+        assert pickle.loads(shared._r.get(str(id(foo)) + '_data')) == ['foo', 'bar', 'bAr']
+
     def test_refresh_without_commit(self):
         shared = share.SharedDataManager()
 

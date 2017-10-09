@@ -8,6 +8,7 @@ from random import seed
 synergine2_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_path)
 
+from synergine2_xyz.move import MoveToMechanism, MoveToBehaviour
 from sandbox.tile.simulation.subject import Man
 from sandbox.tile.simulation.base import TileStrategySimulation
 from sandbox.tile.simulation.base import TileStrategySubjects
@@ -24,11 +25,13 @@ def main(map_dir_path: str, seed_value: int=42):
 
     config = Config()
     config.load_files(['sandbox/tile/config.yaml'])
-    logger = get_default_logger(level=logging.DEBUG)
+    logger = get_default_logger(level=logging.ERROR)
 
     map_file_path = 'sandbox/tile/{}.tmx'.format(os.path.join(map_dir_path, os.path.basename(map_dir_path)))
 
     simulation = TileStrategySimulation(config, map_file_path=map_file_path)
+    simulation.add_to_index(Man, MoveToBehaviour, MoveToMechanism)
+
     subjects = TileStrategySubjects(simulation=simulation)
 
     for position in ((0, 2),):

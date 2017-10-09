@@ -127,7 +127,7 @@ class MoveToBehaviour(SubjectBehaviour):
     def run(self, data):
         # TODO: on fait vraiment rien ici ? Note: meme si il n'y a pas de new_path, l'action doit s'effectuer
         # du moment qu'il y a une intention de move
-        move_to_data = data[self.move_to_mechanism]
+        move_to_data = data[self.move_to_mechanism.__name__]
         if move_to_data:
             return move_to_data
         return False
@@ -151,6 +151,7 @@ class MoveToBehaviour(SubjectBehaviour):
             new_position = move.path[move.path_progression]
             previous_position = self.subject.position
             self.subject.position = new_position
+            self.subject.intentions.set(move)
 
             return [MoveEvent(self.subject.id, previous_position, new_position)]
 

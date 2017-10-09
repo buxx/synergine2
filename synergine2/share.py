@@ -30,16 +30,17 @@ class TrackedDict(dict):
 
     def __init__(self, seq=None, **kwargs):
         self.key = kwargs.pop('key')
+        self.original_key = kwargs.pop('original_key')
         self.shared = kwargs.pop('shared')
         super().__init__(seq, **kwargs)
 
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
-        self.shared.set(self.key, dict(self))
+        self.shared.set(self.key, dict(self), original_key=self.original_key)
 
     def setdefault(self, k, d=None):
         v = super().setdefault(k, d)
-        self.shared.set(self.key, dict(self))
+        self.shared.set(self.key, dict(self), original_key=self.original_key)
         return v
     # TODO: Cover all methods
 
@@ -49,12 +50,13 @@ class TrackedList(list):
 
     def __init__(self, seq=(), **kwargs):
         self.key = kwargs.pop('key')
+        self.original_key = kwargs.pop('original_key')
         self.shared = kwargs.pop('shared')
         super().__init__(seq)
 
     def append(self, p_object):
         super().append(p_object)
-        self.shared.set(self.key, list(self))
+        self.shared.set(self.key, list(self), original_key=self.original_key)
 
     # TODO: Cover all methods
 
@@ -86,15 +88,20 @@ class SharedDataManager(object):
         self.commit()
         self._data = {}
 
-    def set(self, key: str, value: typing.Any) -> None:
+    def set(self, key: str, value: typing.Any, original_key: str=None) -> None:
         try:
-            special_type = self._special_types[key]
-            value = special_type(value, key=key, shared=self)
+            special_type, original_key_ = self._special_types[key]
+            value = special_type(value, key=key, shared=self, original_key=original_key)
         except KeyError:
-            pass
+            try:
+                # TODO: Code degeu pour gerer les {id}_truc
+                special_type, original_key_ = self._special_types[original_key]
+                value = special_type(value, key=key, shared=self, original_key=original_key)
+            except KeyError:
+                pass
 
         self._data[key] = value
-        self._modified_keys.add(key)
+        self._modified_keys.add((key, original_key))
 
     def get(self, *key_args: typing.Union[str, float, int]) -> typing.Any:
         key = '_'.join([str(v) for v in key_args])
@@ -111,25 +118,31 @@ class SharedDataManager(object):
             special_type = None
 
             try:
-                special_type = self._special_types[key]
+                special_type, original_key = self._special_types[key]
             except KeyError:
                 pass
 
             if special_type:
-                self._data[key] = special_type(value, key=key, shared=self)
+                self._data[key] = special_type(value, key=key, shared=self, original_key=original_key)
             else:
                 self._data[key] = value
 
         return self._data[key]
 
     def commit(self) -> None:
-        for key in self._modified_keys:
+        for key, original_key in self._modified_keys:
             try:
-                special_type = self._special_types[key]
+                special_type, original_key = self._special_types[key]
                 value = special_type.base(self.get(key))
                 self._r.set(key, pickle.dumps(value))
             except KeyError:
-                self._r.set(key, pickle.dumps(self.get(key)))
+                # Code degeu pour gerer les {id}_truc
+                try:
+                    special_type, original_key = self._special_types[original_key]
+                    value = special_type.base(self.get(key))
+                    self._r.set(key, pickle.dumps(value))
+                except KeyError:
+                    self._r.set(key, pickle.dumps(self.get(key)))
         self._modified_keys = set()
 
     def refresh(self) -> None:
@@ -156,11 +169,11 @@ class SharedDataManager(object):
         indexes = indexes or []
 
         if type(value) is dict:
-            value = TrackedDict(value, key=key, shared=shared)
-            self._special_types[key] = TrackedDict
+            value = TrackedDict(value, key=key, shared=shared, original_key=key)
+            self._special_types[key] = TrackedDict, key
         elif type(value) is list:
-            value = TrackedList(value, key=key, shared=shared)
-            self._special_types[key] = TrackedList
+            value = TrackedList(value, key=key, shared=shared, original_key=key)
+            self._special_types[key] = TrackedList, key
 
         def get_key(obj):
             return key
@@ -186,7 +199,7 @@ class SharedDataManager(object):
             except UnknownSharedData:
                 pass  # If no shared data, no previous value to remove
 
-            self.set(key_formatter(self_), value_)
+            self.set(key_formatter(self_), value_, original_key=key)
 
             for index in indexes:
                 index.add(value_)

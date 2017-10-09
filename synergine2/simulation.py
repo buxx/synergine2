@@ -13,13 +13,21 @@ class Intention(object):
 
 
 class IntentionManager(object):
-    def __init__(self) -> None:
-        self.intentions = {}  # type: typing.Dict[typing.Type[Intention], Intention]
+    intentions = shared.create(['{id}', 'intentions'], {})  # type: typing.Dict[typing.Type[Intention], Intention]
+
+    def __init__(self):
+        self._id = id(self)
+        self.intentions = {}
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     def set(self, intention: Intention) -> None:
         self.intentions[type(intention)] = intention
 
     def get(self, intention_type: typing.Type[Intention]) -> Intention:
+        # TODO: Raise specialised exception if KeyError
         return self.intentions[intention_type]
 
 
