@@ -35,9 +35,6 @@ class CycleManager(BaseObject):
         self.current_cycle = -1
         self.first_cycle = True
 
-        self.subject_mechanisms_cache = {}  # type: typing.Dict[int, typing.Dict[str, SubjectMechanism]]
-        self.subject_behaviours_cache = {}  # type: typing.Dict[int, typing.Dict[str, SubjectBehaviour]]
-
         # TODO NOW: Les processes devront maintenir une liste des subjects qui sont nouveaux.ne connaissent pas
         # Attention a ce qu'in ne soient pas "expose" quand on créer ces subjects au sein du process.
         # Ces subjects ont vocation à adopter l'id du vrau subject tout de suite après leur instanciation
@@ -107,7 +104,7 @@ class CycleManager(BaseObject):
                     str(mechanism_data),
                 ))
 
-            mechanisms_data[mechanism.__class__.__name__] = mechanism_data
+            mechanisms_data[mechanism.__class__] = mechanism_data
 
         behaviours = self.simulation.behaviours.values()
         self.logger.info('{} behaviours to compute'.format(str(len(behaviours))))
@@ -126,7 +123,7 @@ class CycleManager(BaseObject):
                 ))
 
             if behaviour_data:
-                behaviours_data[id(behaviour.__class__)] = behaviour_data
+                behaviours_data[behaviour.__class__] = behaviour_data
 
         return behaviours_data
 
@@ -168,8 +165,7 @@ class CycleManager(BaseObject):
         results_by_processes = self.process_manager.make_them_work(JOB_TYPE_SIMULATION)
 
         for process_result in results_by_processes:
-            for behaviour_class_id, behaviour_result in process_result.items():
-                behaviour_class = self.simulation.index[behaviour_class_id]
+            for behaviour_class, behaviour_result in process_result.items():
                 results[behaviour_class] = behaviour_class.merge_data(
                     behaviour_result,
                     results.get(behaviour_class),
@@ -179,7 +175,7 @@ class CycleManager(BaseObject):
 
         # Make events
         for behaviour_class, behaviour_data in results.items():
-            behaviour_events = self.simulation.behaviours[behaviour_class.__name__].action(behaviour_data)
+            behaviour_events = self.simulation.behaviours[behaviour_class].action(behaviour_data)
             self.logger.info('{} behaviour generate {} events'.format(
                 str(behaviour_class),
                 str(len(behaviour_events)),
@@ -215,21 +211,21 @@ class CycleManager(BaseObject):
                     subject_behaviours_results,
                 ))
 
-            subject_behaviours = self.get_subject_behaviours(subject)
-            for behaviour_class_name, behaviour_data in subject_behaviours_results.items():
+            subject_behaviours = subject.behaviours
+            for behaviour_class, behaviour_data in subject_behaviours_results.items():
                 # TODO: Ajouter une etape de selection des actions a faire (genre neuronnal)
                 # (genre se cacher et fuir son pas compatibles)
-                behaviour_events = subject_behaviours[behaviour_class_name].action(behaviour_data)
+                behaviour_events = subject_behaviours[behaviour_class].action(behaviour_data)
 
                 self.logger.info('{} behaviour for subject {} generate {} events'.format(
-                    str(behaviour_class_name),
+                    str(behaviour_class.__name__),
                     str(subject.id),
                     str(len(behaviour_events)),
                 ))
 
                 if self.logger.is_debug:
                     self.logger.debug('{} behaviour for subject {} generated events: {}'.format(
-                        str(behaviour_class_name),
+                        str(behaviour_class.__name__),
                         str(subject.id),
                         str([e.repr_debug() for e in behaviour_events]),
                     ))
@@ -249,7 +245,7 @@ class CycleManager(BaseObject):
         self.logger.info('Subjects computing: {} subjects to compute'.format(str(len(subjects))))
 
         for subject in subjects:
-            mechanisms = self.get_subject_mechanisms(subject)
+            mechanisms = subject.mechanisms.values()
 
             if mechanisms:
                 self.logger.info('Subject {}: {} mechanisms'.format(
@@ -260,13 +256,13 @@ class CycleManager(BaseObject):
                 if self.logger.is_debug:
                     self.logger.info('Subject {}: mechanisms are: {}'.format(
                         str(subject.id),
-                        str([m.repr_debug for n, m in mechanisms.items()])
+                        str([m.repr_debug for m in mechanisms])
                     ))
 
             mechanisms_data = {}
             behaviours_data = {}
 
-            for mechanism_class_name, mechanism in mechanisms.items():
+            for mechanism in mechanisms:
                 with time_it() as elapsed_time:
                     mechanism_data = mechanism.run()
                 if self.logger.is_debug:
@@ -277,7 +273,7 @@ class CycleManager(BaseObject):
                         elapsed_time.get_final_time(),
                     ))
 
-                mechanisms_data[mechanism_class_name] = mechanism_data
+                mechanisms_data[mechanism.__class__] = mechanism_data
 
             if mechanisms:
                 if self.logger.is_debug:
@@ -286,7 +282,7 @@ class CycleManager(BaseObject):
                         str(mechanisms_data),
                     ))
 
-            subject_behaviours = self.get_subject_behaviours(subject)
+            subject_behaviours = subject.behaviours
             if not subject_behaviours:
                 break
 
@@ -295,7 +291,7 @@ class CycleManager(BaseObject):
                 str(len(subject_behaviours)),
             ))
 
-            for behaviour_class_name, behaviour in subject_behaviours.items():
+            for behaviour in subject_behaviours.values():
                 self.logger.info('Subject {}: run {} behaviour'.format(
                     str(subject.id),
                     str(type(behaviour)),
@@ -314,46 +310,10 @@ class CycleManager(BaseObject):
                     ))
 
                 if behaviour_data:
-                    behaviours_data[behaviour_class_name] = behaviour_data
+                    behaviours_data[behaviour.__class__] = behaviour_data
 
             results[subject.id] = behaviours_data
         return results
-
-    def get_subject_mechanisms(self, subject: Subject) -> typing.Dict[str, SubjectMechanism]:
-        # TODO: Implementer un systeme qui inhibe des mechanisme (ex. someil inhibe l'ouie)
-        # Attention: c'est utilisé dans le main process aussi, pertinent de la faire là ?
-        try:
-            return self.subject_mechanisms_cache[subject.id]
-        except KeyError:
-            mechanisms = {}
-            for mechanism_class_id in shared.get('subject_mechanisms_index')[subject.id]:
-                mechanism_class = self.simulation.index[mechanism_class_id]
-                mechanism = mechanism_class(
-                    self.config,
-                    self.simulation,
-                    subject,
-                )
-                mechanisms[mechanism_class.__name__] = mechanism
-            self.subject_mechanisms_cache[subject.id] = mechanisms
-            return mechanisms
-
-    def get_subject_behaviours(self, subject: Subject) -> typing.Dict[str, SubjectBehaviour]:
-        # TODO: Implementer un systeme qui inhibe des behaviours (ex. someil inhibe avoir faim)
-        # Attention: c'est utilisé dans le main process aussi, pertinent de la faire là ?
-        try:
-            return self.subject_behaviours_cache[subject.id]
-        except KeyError:
-            behaviours = {}
-            for behaviour_class_id in shared.get('subject_behaviours_index')[subject.id]:
-                behaviour_class = self.simulation.index[behaviour_class_id]
-                behaviour = behaviour_class(
-                    self.config,
-                    self.simulation,
-                    subject,
-                )
-                behaviours[behaviour_class.__name__] = behaviour
-            self.subject_behaviours_cache[subject.id] = behaviours
-            return behaviours
 
     def apply_actions(
             self,

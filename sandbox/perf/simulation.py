@@ -55,7 +55,7 @@ class ComputeBehaviour(SubjectBehaviour):
 
 class ComputeSubject(Subject):
     behaviours_classes = [ComputeBehaviour]
-    data = shared.create(['{id}', 'data'], [])
+    data = shared.create_self('data', lambda: [])
 
     def __init__(
         self,

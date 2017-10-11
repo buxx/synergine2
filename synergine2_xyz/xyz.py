@@ -110,13 +110,13 @@ def get_degree_from_north(a, b):
 class XYZSubjectMixinMetaClass(type):
     def __init__(cls, name, parents, attribs):
         super().__init__(name, parents, attribs)
-        collections = getattr(cls, "collections", [])
+        collections = getattr(cls, "start_collections", [])
         if COLLECTION_XYZ not in collections:
             collections.append(COLLECTION_XYZ)
 
 
 class XYZSubjectMixin(object, metaclass=XYZSubjectMixinMetaClass):
-    position = shared.create(['{id}', 'counter'], (0, 0, 0))
+    position = shared.create_self('position', lambda: (0, 0, 0))
 
     def __init__(self, *args, **kwargs):
         """

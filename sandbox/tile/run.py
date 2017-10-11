@@ -30,8 +30,6 @@ def main(map_dir_path: str, seed_value: int=42):
     map_file_path = 'sandbox/tile/{}.tmx'.format(os.path.join(map_dir_path, os.path.basename(map_dir_path)))
 
     simulation = TileStrategySimulation(config, map_file_path=map_file_path)
-    simulation.add_to_index(Man, MoveToBehaviour, MoveToMechanism)
-
     subjects = TileStrategySubjects(simulation=simulation)
 
     for position in ((0, 2),):

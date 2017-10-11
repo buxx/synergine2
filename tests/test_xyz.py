@@ -25,11 +25,6 @@ class TestXYZ(BaseTest):
     def test_proximity_mechanism_with_one(self):
         shared.reset()
         simulation = XYZSimulation(Config())
-        simulation.add_to_index(
-            MyProximityMechanism,
-            MySubject,
-        )
-
         subject = MySubject(Config(), simulation, position=(0, 0, 0))
         other_subject = MySubject(Config(), simulation, position=(5, 0, 0))
 
@@ -58,10 +53,6 @@ class TestXYZ(BaseTest):
     def test_proximity_mechanism_excluding(self):
         shared.reset()
         simulation = XYZSimulation(Config())
-        simulation.add_to_index(
-            MyProximityMechanism,
-            MySubject,
-        )
 
         subject = MySubject(Config(), simulation, position=(0, 0, 0))
         other_subject = MySubject(Config(), simulation, position=(11, 0, 0))
@@ -88,10 +79,6 @@ class TestXYZ(BaseTest):
     def test_proximity_mechanism_with_multiple(self):
         shared.reset()
         simulation = XYZSimulation(Config())
-        simulation.add_to_index(
-            MyProximityMechanism,
-            MySubject,
-        )
 
         subject = MySubject(Config(), simulation, position=(0, 0, 0))
         other_subjects = []

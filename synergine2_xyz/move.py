@@ -127,7 +127,7 @@ class MoveToBehaviour(SubjectBehaviour):
     def run(self, data):
         # TODO: on fait vraiment rien ici ? Note: meme si il n'y a pas de new_path, l'action doit s'effectuer
         # du moment qu'il y a une intention de move
-        move_to_data = data[self.move_to_mechanism.__name__]
+        move_to_data = data[self.move_to_mechanism]
         if move_to_data:
             return move_to_data
         return False

@@ -2,11 +2,15 @@
 import pickle
 import typing
 
-import collections
 import redis
 
+from synergine2.base import IdentifiedObject
 from synergine2.exceptions import SynergineException
 from synergine2.exceptions import UnknownSharedData
+
+
+class NoSharedDataInstance(SynergineException):
+    pass
 
 
 class SharedDataIndex(object):
@@ -25,22 +29,58 @@ class SharedDataIndex(object):
         raise NotImplementedError()
 
 
+class SharedData(object):
+    def __init__(
+        self, key: str,
+        self_type: bool=False,
+        default: typing.Any=None,
+    ) -> None:
+        """
+        :param key: shared data key
+        :param self_type: if it is a magic shared data where real key is association of key and instance id
+        :param default: default/initial value to shared data. Can be a callable to return list or dict
+        """
+        self._key = key
+        self.self_type = self_type
+        self._default = default
+        self.is_special_type = isinstance(self.default_value, (list, dict))
+        if self.is_special_type:
+            if isinstance(self.default_value, list):
+                self.special_type = TrackedList
+            elif isinstance(self.default_value, dict):
+                self.special_type = TrackedDict
+            else:
+                raise NotImplementedError()
+
+    def get_final_key(self, instance: IdentifiedObject) -> str:
+        if self.self_type:
+            return '{}_{}'.format(instance.id, self._key)
+        return self._key
+
+    @property
+    def default_value(self) -> typing.Any:
+        if callable(self._default):
+            return self._default()
+
+        return self._default
+
+
 class TrackedDict(dict):
     base = dict
 
     def __init__(self, seq=None, **kwargs):
-        self.key = kwargs.pop('key')
-        self.original_key = kwargs.pop('original_key')
+        self.shared_data = kwargs.pop('shared_data')
         self.shared = kwargs.pop('shared')
+        self.instance = kwargs.pop('instance')
         super().__init__(seq, **kwargs)
 
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
-        self.shared.set(self.key, dict(self), original_key=self.original_key)
+        self.shared.set(self.shared_data.get_final_key(self.instance), dict(self))
 
     def setdefault(self, k, d=None):
         v = super().setdefault(k, d)
-        self.shared.set(self.key, dict(self), original_key=self.original_key)
+        self.shared.set(self.shared_data.get_final_key(self.instance), dict(self))
         return v
     # TODO: Cover all methods
 
@@ -49,14 +89,14 @@ class TrackedList(list):
     base = list
 
     def __init__(self, seq=(), **kwargs):
-        self.key = kwargs.pop('key')
-        self.original_key = kwargs.pop('original_key')
+        self.shared_data = kwargs.pop('shared_data')
         self.shared = kwargs.pop('shared')
+        self.instance = kwargs.pop('instance')
         super().__init__(seq)
 
     def append(self, p_object):
         super().append(p_object)
-        self.shared.set(self.key, list(self), original_key=self.original_key)
+        self.shared.set(self.shared_data.get_final_key(self.instance), list(self))
 
     # TODO: Cover all methods
 
@@ -68,6 +108,8 @@ class SharedDataManager(object):
     """
     def __init__(self, clear: bool=True):
         self._r = redis.StrictRedis(host='localhost', port=6379, db=0)  # TODO: configs
+
+        self._shared_data_list = []  # type: typing.List[SharedData]
 
         self._data = {}
         self._modified_keys = set()
@@ -88,61 +130,31 @@ class SharedDataManager(object):
         self.commit()
         self._data = {}
 
-    def set(self, key: str, value: typing.Any, original_key: str=None) -> None:
-        try:
-            special_type, original_key_ = self._special_types[key]
-            value = special_type(value, key=key, shared=self, original_key=original_key)
-        except KeyError:
-            try:
-                # TODO: Code degeu pour gerer les {id}_truc
-                special_type, original_key_ = self._special_types[original_key]
-                value = special_type(value, key=key, shared=self, original_key=original_key)
-            except KeyError:
-                pass
+    def purge_data(self):
+        self._data = {}
 
+    def set(self, key: str, value: typing.Any) -> None:
         self._data[key] = value
-        self._modified_keys.add((key, original_key))
+        self._modified_keys.add(key)
 
-    def get(self, *key_args: typing.Union[str, float, int]) -> typing.Any:
-        key = '_'.join([str(v) for v in key_args])
-
+    def get(self, key: str) -> typing.Any:
         try:
             return self._data[key]
         except KeyError:
-            b_value = self._r.get(key)
-            if b_value is None:
+            database_value = self._r.get(key)
+            if database_value is None:
                 # We not allow None value storage
                 raise UnknownSharedData('No shared data for key "{}"'.format(key))
-
-            value = pickle.loads(b_value)
-            special_type = None
-
-            try:
-                special_type, original_key = self._special_types[key]
-            except KeyError:
-                pass
-
-            if special_type:
-                self._data[key] = special_type(value, key=key, shared=self, original_key=original_key)
-            else:
-                self._data[key] = value
+            value = pickle.loads(database_value)
+            self._data[key] = value
 
         return self._data[key]
 
     def commit(self) -> None:
-        for key, original_key in self._modified_keys:
-            try:
-                special_type, original_key = self._special_types[key]
-                value = special_type.base(self.get(key))
-                self._r.set(key, pickle.dumps(value))
-            except KeyError:
-                # Code degeu pour gerer les {id}_truc
-                try:
-                    special_type, original_key = self._special_types[original_key]
-                    value = special_type.base(self.get(key))
-                    self._r.set(key, pickle.dumps(value))
-                except KeyError:
-                    self._r.set(key, pickle.dumps(self.get(key)))
+        for key in self._modified_keys:
+            value = self.get(key)
+            self._r.set(key, pickle.dumps(value))
+
         self._modified_keys = set()
 
     def refresh(self) -> None:
@@ -157,61 +169,74 @@ class SharedDataManager(object):
     ) -> SharedDataIndex:
         return shared_data_index_class(self, key, *args, **kwargs)
 
-    def create(
+    def create_self(
         self,
-        key_args: typing.Union[str, typing.List[typing.Union[str, int, float]]],
-        value: typing.Any,
+        key: str,
+        default: typing.Any,
         indexes: typing.List[SharedDataIndex]=None,
     ):
-        key = key_args
-        if not isinstance(key, str):
-            key = '_'.join(key_args)
+        return self.create(key, self_type=True, value=default, indexes=indexes)
+
+    def create(
+        self,
+        key: str,
+        value: typing.Any,
+        self_type: bool=False,
+        indexes: typing.List[SharedDataIndex]=None,
+    ):
+        # TODO: Store all keys and forbid re-use one
         indexes = indexes or []
+        shared_data = SharedData(
+            key=key,
+            self_type=self_type,
+            default=value,
+        )
+        self._shared_data_list.append(shared_data)
 
-        if type(value) is dict:
-            value = TrackedDict(value, key=key, shared=shared, original_key=key)
-            self._special_types[key] = TrackedDict, key
-        elif type(value) is list:
-            value = TrackedList(value, key=key, shared=shared, original_key=key)
-            self._special_types[key] = TrackedList, key
+        def fget(instance):
+            final_key = shared_data.get_final_key(instance)
 
-        def get_key(obj):
-            return key
-
-        def get_key_with_id(obj):
-            return key.format(id=obj.id)
-
-        if '{id}' in key:
-            key_formatter = get_key_with_id
-        else:
-            self.set(key, value)
-            self._default_values[key] = value
-            key_formatter = get_key
-
-        def fget(self_):
-            return self.get(key_formatter(self_))
-
-        def fset(self_, value_):
             try:
-                previous_value = self.get(key_formatter(self_))
+                value_ = self.get(final_key)
+                if not shared_data.is_special_type:
+                    return value_
+                else:
+                    return shared_data.special_type(value_, shared_data=shared_data, shared=self, instance=instance)
+
+            except UnknownSharedData:
+                # If no data in database, value for this shared_data have been never set
+                self.set(final_key, shared_data.default_value)
+                self._default_values[final_key] = shared_data.default_value
+                return self.get(final_key)
+
+        def fset(instance, value_):
+            final_key = shared_data.get_final_key(instance)
+
+            try:
+                previous_value = self.get(final_key)
                 for index in indexes:
                     index.remove(previous_value)
             except UnknownSharedData:
                 pass  # If no shared data, no previous value to remove
 
-            self.set(key_formatter(self_), value_, original_key=key)
+            self.set(final_key, value_)
 
             for index in indexes:
                 index.add(value_)
 
         def fdel(self_):
-            raise SynergineException('You cannot delete a shared data')
+            raise SynergineException('You cannot delete a shared data: not implemented yet')
 
         shared_property = property(
             fget=fget,
             fset=fset,
             fdel=fdel,
         )
+
+        # A simple shared data can be set now because no need to build key with instance id
+        if not self_type:
+            self.set(key, shared_data.default_value)
+            self._default_values[key] = shared_data.default_value
 
         return shared_property
 

@@ -28,8 +28,7 @@ class MySubjectBehavior(SubjectBehaviour):
     use = [MySubjectMechanism]
 
     def run(self, data):
-        class_name = MySubjectMechanism.__name__
-        if class_name in data and data[class_name] == 42:
+        if MySubjectMechanism in data and data[MySubjectMechanism] == 42:
             return self.subject.id
 
     def action(self, data) -> [Event]:
@@ -58,7 +57,7 @@ class MySimulationBehaviour(SimulationBehaviour):
         return start_data + new_data
 
     def run(self, data):
-        return data['MySimulationMechanism'] * 2
+        return data[MySimulationMechanism] * 2
 
     def action(self, data) -> [Event]:
         return [MyEvent(data)]
@@ -77,11 +76,6 @@ class TestCycle(BaseTest):
         simulation = Simulation(config)
         subjects = MySubjects(simulation=simulation)
         simulation.subjects = subjects
-
-        # Prepare simulation class index
-        simulation.add_to_index(MySubjectBehavior)
-        simulation.add_to_index(MySubjectMechanism)
-        simulation.add_to_index(MySubject)
 
         for i in range(3):
             subjects.append(MySubject(config, simulation=simulation))
@@ -107,11 +101,6 @@ class TestCycle(BaseTest):
         simulation = Simulation(config)
         subjects = MySubjects(simulation=simulation)
         simulation.subjects = subjects
-
-        # Prepare simulation class index
-        simulation.add_to_index(MySubjectBehavior)
-        simulation.add_to_index(MySubjectMechanism)
-        simulation.add_to_index(MySubject)
 
         for i in range(3):
             subjects.append(MySubject(config, simulation=simulation))
@@ -142,9 +131,6 @@ class TestCycle(BaseTest):
         logger = SynergineLogger(name='test')
 
         simulation = MySimulation(config)
-
-        # Prepare simulation class index
-        simulation.add_to_index(MySimulationBehaviour, MySimulationMechanism)
 
         subjects = MySubjects(simulation=simulation)
         simulation.subjects = subjects

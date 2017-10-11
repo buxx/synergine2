@@ -1,8 +1,8 @@
 # coding: utf-8
-import collections
 import typing
 
 from synergine2.base import BaseObject
+from synergine2.base import IdentifiedObject
 from synergine2.config import Config
 from synergine2.share import shared
 from synergine2.utils import get_mechanisms_classes
@@ -13,11 +13,10 @@ class Intention(object):
 
 
 class IntentionManager(object):
-    intentions = shared.create(['{id}', 'intentions'], {})  # type: typing.Dict[typing.Type[Intention], Intention]
+    intentions = shared.create_self('intentions', lambda: {})  # type: typing.Dict[typing.Type[Intention], Intention]
 
     def __init__(self):
         self._id = id(self)
-        self.intentions = {}
 
     @property
     def id(self) -> int:
@@ -31,8 +30,8 @@ class IntentionManager(object):
         return self.intentions[intention_type]
 
 
-class Subject(BaseObject):
-    collections = []
+class Subject(IdentifiedObject):
+    start_collections = []
     behaviours_classes = []
     behaviour_selector_class = None  # type: typing.Type[SubjectBehaviourSelector]
     intention_manager_class = None  # type: typing.Type[IntentionManager]
@@ -42,8 +41,9 @@ class Subject(BaseObject):
         config: Config,
         simulation: 'Simulation',
     ):
-        # TODO: Bannir les attribut de classe passé en reference ! Et meme virer les attr de classe tout court.
-        self.collections = self.collections[:]
+        super().__init__()
+        # FIXME: use shared data to permit dynamic start_collections
+        self.collections = self.start_collections[:]
 
         self.config = config
         self._id = id(self)  # We store object id because it's lost between process
@@ -60,27 +60,43 @@ class Subject(BaseObject):
         else:
             self.intentions = IntentionManager()
 
+        self._mechanisms = None  # type: typing.Dict[typing.Type['SubjectMechanism'], 'SubjectMechanism']
+        self._behaviours = None  # type: typing.Dict[typing.Type['SubjectBehaviour'], 'SubjectBehaviour']
+
     @property
-    def id(self) -> int:
-        try:
-            return self._id
-        except AttributeError:
-            pass
+    def mechanisms(self) -> typing.Dict[typing.Type['SubjectMechanism'], 'SubjectMechanism']:
+        if self._mechanisms is None:
+            self._mechanisms = {}
+            for behaviour_class in self.behaviours_classes:
+                for mechanism_class in behaviour_class.use:
+                    mechanism = mechanism_class(
+                        self.config,
+                        self.simulation,
+                        self,
+                    )
+                    self._mechanisms[mechanism_class] = mechanism
+        return self._mechanisms
+
+    @property
+    def behaviours(self) -> typing.Dict[typing.Type['SubjectBehaviour'], 'SubjectBehaviour']:
+        if self._behaviours is None:
+            self._behaviours = {}
+            for behaviour_class in self.behaviours_classes:
+                behaviour = behaviour_class(
+                    self.config,
+                    self.simulation,
+                    self,
+                )
+                self._behaviours[behaviour_class] = behaviour
+        return self._behaviours
 
     def change_id(self, id_: int) -> None:
         self._id = id_
 
     def expose(self) -> None:
-        subject_behaviours_index = shared.get('subject_behaviours_index').setdefault(self._id, [])
-        subject_mechanisms_index = shared.get('subject_mechanisms_index').setdefault(self._id, [])
         subject_classes = shared.get('subject_classes')
-
-        for behaviour_class in self.behaviours_classes:
-            subject_behaviours_index.append(id(behaviour_class))
-            for mechanism_class in behaviour_class.use:
-                subject_mechanisms_index.append(id(mechanism_class))
-
-        subject_classes[self._id] = id(type(self))
+        subject_classes[self._id] = type(self)
+        shared.set('subject_classes', subject_classes)
 
         for collection in self.collections:
             self.simulation.collections.setdefault(collection, []).append(self.id)
@@ -129,7 +145,7 @@ class Subjects(list):
         self.subject_ids.remove(value.id)
         # Remove from subjects list
         super().remove(value)
-        # Remove from collections
+        # Remove from start_collections
         for collection_name in value.collections:
             self.simulation.collections[collection_name].remove(value)
         # Add to removed listing
@@ -158,10 +174,8 @@ class Simulation(BaseObject):
     accepted_subject_class = Subjects
     behaviours_classes = []
 
-    subject_behaviours_index = shared.create('subject_behaviours_index', {})
-    subject_mechanisms_index = shared.create('subject_mechanisms_index', {})
     subject_classes = shared.create('subject_classes', {})
-    collections = shared.create('collections', {})
+    collections = shared.create('start_collections', {})
 
     def __init__(
         self,
@@ -170,34 +184,22 @@ class Simulation(BaseObject):
         self.config = config
         self._subjects = None  # type: Subjects
 
-        # Should contain all usable class of Behaviors, Mechanisms, SubjectBehaviourSelectors,
-        # IntentionManagers, Subject
-        self._index = {}  # type: typing.Dict[int, type]
         self._index_locked = False
 
         self.behaviours = {}
         self.mechanisms = {}
 
         for mechanism_class in get_mechanisms_classes(self):
-            self.mechanisms[mechanism_class.__name__] = mechanism_class(
+            self.mechanisms[mechanism_class] = mechanism_class(
                 config=self.config,
                 simulation=self,
             )
 
         for behaviour_class in self.behaviours_classes:
-            self.behaviours[behaviour_class.__name__] = behaviour_class(
+            self.behaviours[behaviour_class] = behaviour_class(
                 config=self.config,
                 simulation=self,
             )
-
-    def add_to_index(self, *classes: type) -> None:
-        assert not self._index_locked
-        for class_ in classes:
-            self._index[id(class_)] = class_
-
-    @property
-    def index(self) -> typing.Dict[int, type]:
-        return self._index
 
     def lock_index(self) -> None:
         self._index_locked = True
@@ -219,8 +221,7 @@ class Simulation(BaseObject):
             return self._subjects.index[subject_id]
         except KeyError:
             # We should be in process context and subject have to been created
-            subject_class_id = shared.get('subject_classes')[subject_id]
-            subject_class = self.index[subject_class_id]
+            subject_class = shared.get('subject_classes')[subject_id]
             subject = subject_class(self.config, self)
             subject.change_id(subject_id)
             self.subjects.append(subject)

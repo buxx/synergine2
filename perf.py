@@ -21,12 +21,8 @@ from synergine2.simulation import Simulation, Subjects
 def simulate(complexity, subject_count, cycle_count, cores):
     config = Config(dict(complexity=complexity, core=dict(use_x_cores=cores)))
     simulation = Simulation(config)
-
-    simulation.add_to_index(ComputeSubject)
-    simulation.add_to_index(ComputeBehaviour)
-    simulation.add_to_index(ComputeMechanism)
-
     subjects = Subjects(simulation=simulation)
+
     for i in range(subject_count):
         subject = ComputeSubject(
             config=config,

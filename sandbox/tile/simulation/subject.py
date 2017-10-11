@@ -5,7 +5,7 @@ from synergine2_xyz.move import MoveToBehaviour
 
 
 class Man(BaseSubject):
-    collections = [
+    start_collections = [
         COLLECTION_ALIVE,
     ]
     behaviours_classes = [
