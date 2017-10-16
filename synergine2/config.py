@@ -3,6 +3,8 @@ import typing
 
 import re
 
+import yaml
+
 from synergine2.exceptions import SynergineException
 
 DEFAULT_VALUE = '__DEFAULT_VALUE__'
@@ -86,3 +88,7 @@ class Config(dict):
                 return None
 
             return value
+
+    def load_yaml(self, yaml_file_path) -> None:
+        with open(yaml_file_path, 'r') as yaml_file:
+            self.update(yaml.load(yaml_file))

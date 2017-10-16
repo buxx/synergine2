@@ -669,7 +669,7 @@ class Gui(object):
         self.logger = logger
         self._read_queue_interval = read_queue_interval
         self.terminal = terminal
-        self.cycle_duration = self.config.core.cycle_duration
+        self.cycle_duration = self.config.resolve('core.cycle_duration')
 
         cocos.director.director.init(
             width=640,

@@ -24,7 +24,7 @@ def main(map_dir_path: str, seed_value: int=42):
     seed(seed_value)
 
     config = Config()
-    config.load_files(['sandbox/tile/config.yaml'])
+    config.load_yaml('sandbox/tile/config.yaml')
     logger = get_default_logger(level=logging.ERROR)
 
     map_file_path = 'sandbox/tile/{}.tmx'.format(os.path.join(map_dir_path, os.path.basename(map_dir_path)))
@@ -61,7 +61,7 @@ def main(map_dir_path: str, seed_value: int=42):
                 map_dir_path=map_dir_path,
             )]
         ),
-        cycles_per_seconds=1 / config.core.cycle_duration,
+        cycles_per_seconds=1 / config.resolve('core.cycle_duration'),
     )
     core.run()
 
