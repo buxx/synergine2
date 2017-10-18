@@ -17,9 +17,6 @@ class Man(Actor):
             'actors/man_w5.png',
             'actors/man_w6.png',
             'actors/man_w7.png',
-            'actors/man_w8.png',
-            'actors/man_w9.png',
-            'actors/man_w10.png',
         ],
         # ANIMATION_CRAWL: [
         #     'actors/man_c1.png',

@@ -28,7 +28,8 @@ from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import MapMiddleware
 from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.user_action import UserAction
-from synergine2_xyz.move import MoveEvent
+from synergine2_xyz.move import FinishMoveEvent
+from synergine2_xyz.move import StartMoveEvent
 from synergine2_xyz.utils import get_angle
 from synergine2_xyz.xyz import XYZSubjectMixin
 
@@ -745,9 +746,17 @@ class TMXGui(Gui):
         )
 
         self.terminal.register_event_handler(
-            MoveEvent,
-            self.move_subject,
+            FinishMoveEvent,
+            self.set_subject_position,
         )
+
+        self.terminal.register_event_handler(
+            StartMoveEvent,
+            self.start_move_subject,
+        )
+
+        # configs
+        self.move_duration_ref = float(self.config.resolve('game.move.walk_ref_time'))
 
     def get_layer_middleware(self) -> MapMiddleware:
         return TMXMiddleware(
@@ -769,12 +778,17 @@ class TMXGui(Gui):
         subject_mapper = self.subject_mapper_factory.get_subject_mapper(subject)
         subject_mapper.append(subject, self.layer_manager)
 
-    def move_subject(self, event: MoveEvent):
+    def set_subject_position(self, event: FinishMoveEvent):
         actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
-
         new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
 
-        move_action = MoveTo(new_world_position, 0.5)
+        actor.set_position(*new_world_position)
+
+    def start_move_subject(self, event: StartMoveEvent):
+        actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
+        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
+
+        move_action = MoveTo(new_world_position, self.move_duration_ref)
         actor.do(move_action)
-        actor.do(Animate(ANIMATION_WALK, 0.5, 1))
+        actor.do(Animate(ANIMATION_WALK, duration=self.move_duration_ref, cycle_duration=2))
         actor.rotation = get_angle(event.from_position, event.to_position)

@@ -86,7 +86,7 @@ class MoveActorInteraction(Interaction):
                 )
 
     def get_package_for_terminal(self) -> TerminalPackage:
-        # TODO: MoveEvent ?
+        # TODO: FinishMoveEvent ?
         actions = []
         mouse_grid_position = self.layer_manager.grid_manager.get_grid_position(
             self.layer_manager.scrolling_manager.screen_to_world(

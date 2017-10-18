@@ -1,8 +1,11 @@
 # coding: utf-8
 import typing
+from random import randint
+
+import time
 
 from synergine2.config import Config
-from synergine2.simulation import SimulationBehaviour
+from synergine2.simulation import SimulationBehaviour, Subject
 from synergine2.simulation import SubjectBehaviour
 from synergine2.simulation import SubjectMechanism
 from synergine2.simulation import Intention
@@ -12,10 +15,17 @@ from synergine2_xyz.simulation import XYZSimulation
 
 
 class MoveToIntention(Intention):
-    def __init__(self, move_to: typing.Tuple[int, int]) -> None:
+    def __init__(
+        self,
+        move_to: typing.Tuple[int, int],
+        start_time: float,
+    ) -> None:
         self.move_to = move_to
         self.path = []  # type: typing.List[typing.Tuple[int, int]]
         self.path_progression = -1  # type: int
+        self.last_intention_time = start_time
+        self.just_reach = False
+        self.initial = True
 
 
 class RequestMoveBehaviour(SimulationBehaviour):
@@ -44,7 +54,7 @@ class RequestMoveBehaviour(SimulationBehaviour):
 
         try:
             subject = self.simulation.subjects.index[subject_id]
-            subject.intentions.set(self.move_intention_class(move_to))
+            subject.intentions.set(self.move_intention_class(move_to, start_time=time.time()))
         except KeyError:
             # TODO: log error here
             pass
@@ -89,6 +99,9 @@ class MoveToMechanism(SubjectMechanism):
 
             return {
                 'new_path': new_path,
+                'last_intention_time': move.last_intention_time,
+                'just_reach': move.just_reach,
+                'initial': move.initial,
             }
 
         except IndexError:  # TODO: Specialize ? No movement left
@@ -97,7 +110,30 @@ class MoveToMechanism(SubjectMechanism):
             return None
 
 
-class MoveEvent(Event):
+class FinishMoveEvent(Event):
+    def __init__(
+        self,
+        subject_id: int,
+        from_position: typing.Tuple[int, int],
+        to_position: typing.Tuple[int, int],
+        *args,
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.subject_id = subject_id
+        self.from_position = from_position
+        self.to_position = to_position
+
+    def repr_debug(self) -> str:
+        return '{}: subject_id:{}, from_position:{} to_position: {}'.format(
+            type(self).__name__,
+            self.subject_id,
+            self.from_position,
+            self.to_position,
+        )
+
+
+class StartMoveEvent(Event):
     def __init__(
         self,
         subject_id: int,
@@ -124,12 +160,30 @@ class MoveToBehaviour(SubjectBehaviour):
     use = [MoveToMechanism]
     move_to_mechanism = MoveToMechanism
 
+    def __init__(
+        self,
+        config: Config,
+        simulation: Simulation,
+        subject: Subject,
+    ) -> None:
+        super().__init__(config, simulation, subject)
+        self._duration = float(self.config.resolve('game.move.walk_ref_time'))
+
     def run(self, data):
         # TODO: on fait vraiment rien ici ? Note: meme si il n'y a pas de new_path, l'action doit s'effectuer
         # du moment qu'il y a une intention de move
         move_to_data = data[self.move_to_mechanism]
         if move_to_data:
+
+            if time.time() - move_to_data['last_intention_time'] >= self._duration:
+                move_to_data['reach_next'] = True
+            elif move_to_data['just_reach'] or move_to_data['initial']:
+                move_to_data['reach_next'] = False
+            else:
+                return False
+
             return move_to_data
+
         return False
 
     def action(self, data) -> [Event]:
@@ -144,16 +198,25 @@ class MoveToBehaviour(SubjectBehaviour):
                 move.path = new_path
                 move.path_progression = -1
 
-            # TODO: progression et lorsque "vraiment avance d'une case" envoyer le Move
-            # pour le moment on move direct
-            # TODO: fin de path
-            move.path_progression += 1
-            new_position = move.path[move.path_progression]
             previous_position = self.subject.position
-            self.subject.position = new_position
+            new_position = move.path[move.path_progression + 1]
+
+            if data['reach_next']:
+                # TODO: fin de path
+                move.path_progression += 1
+                self.subject.position = new_position
+                move.last_intention_time = time.time()
+                move.just_reach = True
+                event = FinishMoveEvent(self.subject.id, previous_position, new_position)
+            else:
+                move.just_reach = False
+                event = StartMoveEvent(self.subject.id, previous_position, new_position)
+
+            move.initial = False
+            # Note: Need to explicitly set to update shared data
             self.subject.intentions.set(move)
 
-            return [MoveEvent(self.subject.id, previous_position, new_position)]
+            return [event]
 
         except KeyError:
             # TODO: log ? Il devrait y avoir un move puisque data du run/mechanism !
