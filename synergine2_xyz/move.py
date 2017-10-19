@@ -170,54 +170,51 @@ class MoveToBehaviour(SubjectBehaviour):
         self._duration = float(self.config.resolve('game.move.walk_ref_time'))
 
     def run(self, data):
-        # TODO: on fait vraiment rien ici ? Note: meme si il n'y a pas de new_path, l'action doit s'effectuer
-        # du moment qu'il y a une intention de move
         move_to_data = data[self.move_to_mechanism]
         if move_to_data:
 
-            if time.time() - move_to_data['last_intention_time'] >= self._duration:
+            if self._can_move_to_next_step(move_to_data):
                 move_to_data['reach_next'] = True
-            elif move_to_data['just_reach'] or move_to_data['initial']:
-                move_to_data['reach_next'] = False
-            else:
-                return False
+                return move_to_data
 
-            return move_to_data
+            if self._is_fresh_new_step(move_to_data):
+                move_to_data['reach_next'] = False
+                return move_to_data
 
         return False
 
+    def _can_move_to_next_step(self, move_to_data: dict) -> bool:
+        return time.time() - move_to_data['last_intention_time'] >= self._duration
+
+    def _is_fresh_new_step(self, move_to_data: dict) -> bool:
+        return move_to_data['just_reach'] or move_to_data['initial']
+
     def action(self, data) -> [Event]:
-        # TODO: effectuer un move vers une nouvelle position ou faire progresser "l'entre-deux"
         new_path = data['new_path']
-        try:
-            # TODO: MoveToIntention doit être configurable
-            move = self.subject.intentions.get(MoveToIntention)
-            move = typing.cast(MoveToIntention, move)
+        # TODO: MoveToIntention doit être configurable
+        move = self.subject.intentions.get(MoveToIntention)
+        move = typing.cast(MoveToIntention, move)
 
-            if new_path:
-                move.path = new_path
-                move.path_progression = -1
+        if new_path:
+            move.path = new_path
+            move.path_progression = -1
 
-            previous_position = self.subject.position
-            new_position = move.path[move.path_progression + 1]
+        previous_position = self.subject.position
+        new_position = move.path[move.path_progression + 1]
 
-            if data['reach_next']:
-                # TODO: fin de path
-                move.path_progression += 1
-                self.subject.position = new_position
-                move.last_intention_time = time.time()
-                move.just_reach = True
-                event = FinishMoveEvent(self.subject.id, previous_position, new_position)
-            else:
-                move.just_reach = False
-                event = StartMoveEvent(self.subject.id, previous_position, new_position)
+        if data['reach_next']:
+            # TODO: fin de path
+            move.path_progression += 1
+            self.subject.position = new_position
+            move.last_intention_time = time.time()
+            move.just_reach = True
+            event = FinishMoveEvent(self.subject.id, previous_position, new_position)
+        else:
+            move.just_reach = False
+            event = StartMoveEvent(self.subject.id, previous_position, new_position)
 
-            move.initial = False
-            # Note: Need to explicitly set to update shared data
-            self.subject.intentions.set(move)
+        move.initial = False
+        # Note: Need to explicitly set to update shared data
+        self.subject.intentions.set(move)
 
-            return [event]
-
-        except KeyError:
-            # TODO: log ? Il devrait y avoir un move puisque data du run/mechanism !
-            pass
+        return [event]
