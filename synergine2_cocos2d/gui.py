@@ -11,6 +11,7 @@ import cocos
 from cocos import collision_model
 from cocos import euclid
 from cocos.layer import ScrollableLayer
+from cocos.actions import MoveTo as BaseMoveTo
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
@@ -397,6 +398,8 @@ class EditLayer(cocos.layer.Layer):
         if self.selection:
             if k == key.M:
                 self.user_action_pending = UserAction.ORDER_MOVE
+            if k == key.R:
+                self.user_action_pending = UserAction.ORDER_MOVE_FAST
 
         if k in binds:
             self.buttons[binds[k]] = 1
@@ -757,6 +760,7 @@ class TMXGui(Gui):
 
         # configs
         self.move_duration_ref = float(self.config.resolve('game.move.walk_ref_time'))
+        self.move_fast_duration_ref = float(self.config.resolve('game.move.run_ref_time'))
 
     def get_layer_middleware(self) -> MapMiddleware:
         return TMXMiddleware(
@@ -782,13 +786,25 @@ class TMXGui(Gui):
         actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
         new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
 
+        actor.stop_actions((BaseMoveTo,))
         actor.set_position(*new_world_position)
 
     def start_move_subject(self, event: StartMoveEvent):
         actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
         new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
 
-        move_action = MoveTo(new_world_position, self.move_duration_ref)
+        if event.gui_action == UserAction.ORDER_MOVE:
+            animation = ANIMATION_WALK
+            cycle_duration = 2
+            move_duration = self.move_duration_ref
+        elif event.gui_action == UserAction.ORDER_MOVE_FAST:
+            animation = ANIMATION_WALK
+            cycle_duration = 0.5
+            move_duration = self.move_fast_duration_ref
+        else:
+            raise NotImplementedError()
+
+        move_action = MoveTo(new_world_position, move_duration)
         actor.do(move_action)
-        actor.do(Animate(ANIMATION_WALK, duration=self.move_duration_ref, cycle_duration=2))
+        actor.do(Animate(animation, duration=move_duration, cycle_duration=cycle_duration))
         actor.rotation = get_angle(event.from_position, event.to_position)

@@ -70,8 +70,9 @@ class Interaction(object):
         raise NotImplementedError()
 
 
-class MoveActorInteraction(Interaction):
-    gui_action = UserAction.ORDER_MOVE
+class BaseMoveActorInteraction(Interaction):
+    gui_action = None
+    color = None
     request_move_behaviour_class = RequestMoveBehaviour
 
     def draw_pending(self) -> None:
@@ -82,7 +83,7 @@ class MoveActorInteraction(Interaction):
                 draw_line(
                     self.layer_manager.scrolling_manager.world_to_screen(*pixel_position),
                     self.layer_manager.edit_layer.screen_mouse,
-                    (0, 0, 255),
+                    self.color,
                 )
 
     def get_package_for_terminal(self) -> TerminalPackage:
@@ -99,9 +100,20 @@ class MoveActorInteraction(Interaction):
                 self.request_move_behaviour_class, {
                     'subject_id': actor.subject.id,
                     'move_to': mouse_grid_position,
+                    'gui_action': self.gui_action,
                 }
             ))
 
         return TerminalPackage(
             simulation_actions=actions,
         )
+
+
+class MoveActorInteraction(BaseMoveActorInteraction):
+    gui_action = UserAction.ORDER_MOVE
+    color = (0, 0, 255)
+
+
+class MoveFastActorInteraction(BaseMoveActorInteraction):
+    gui_action = UserAction.ORDER_MOVE_FAST
+    color = (72, 244, 66)

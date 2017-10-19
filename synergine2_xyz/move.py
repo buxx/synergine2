@@ -11,6 +11,7 @@ from synergine2.simulation import SubjectMechanism
 from synergine2.simulation import Intention
 from synergine2.simulation import Simulation
 from synergine2.simulation import Event
+from synergine2_cocos2d.user_action import UserAction
 from synergine2_xyz.simulation import XYZSimulation
 
 
@@ -19,6 +20,7 @@ class MoveToIntention(Intention):
         self,
         move_to: typing.Tuple[int, int],
         start_time: float,
+        gui_action: typing.Any,
     ) -> None:
         self.move_to = move_to
         self.path = []  # type: typing.List[typing.Tuple[int, int]]
@@ -26,6 +28,7 @@ class MoveToIntention(Intention):
         self.last_intention_time = start_time
         self.just_reach = False
         self.initial = True
+        self.gui_action = gui_action
 
 
 class RequestMoveBehaviour(SimulationBehaviour):
@@ -54,7 +57,11 @@ class RequestMoveBehaviour(SimulationBehaviour):
 
         try:
             subject = self.simulation.subjects.index[subject_id]
-            subject.intentions.set(self.move_intention_class(move_to, start_time=time.time()))
+            subject.intentions.set(self.move_intention_class(
+                move_to,
+                start_time=time.time(),
+                gui_action=data['gui_action'],
+            ))
         except KeyError:
             # TODO: log error here
             pass
@@ -102,6 +109,7 @@ class MoveToMechanism(SubjectMechanism):
                 'last_intention_time': move.last_intention_time,
                 'just_reach': move.just_reach,
                 'initial': move.initial,
+                'gui_action': move.gui_action,
             }
 
         except IndexError:  # TODO: Specialize ? No movement left
@@ -116,6 +124,7 @@ class FinishMoveEvent(Event):
         subject_id: int,
         from_position: typing.Tuple[int, int],
         to_position: typing.Tuple[int, int],
+        gui_action: typing.Any,
         *args,
         **kwargs
     ):
@@ -123,6 +132,7 @@ class FinishMoveEvent(Event):
         self.subject_id = subject_id
         self.from_position = from_position
         self.to_position = to_position
+        self.gui_action = gui_action
 
     def repr_debug(self) -> str:
         return '{}: subject_id:{}, from_position:{} to_position: {}'.format(
@@ -139,6 +149,7 @@ class StartMoveEvent(Event):
         subject_id: int,
         from_position: typing.Tuple[int, int],
         to_position: typing.Tuple[int, int],
+        gui_action: typing.Any,
         *args,
         **kwargs
     ):
@@ -146,6 +157,7 @@ class StartMoveEvent(Event):
         self.subject_id = subject_id
         self.from_position = from_position
         self.to_position = to_position
+        self.gui_action = gui_action
 
     def repr_debug(self) -> str:
         return '{}: subject_id:{}, from_position:{} to_position: {}'.format(
@@ -167,7 +179,8 @@ class MoveToBehaviour(SubjectBehaviour):
         subject: Subject,
     ) -> None:
         super().__init__(config, simulation, subject)
-        self._duration = float(self.config.resolve('game.move.walk_ref_time'))
+        self._walk_duration = float(self.config.resolve('game.move.walk_ref_time'))
+        self._run_duration = float(self.config.resolve('game.move.run_ref_time'))
 
     def run(self, data):
         move_to_data = data[self.move_to_mechanism]
@@ -184,7 +197,11 @@ class MoveToBehaviour(SubjectBehaviour):
         return False
 
     def _can_move_to_next_step(self, move_to_data: dict) -> bool:
-        return time.time() - move_to_data['last_intention_time'] >= self._duration
+        # TODO: Relation vers cocos ! Deplacer UserAction ?
+        if move_to_data['gui_action'] == UserAction.ORDER_MOVE:
+            return time.time() - move_to_data['last_intention_time'] >= self._walk_duration
+        if move_to_data['gui_action'] == UserAction.ORDER_MOVE_FAST:
+            return time.time() - move_to_data['last_intention_time'] >= self._run_duration
 
     def _is_fresh_new_step(self, move_to_data: dict) -> bool:
         return move_to_data['just_reach'] or move_to_data['initial']
@@ -208,10 +225,20 @@ class MoveToBehaviour(SubjectBehaviour):
             self.subject.position = new_position
             move.last_intention_time = time.time()
             move.just_reach = True
-            event = FinishMoveEvent(self.subject.id, previous_position, new_position)
+            event = FinishMoveEvent(
+                self.subject.id,
+                previous_position,
+                new_position,
+                gui_action=move.gui_action,
+            )
         else:
             move.just_reach = False
-            event = StartMoveEvent(self.subject.id, previous_position, new_position)
+            event = StartMoveEvent(
+                self.subject.id,
+                previous_position,
+                new_position,
+                gui_action=move.gui_action,
+            )
 
         move.initial = False
         # Note: Need to explicitly set to update shared data

@@ -1,11 +1,13 @@
 # coding: utf-8
 from synergine2_cocos2d.gui import TMXGui
 from synergine2_cocos2d.interaction import MoveActorInteraction
+from synergine2_cocos2d.interaction import MoveFastActorInteraction
 
 
 class Game(TMXGui):
     def before_run(self) -> None:
         self.layer_manager.interaction_manager.register(MoveActorInteraction, self.layer_manager)
+        self.layer_manager.interaction_manager.register(MoveFastActorInteraction, self.layer_manager)
 
         # Test
         # from sandbox.tile.gui.actor import Man

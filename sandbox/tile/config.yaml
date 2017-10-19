@@ -6,4 +6,4 @@ terminals:
 game:
     move:
         walk_ref_time: 3
-        run_ref_time: 1.5
+        run_ref_time: 1

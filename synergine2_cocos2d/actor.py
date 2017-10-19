@@ -43,6 +43,11 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.current_image = image
         self.need_update_cshape = False
 
+    def stop_actions(self, action_types: typing.Tuple[typing.Type[cocos.actions.Action], ...]) -> None:
+        for action in self.actions:
+            if isinstance(action, action_types):
+                self.remove_action(action)
+
     def update_cshape(self) -> None:
         self.cshape = collision_model.AARectShape(
             euclid.Vector2(self.position[0], self.position[1]),
