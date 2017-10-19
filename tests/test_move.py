@@ -4,6 +4,7 @@ import time
 from freezegun import freeze_time
 
 from synergine2.config import Config
+from synergine2_cocos2d.user_action import UserAction
 from synergine2_xyz.move import MoveToBehaviour, MoveToMechanism, MoveToIntention, StartMoveEvent, FinishMoveEvent
 from synergine2_xyz.simulation import XYZSimulation
 from synergine2_xyz.subjects import XYZSubject
@@ -24,6 +25,8 @@ class TestMove(BaseTest):
             'game': {
                 'move': {
                     'walk_ref_time': 2,
+                    'run_ref_time': 2,
+                    'crawl_ref_time': 2,
                 }
             }
         })
@@ -32,7 +35,7 @@ class TestMove(BaseTest):
         behaviour = MoveToBehaviour(config, simulation, subject)
 
         with freeze_time("2000-01-01 00:00:00"):
-            move_intention = MoveToIntention((0, 3), time.time())
+            move_intention = MoveToIntention((0, 3), time.time(), gui_action=UserAction.ORDER_MOVE)
 
             assert move_intention.path_progression == -1
             assert move_intention.just_reach is False
@@ -44,6 +47,7 @@ class TestMove(BaseTest):
                 'last_intention_time': time.time(),
                 'just_reach': False,
                 'initial': True,
+                'gui_action': UserAction.ORDER_MOVE,
             }
             data = {
                 MoveToMechanism: move_data,
@@ -82,6 +86,7 @@ class TestMove(BaseTest):
                        'just_reach': False,
                        'last_intention_time': 946684800.0,
                        'reach_next': True,
+                       'gui_action': UserAction.ORDER_MOVE,
                    } == run_data
 
             events = behaviour.action(run_data)
@@ -105,6 +110,7 @@ class TestMove(BaseTest):
                        'just_reach': True,
                        'last_intention_time': 946684802.0,
                        'reach_next': False,
+                       'gui_action': UserAction.ORDER_MOVE,
                    } == run_data
 
             events = behaviour.action(run_data)
@@ -128,6 +134,7 @@ class TestMove(BaseTest):
                        'just_reach': False,
                        'last_intention_time': 946684802.0,
                        'reach_next': True,
+                       'gui_action': UserAction.ORDER_MOVE,
                    } == run_data
 
             events = behaviour.action(run_data)
