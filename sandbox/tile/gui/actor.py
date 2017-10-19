@@ -4,6 +4,7 @@ import pyglet
 from synergine2.simulation import Subject
 from synergine2_cocos2d.actor import Actor
 from synergine2_cocos2d.animation import ANIMATION_WALK
+from synergine2_cocos2d.animation import ANIMATION_CRAWL
 
 
 class Man(Actor):
@@ -18,12 +19,12 @@ class Man(Actor):
             'actors/man_w6.png',
             'actors/man_w7.png',
         ],
-        # ANIMATION_CRAWL: [
-        #     'actors/man_c1.png',
-        #     'actors/man_c2.png',
-        #     'actors/man_c3.png',
-        #     'actors/man_c4.png',
-        # ]
+        ANIMATION_CRAWL: [
+            'actors/man_c1.png',
+            'actors/man_c2.png',
+            'actors/man_c3.png',
+            'actors/man_c4.png',
+        ]
     }
 
     def __init__(self, subject: Subject) -> None:

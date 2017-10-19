@@ -181,6 +181,7 @@ class MoveToBehaviour(SubjectBehaviour):
         super().__init__(config, simulation, subject)
         self._walk_duration = float(self.config.resolve('game.move.walk_ref_time'))
         self._run_duration = float(self.config.resolve('game.move.run_ref_time'))
+        self._crawl_duration = float(self.config.resolve('game.move.crawl_ref_time'))
 
     def run(self, data):
         move_to_data = data[self.move_to_mechanism]
@@ -202,6 +203,8 @@ class MoveToBehaviour(SubjectBehaviour):
             return time.time() - move_to_data['last_intention_time'] >= self._walk_duration
         if move_to_data['gui_action'] == UserAction.ORDER_MOVE_FAST:
             return time.time() - move_to_data['last_intention_time'] >= self._run_duration
+        if move_to_data['gui_action'] == UserAction.ORDER_MOVE_CRAWL:
+            return time.time() - move_to_data['last_intention_time'] >= self._crawl_duration
 
     def _is_fresh_new_step(self, move_to_data: dict) -> bool:
         return move_to_data['just_reach'] or move_to_data['initial']

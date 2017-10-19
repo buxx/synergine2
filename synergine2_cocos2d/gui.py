@@ -18,7 +18,7 @@ from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.actions import MoveTo
 from synergine2_cocos2d.actor import Actor
-from synergine2_cocos2d.animation import Animate
+from synergine2_cocos2d.animation import Animate, ANIMATION_CRAWL
 from synergine2_cocos2d.animation import ANIMATION_WALK
 from synergine2_cocos2d.exception import InteractionNotFound
 from synergine2_cocos2d.exception import OuterWorldPosition
@@ -400,6 +400,8 @@ class EditLayer(cocos.layer.Layer):
                 self.user_action_pending = UserAction.ORDER_MOVE
             if k == key.R:
                 self.user_action_pending = UserAction.ORDER_MOVE_FAST
+            if k == key.C:
+                self.user_action_pending = UserAction.ORDER_MOVE_CRAWL
 
         if k in binds:
             self.buttons[binds[k]] = 1
@@ -761,6 +763,7 @@ class TMXGui(Gui):
         # configs
         self.move_duration_ref = float(self.config.resolve('game.move.walk_ref_time'))
         self.move_fast_duration_ref = float(self.config.resolve('game.move.run_ref_time'))
+        self.move_crawl_duration_ref = float(self.config.resolve('game.move.crawl_ref_time'))
 
     def get_layer_middleware(self) -> MapMiddleware:
         return TMXMiddleware(
@@ -801,6 +804,10 @@ class TMXGui(Gui):
             animation = ANIMATION_WALK
             cycle_duration = 0.5
             move_duration = self.move_fast_duration_ref
+        elif event.gui_action == UserAction.ORDER_MOVE_CRAWL:
+            animation = ANIMATION_CRAWL
+            cycle_duration = 2
+            move_duration = self.move_crawl_duration_ref
         else:
             raise NotImplementedError()
 

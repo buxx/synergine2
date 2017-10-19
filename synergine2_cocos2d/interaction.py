@@ -117,3 +117,8 @@ class MoveActorInteraction(BaseMoveActorInteraction):
 class MoveFastActorInteraction(BaseMoveActorInteraction):
     gui_action = UserAction.ORDER_MOVE_FAST
     color = (72, 244, 66)
+
+
+class MoveCrawlActorInteraction(BaseMoveActorInteraction):
+    gui_action = UserAction.ORDER_MOVE_CRAWL
+    color = (235, 244, 66)
