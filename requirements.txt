@@ -1,5 +1,5 @@
 apipkg==1.4
-appdirs==1.4.2
+appdirs==1.4.3
 cocos2d==0.6.4
 coverage==4.4.1
 execnet==1.4.1
