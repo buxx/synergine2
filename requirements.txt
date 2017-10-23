@@ -1,6 +1,6 @@
 apipkg==1.4
 appdirs==1.4.3
-cocos2d==0.6.4
+cocos2d==0.6.5
 coverage==4.4.1
 execnet==1.4.1
 packaging==16.8
