@@ -9,7 +9,7 @@ py==1.4.34
 pyglet==1.2.4
 pymlconf==0.7.3
 pyparsing==2.2.0
-pytest==3.0.4
+pytest==3.2.3
 pytest-cov==2.5.1
 pytest-xdist==1.16.0
 PyYAML==3.12
