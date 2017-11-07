@@ -1,34 +1,15 @@
 # coding: utf-8
-import typing
-from random import randint
-
 import time
+import typing
 
 from synergine2.config import Config
-from synergine2.simulation import SimulationBehaviour, Subject
-from synergine2.simulation import SubjectBehaviour
-from synergine2.simulation import SubjectMechanism
-from synergine2.simulation import Intention
+from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import Simulation
 from synergine2.simulation import Event
-from synergine2_cocos2d.user_action import UserAction
+from synergine2.simulation import SubjectMechanism
+from synergine2.simulation import SubjectBehaviour
+from synergine2_xyz.move.intention import MoveToIntention
 from synergine2_xyz.simulation import XYZSimulation
-
-
-class MoveToIntention(Intention):
-    def __init__(
-        self,
-        move_to: typing.Tuple[int, int],
-        start_time: float,
-        gui_action: typing.Any,
-    ) -> None:
-        self.move_to = move_to
-        self.path = []  # type: typing.List[typing.Tuple[int, int]]
-        self.path_progression = -1  # type: int
-        self.last_intention_time = start_time
-        self.just_reach = False
-        self.initial = True
-        self.gui_action = gui_action
 
 
 class RequestMoveBehaviour(SimulationBehaviour):
@@ -172,17 +153,6 @@ class MoveToBehaviour(SubjectBehaviour):
     use = [MoveToMechanism]
     move_to_mechanism = MoveToMechanism
 
-    def __init__(
-        self,
-        config: Config,
-        simulation: Simulation,
-        subject: Subject,
-    ) -> None:
-        super().__init__(config, simulation, subject)
-        self._walk_duration = float(self.config.resolve('game.move.walk_ref_time'))
-        self._run_duration = float(self.config.resolve('game.move.run_ref_time'))
-        self._crawl_duration = float(self.config.resolve('game.move.crawl_ref_time'))
-
     def run(self, data):
         move_to_data = data[self.move_to_mechanism]
         if move_to_data:
@@ -198,13 +168,7 @@ class MoveToBehaviour(SubjectBehaviour):
         return False
 
     def _can_move_to_next_step(self, move_to_data: dict) -> bool:
-        # TODO: Relation vers cocos ! Deplacer UserAction ?
-        if move_to_data['gui_action'] == UserAction.ORDER_MOVE:
-            return time.time() - move_to_data['last_intention_time'] >= self._walk_duration
-        if move_to_data['gui_action'] == UserAction.ORDER_MOVE_FAST:
-            return time.time() - move_to_data['last_intention_time'] >= self._run_duration
-        if move_to_data['gui_action'] == UserAction.ORDER_MOVE_CRAWL:
-            return time.time() - move_to_data['last_intention_time'] >= self._crawl_duration
+        raise NotImplementedError()
 
     def _is_fresh_new_step(self, move_to_data: dict) -> bool:
         return move_to_data['just_reach'] or move_to_data['initial']

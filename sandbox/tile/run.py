@@ -8,7 +8,6 @@ from random import seed
 synergine2_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_path)
 
-from synergine2_xyz.move import MoveToMechanism, MoveToBehaviour
 from sandbox.tile.simulation.subject import Man
 from sandbox.tile.simulation.base import TileStrategySimulation
 from sandbox.tile.simulation.base import TileStrategySubjects

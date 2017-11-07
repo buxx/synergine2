@@ -1,7 +1,7 @@
 # coding: utf-8
 from sandbox.tile.const import COLLECTION_ALIVE
 from sandbox.tile.simulation.base import BaseSubject
-from synergine2_xyz.move import MoveToBehaviour
+from sandbox.tile.simulation.behaviour import MoveToBehaviour
 
 
 class Man(BaseSubject):

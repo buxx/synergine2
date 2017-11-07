@@ -58,6 +58,8 @@ class SubjectLayer(cocos.layer.ScrollableLayer):
 
 
 class LayerManager(object):
+    edit_layer_class = None  # type: typing.Type['EditLayer']
+
     def __init__(
         self,
         config: Config,
@@ -81,10 +83,12 @@ class LayerManager(object):
         self.subject_layer = None  # type: SubjectLayer
         self.top_layer = None  # type: cocos.tiles.RectMapLayer
 
+        from synergine2_cocos2d.gui import EditLayer
+        self.edit_layer_class = self.edit_layer_class or EditLayer
+
     def init(self) -> None:
         # TODO: cyclic import
         from synergine2_cocos2d.gui import MainLayer
-        from synergine2_cocos2d.gui import EditLayer
         from synergine2_cocos2d.gui import GridManager
 
         self.middleware.init()
@@ -107,7 +111,7 @@ class LayerManager(object):
                 'height': 1000,  # Note: world size
             }
         )
-        self.edit_layer = EditLayer(
+        self.edit_layer = self.edit_layer_class(
             self.config,
             self.logger,
             self,

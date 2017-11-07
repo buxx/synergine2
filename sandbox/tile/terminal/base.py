@@ -2,8 +2,8 @@
 from sandbox.tile.simulation.subject import Man as ManSubject
 from sandbox.tile.gui.actor import Man as ManActor
 from synergine2_cocos2d.terminal import GameTerminal
-from synergine2_xyz.move import FinishMoveEvent
-from synergine2_xyz.move import StartMoveEvent
+from synergine2_xyz.move.simulation import FinishMoveEvent
+from synergine2_xyz.move.simulation import StartMoveEvent
 
 
 class CocosTerminal(GameTerminal):

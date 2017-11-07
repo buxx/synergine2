@@ -4,11 +4,35 @@ import time
 from freezegun import freeze_time
 
 from synergine2.config import Config
-from synergine2_cocos2d.user_action import UserAction
-from synergine2_xyz.move import MoveToBehaviour, MoveToMechanism, MoveToIntention, StartMoveEvent, FinishMoveEvent
+from synergine2.simulation import Simulation, Subject
+from synergine2_cocos2d.user_action import UserAction as BaseUserAction
+from synergine2_xyz.move.intention import MoveToIntention
+from synergine2_xyz.move.simulation import MoveToMechanism
+from synergine2_xyz.move.simulation import StartMoveEvent
+from synergine2_xyz.move.simulation import FinishMoveEvent
 from synergine2_xyz.simulation import XYZSimulation
 from synergine2_xyz.subjects import XYZSubject
 from tests import BaseTest
+from synergine2_xyz.move.simulation import MoveToBehaviour as BaseMoveToBehaviour
+
+
+class MyMoveToBehaviour(BaseMoveToBehaviour):
+    def __init__(
+        self,
+        config: Config,
+        simulation: Simulation,
+        subject: Subject,
+    ) -> None:
+        super().__init__(config, simulation, subject)
+        self._walk_duration = float(self.config.resolve('game.move.walk_ref_time'))
+
+    def _can_move_to_next_step(self, move_to_data: dict) -> bool:
+        if move_to_data['gui_action'] == UserAction.ORDER_MOVE:
+            return time.time() - move_to_data['last_intention_time'] >= self._walk_duration
+
+
+class UserAction(BaseUserAction):
+    ORDER_MOVE = 'ORDER_MOVE'
 
 
 class MySubject(XYZSubject):
@@ -25,14 +49,12 @@ class TestMove(BaseTest):
             'game': {
                 'move': {
                     'walk_ref_time': 2,
-                    'run_ref_time': 2,
-                    'crawl_ref_time': 2,
                 }
             }
         })
         simulation = MySimulation(config)
         subject = MySubject(config, simulation)
-        behaviour = MoveToBehaviour(config, simulation, subject)
+        behaviour = MyMoveToBehaviour(config, simulation, subject)
 
         with freeze_time("2000-01-01 00:00:00"):
             move_intention = MoveToIntention((0, 3), time.time(), gui_action=UserAction.ORDER_MOVE)

@@ -4,22 +4,17 @@ import weakref
 from math import floor
 
 import pyglet
-from pyglet.window import key
 from pyglet.window import mouse
 
 import cocos
 from cocos import collision_model
 from cocos import euclid
 from cocos.layer import ScrollableLayer
-from cocos.actions import MoveTo as BaseMoveTo
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
-from synergine2_cocos2d.actions import MoveTo
 from synergine2_cocos2d.actor import Actor
-from synergine2_cocos2d.animation import Animate, ANIMATION_CRAWL
-from synergine2_cocos2d.animation import ANIMATION_WALK
 from synergine2_cocos2d.exception import InteractionNotFound
 from synergine2_cocos2d.exception import OuterWorldPosition
 from synergine2_cocos2d.gl import draw_rectangle
@@ -29,9 +24,6 @@ from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import MapMiddleware
 from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.user_action import UserAction
-from synergine2_xyz.move import FinishMoveEvent
-from synergine2_xyz.move import StartMoveEvent
-from synergine2_xyz.utils import get_angle
 from synergine2_xyz.xyz import XYZSubjectMixin
 
 
@@ -139,7 +131,7 @@ class EditLayer(cocos.layer.Layer):
         mod_restricted_mov=None,
     ):
         # TODO: Clean init params
-        super(EditLayer, self).__init__()
+        super().__init__()
 
         self.config = config
         self.logger = logger
@@ -188,7 +180,7 @@ class EditLayer(cocos.layer.Layer):
         self.sright = None
         self.sbottom = None
         self.s_top = None
-        self.user_action_pending = None  # UserAction
+        self.user_action_pending = None  # type: UserAction
 
         # opers that change cshape must ensure it goes to False,
         # selection opers must ensure it goes to True
@@ -248,7 +240,7 @@ class EditLayer(cocos.layer.Layer):
                 pass
 
     def on_enter(self):
-        super(EditLayer, self).on_enter()
+        super().on_enter()
         scene = self.get_ancestor(cocos.scene.Scene)
         if self.elastic_box is None:
             self.elastic_box = MinMaxRect(self.layer_manager)
@@ -392,22 +384,16 @@ class EditLayer(cocos.layer.Layer):
 
     def on_key_press(self, k, m):
         binds = self.bindings
-
-        # TODO: Clarify code
-        # Actions available if actor selected
-        if self.selection:
-            if k == key.M:
-                self.user_action_pending = UserAction.ORDER_MOVE
-            if k == key.R:
-                self.user_action_pending = UserAction.ORDER_MOVE_FAST
-            if k == key.C:
-                self.user_action_pending = UserAction.ORDER_MOVE_CRAWL
+        self._on_key_press(k, m)
 
         if k in binds:
             self.buttons[binds[k]] = 1
             self.modifiers[binds[k]] = 1
             return True
         return False
+
+    def _on_key_press(self, k, m):
+        pass
 
     def on_key_release(self, k, m):
         binds = self.bindings
@@ -664,6 +650,8 @@ class SubjectMapperFactory(object):
 
 
 class Gui(object):
+    layer_manager_class = LayerManager
+
     def __init__(
             self,
             config: Config,
@@ -689,7 +677,7 @@ class Gui(object):
             logger=self.logger,
             terminal=self.terminal,
         )
-        self.layer_manager = LayerManager(
+        self.layer_manager = self.layer_manager_class(
             self.config,
             self.logger,
             middleware=self.get_layer_middleware(),
@@ -750,21 +738,6 @@ class TMXGui(Gui):
             read_queue_interval,
         )
 
-        self.terminal.register_event_handler(
-            FinishMoveEvent,
-            self.set_subject_position,
-        )
-
-        self.terminal.register_event_handler(
-            StartMoveEvent,
-            self.start_move_subject,
-        )
-
-        # configs
-        self.move_duration_ref = float(self.config.resolve('game.move.walk_ref_time'))
-        self.move_fast_duration_ref = float(self.config.resolve('game.move.run_ref_time'))
-        self.move_crawl_duration_ref = float(self.config.resolve('game.move.crawl_ref_time'))
-
     def get_layer_middleware(self) -> MapMiddleware:
         return TMXMiddleware(
             self.config,
@@ -784,34 +757,3 @@ class TMXGui(Gui):
     def append_subject(self, subject: XYZSubjectMixin) -> None:
         subject_mapper = self.subject_mapper_factory.get_subject_mapper(subject)
         subject_mapper.append(subject, self.layer_manager)
-
-    def set_subject_position(self, event: FinishMoveEvent):
-        actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
-        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
-
-        actor.stop_actions((BaseMoveTo,))
-        actor.set_position(*new_world_position)
-
-    def start_move_subject(self, event: StartMoveEvent):
-        actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
-        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
-
-        if event.gui_action == UserAction.ORDER_MOVE:
-            animation = ANIMATION_WALK
-            cycle_duration = 2
-            move_duration = self.move_duration_ref
-        elif event.gui_action == UserAction.ORDER_MOVE_FAST:
-            animation = ANIMATION_WALK
-            cycle_duration = 0.5
-            move_duration = self.move_fast_duration_ref
-        elif event.gui_action == UserAction.ORDER_MOVE_CRAWL:
-            animation = ANIMATION_CRAWL
-            cycle_duration = 2
-            move_duration = self.move_crawl_duration_ref
-        else:
-            raise NotImplementedError()
-
-        move_action = MoveTo(new_world_position, move_duration)
-        actor.do(move_action)
-        actor.do(Animate(animation, duration=move_duration, cycle_duration=cycle_duration))
-        actor.rotation = get_angle(event.from_position, event.to_position)
