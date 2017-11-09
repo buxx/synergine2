@@ -40,7 +40,14 @@ class Subject(IdentifiedObject):
         self,
         config: Config,
         simulation: 'Simulation',
+        properties: dict=None,
     ):
+        """
+
+        :param config: config object
+        :param simulation: simulation object
+        :param properties: additional data (will not change during simulation)
+        """
         super().__init__()
         # FIXME: use shared data to permit dynamic start_collections
         self.collections = self.start_collections[:]
@@ -49,6 +56,7 @@ class Subject(IdentifiedObject):
         self._id = id(self)  # We store object id because it's lost between process
         self.simulation = simulation
         self.intentions = None
+        self.properties = properties or {}
 
         if self.behaviour_selector_class:
             self.behaviour_selector = self.behaviour_selector_class()

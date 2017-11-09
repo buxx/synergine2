@@ -24,6 +24,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         opacity=255,
         color=(255, 255, 255),
         anchor=None,
+        properties: dict=None,
         **kwargs
     ):
         super().__init__(
@@ -42,6 +43,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.build_animation_images()
         self.current_image = image
         self.need_update_cshape = False
+        self.properties = properties or {}
 
     def stop_actions(self, action_types: typing.Tuple[typing.Type[cocos.actions.Action], ...]) -> None:
         for action in self.actions:

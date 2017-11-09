@@ -15,6 +15,8 @@ from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.actor import Actor
+from synergine2_cocos2d.const import SELECTION_COLOR_RGB
+from synergine2_cocos2d.const import DEFAULT_SELECTION_COLOR_RGB
 from synergine2_cocos2d.exception import InteractionNotFound
 from synergine2_cocos2d.exception import OuterWorldPosition
 from synergine2_cocos2d.gl import draw_rectangle
@@ -173,7 +175,7 @@ class EditLayer(cocos.layer.Layer):
         self.wdrag_start_point = (0, 0)
         self.elastic_box = None  # type: MinMaxRect
         self.elastic_box_wminmax = 0, 0, 0, 0
-        self.selection = {}
+        self.selection = {}  # type: typing.List[Actor]
         self.screen_mouse = (0, 0)
         self.world_mouse = (0, 0)
         self.sleft = None
@@ -228,7 +230,10 @@ class EditLayer(cocos.layer.Layer):
 
             draw_rectangle(
                 self.layer_manager.scrolling_manager.world_to_screen_positions(rect_positions),
-                (0, 81, 211),
+                actor.subject.properties.get(
+                    SELECTION_COLOR_RGB,
+                    self.config.get(DEFAULT_SELECTION_COLOR_RGB, (0, 81, 211))
+                ),
             )
 
     def draw_interactions(self) -> None:

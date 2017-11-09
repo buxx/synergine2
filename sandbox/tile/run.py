@@ -5,6 +5,13 @@ import sys
 import logging
 from random import seed
 
+from sandbox.tile.const import FLAG
+from sandbox.tile.const import FLAG_DE
+from sandbox.tile.const import DE_COLOR
+from sandbox.tile.const import URSS_COLOR
+from sandbox.tile.const import FLAG_URSS
+from synergine2_cocos2d.const import SELECTION_COLOR_RGB
+
 synergine2_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../'))
 sys.path.append(synergine2_path)
 
@@ -36,6 +43,22 @@ def main(map_dir_path: str, seed_value: int=42):
             config=config,
             simulation=simulation,
             position=position,
+            properties={
+                SELECTION_COLOR_RGB: DE_COLOR,
+                FLAG: FLAG_DE,
+            }
+        )
+        subjects.append(man)
+
+    for position in ((20, 10),):
+        man = Man(
+            config=config,
+            simulation=simulation,
+            position=position,
+            properties={
+                SELECTION_COLOR_RGB: URSS_COLOR,
+                FLAG: FLAG_URSS,
+            }
         )
         subjects.append(man)
 

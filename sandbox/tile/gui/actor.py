@@ -7,6 +7,14 @@ from synergine2_cocos2d.animation import ANIMATION_WALK
 from synergine2_cocos2d.animation import ANIMATION_CRAWL
 
 
+FLAG_DE = 'DE'
+FLAG_URSS = 'URSS'
+
+FLAG_COLORS = {
+    FLAG_DE
+}
+
+
 class Man(Actor):
     animation_image_paths = {
         ANIMATION_WALK: [
@@ -27,5 +35,8 @@ class Man(Actor):
         ]
     }
 
-    def __init__(self, subject: Subject) -> None:
+    def __init__(
+        self,
+        subject: Subject,
+    ) -> None:
         super().__init__(pyglet.resource.image('actors/man.png'), subject=subject)
