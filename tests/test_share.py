@@ -228,6 +228,36 @@ class TestShare(BaseTest):
         # In this case local data is used
         assert shared.get('data') == {'foo': 'buz'}
 
+    def test_update_dict_in_dict_with_pointer(self):
+        shared = share.SharedDataManager()
+
+        class Foo(IdentifiedObject):
+            data = shared.create_self('data', lambda: {})
+
+        foo = Foo()
+        foo.data = {'foo': {'bar': 'baz'}}
+
+        assert foo.data == {'foo': {'bar': 'baz'}}
+
+        foo.data['foo'] = {'bar': 'baz'}
+        # In this case local data is used
+        assert foo.data == {'foo': {'bar': 'baz'}}
+
+        shared.commit()
+        shared.purge_data()
+
+        # In this case, "data" key was pending and has been commit
+        assert foo.data == {'foo': {'bar': 'baz'}}
+
+        # In this case "data" key was NOT pending and has not been commit
+        foo.data['foo']['bar'] = 'biz'
+        foo.data = dict(foo.data)
+
+        shared.commit()
+        shared.purge_data()
+
+        assert foo.data == {'foo': {'bar': 'biz'}}
+
 
 class TestIndexes(BaseTest):
     def test_list_index(self):

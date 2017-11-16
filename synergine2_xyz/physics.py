@@ -5,6 +5,7 @@ from dijkstar import Graph
 from dijkstar import find_path
 
 from synergine2.config import Config
+from synergine2.share import shared
 from synergine2_xyz.map import TMXMap, XYZTile
 from synergine2_xyz.subjects import XYZSubject
 from synergine2_xyz.xyz import get_neighbor_positions
@@ -34,7 +35,32 @@ class MoveCostComputer(object):
         return 1.0
 
 
+class VisibilityMatrix(object):
+    _matrixes = shared.create('matrixes', value=lambda: {})  # type: typing.Dict[str, typing.Dict[float, typing.List[typing.List[float]]]]  # nopep8
+
+    def initialize_empty_matrix(self, name: str, height: float, matrix_width: int, matrix_height: int) -> None:
+        self._matrixes[name] = {}
+        self._matrixes[name][height] = []
+
+        for y in range(matrix_height):
+            x_list = []
+            for x in range(matrix_width):
+                x_list.append(0.0)
+            self._matrixes[name][height].append(x_list)
+
+    def get_matrix(self, name: str, height: float) -> typing.List[typing.List[float]]:
+        return self._matrixes[name][height]
+
+    def update_matrix(self, name: str, height: float, x: int, y: int, value: float) -> None:
+        matrix = self.get_matrix(name, height)
+        matrix[y][x] = value
+        # TODO: Test if working and needed ? This is not perf friendly ...
+        # Force shared data update
+        self._matrixes = dict(self._matrixes)
+
+
 class Physics(object):
+    visibility_matrix = VisibilityMatrix
     move_cost_computer_class = MoveCostComputer
 
     def __init__(
@@ -42,7 +68,8 @@ class Physics(object):
         config: Config,
     ) -> None:
         self.config = config
-        self.graph = Graph()
+        self.graph = Graph()  # Graph of possible movements for dijkstar algorithm lib
+        self.visibility_matrix = self.visibility_matrix()
         self.move_cost_computer = self.move_cost_computer_class(config)
 
     def load(self) -> None:
