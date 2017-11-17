@@ -8,6 +8,7 @@ from synergine2.config import Config
 from synergine2.share import shared
 from synergine2_xyz.map import TMXMap, XYZTile
 from synergine2_xyz.subjects import XYZSubject
+from synergine2_xyz.utils import get_line_xy_path
 from synergine2_xyz.xyz import get_neighbor_positions
 
 
@@ -57,6 +58,21 @@ class VisibilityMatrix(object):
         # TODO: Test if working and needed ? This is not perf friendly ...
         # Force shared data update
         self._matrixes = dict(self._matrixes)
+
+    def get_path_positions(
+        self,
+        from_: typing.Tuple[int, int],
+        to: typing.Tuple[int, int],
+    ) -> typing.List[typing.Tuple[int, int]]:
+        return get_line_xy_path(from_, to)
+
+    def get_values_for_path(self, name: str, height: float, path_positions: typing.List[typing.Tuple[int, int]]):
+        values = []
+        matrix = self.get_matrix(name, height)
+        for path_position in path_positions:
+            x, y = path_position
+            values.append(matrix[y][x])
+        return values
 
 
 class Physics(object):
