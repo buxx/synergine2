@@ -3,9 +3,12 @@ import typing
 
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
+from synergine2.simulation import SimulationBehaviour
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
+from synergine2_cocos2d.actor import Actor
 from synergine2_cocos2d.exception import InteractionNotFound
+from synergine2_cocos2d.gl import draw_line
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.user_action import UserAction
 
@@ -64,4 +67,39 @@ class Interaction(object):
         self.terminal.send(package)
 
     def get_package_for_terminal(self) -> TerminalPackage:
+        raise NotImplementedError()
+
+
+class BaseActorInteraction(Interaction):
+    gui_action = None
+    color = None
+
+    def draw_pending(self) -> None:
+        for actor in self.layer_manager.edit_layer.selection:
+            grid_position = self.layer_manager.grid_manager.get_grid_position(actor.position)
+            pixel_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(grid_position)
+
+            draw_line(
+                self.layer_manager.scrolling_manager.world_to_screen(*pixel_position),
+                self.layer_manager.edit_layer.screen_mouse,
+                self.color,
+            )
+
+    def get_package_for_terminal(self) -> TerminalPackage:
+        actions = []
+        mouse_grid_position = self.layer_manager.grid_manager.get_grid_position(
+            self.layer_manager.scrolling_manager.screen_to_world(
+                *self.layer_manager.edit_layer.screen_mouse,
+            )
+        )
+
+        for actor in self.layer_manager.edit_layer.selection:
+            behaviour_class, behaviour_data = self.get_behaviour(actor, mouse_grid_position)
+            actions.append((behaviour_class, behaviour_data))
+
+        return TerminalPackage(
+            simulation_actions=actions,
+        )
+
+    def get_behaviour(self, actor: Actor, mouse_grid_position) -> typing.Tuple[typing.Type[SimulationBehaviour], dict]:
         raise NotImplementedError()

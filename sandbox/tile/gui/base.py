@@ -1,26 +1,23 @@
 # coding: utf-8
-from pyglet.window import key
-from cocos.actions import MoveTo as BaseMoveTo
-from sandbox.tile.gui.move import MoveActorInteraction
-from sandbox.tile.gui.move import MoveFastActorInteraction
-from sandbox.tile.gui.move import MoveCrawlActorInteraction
-from synergine2_cocos2d.layer import LayerManager
-from synergine2_xyz.move.simulation import FinishMoveEvent
-from synergine2_xyz.move.simulation import StartMoveEvent
 
-from synergine2_xyz.utils import get_angle
+from pyglet.window import key
+
+from cocos.actions import MoveTo as BaseMoveTo
+from sandbox.tile.user_action import UserAction
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
-from synergine2_cocos2d.gui import TMXGui
-from synergine2_cocos2d.gui import EditLayer as BaseEditLayer
 from synergine2_cocos2d.actions import MoveTo
-from synergine2_cocos2d.animation import Animate
 # TODO NOW: MOVE
 from synergine2_cocos2d.animation import ANIMATION_CRAWL
 from synergine2_cocos2d.animation import ANIMATION_WALK
-
-from sandbox.tile.user_action import UserAction
+from synergine2_cocos2d.animation import Animate
+from synergine2_cocos2d.gui import EditLayer as BaseEditLayer
+from synergine2_cocos2d.gui import TMXGui
+from synergine2_cocos2d.layer import LayerManager
+from synergine2_xyz.move.simulation import FinishMoveEvent
+from synergine2_xyz.move.simulation import StartMoveEvent
+from synergine2_xyz.utils import get_angle
 
 
 class EditLayer(BaseEditLayer):
@@ -73,6 +70,11 @@ class Game(TMXGui):
         self.move_crawl_duration_ref = float(self.config.resolve('game.move.crawl_ref_time'))
 
     def before_run(self) -> None:
+        from sandbox.tile.gui.move import MoveActorInteraction
+        from sandbox.tile.gui.move import MoveFastActorInteraction
+        from sandbox.tile.gui.move import MoveCrawlActorInteraction
+        from sandbox.tile.gui.fire import FireActorInteraction
+
         self.layer_manager.interaction_manager.register(MoveActorInteraction, self.layer_manager)
         self.layer_manager.interaction_manager.register(MoveFastActorInteraction, self.layer_manager)
         self.layer_manager.interaction_manager.register(MoveCrawlActorInteraction, self.layer_manager)
