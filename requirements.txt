@@ -1,5 +1,5 @@
 apipkg==1.4
-appdirs==1.4.2
+appdirs==1.4.3
 cocos2d==0.6.5
 coverage==4.4.2
 Dijkstar==2.2
