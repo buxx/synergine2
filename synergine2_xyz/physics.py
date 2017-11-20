@@ -37,23 +37,22 @@ class MoveCostComputer(object):
 
 
 class VisibilityMatrix(object):
-    _matrixes = shared.create('matrixes', value=lambda: {})  # type: typing.Dict[str, typing.Dict[float, typing.List[typing.List[float]]]]  # nopep8
+    _matrixes = shared.create('matrixes', value=lambda: {})  # type: typing.Dict[str, typing.List[typing.List[tuple]]]
 
-    def initialize_empty_matrix(self, name: str, height: float, matrix_width: int, matrix_height: int) -> None:
-        self._matrixes[name] = {}
-        self._matrixes[name][height] = []
+    def initialize_empty_matrix(self, name: str, matrix_width: int, matrix_height: int) -> None:
+        self._matrixes[name] = []
 
         for y in range(matrix_height):
             x_list = []
             for x in range(matrix_width):
-                x_list.append(0.0)
-            self._matrixes[name][height].append(x_list)
+                x_list.append((0.0,))
+            self._matrixes[name].append(x_list)
 
-    def get_matrix(self, name: str, height: float) -> typing.List[typing.List[float]]:
-        return self._matrixes[name][height]
+    def get_matrix(self, name: str) -> typing.List[typing.List[tuple]]:
+        return self._matrixes[name]
 
-    def update_matrix(self, name: str, height: float, x: int, y: int, value: float) -> None:
-        matrix = self.get_matrix(name, height)
+    def update_matrix(self, name: str, x: int, y: int, value: tuple) -> None:
+        matrix = self.get_matrix(name)
         matrix[y][x] = value
         # TODO: Test if working and needed ? This is not perf friendly ...
         # Force shared data update
@@ -66,9 +65,9 @@ class VisibilityMatrix(object):
     ) -> typing.List[typing.Tuple[int, int]]:
         return get_line_xy_path(from_, to)
 
-    def get_values_for_path(self, name: str, height: float, path_positions: typing.List[typing.Tuple[int, int]]):
+    def get_values_for_path(self, name: str, path_positions: typing.List[typing.Tuple[int, int]]):
         values = []
-        matrix = self.get_matrix(name, height)
+        matrix = self.get_matrix(name)
         for path_position in path_positions:
             x, y = path_position
             values.append(matrix[y][x])
