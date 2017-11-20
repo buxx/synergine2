@@ -36,16 +36,26 @@ class MoveCostComputer(object):
         return 1.0
 
 
-class VisibilityMatrix(object):
+class Matrixes(object):
     _matrixes = shared.create('matrixes', value=lambda: {})  # type: typing.Dict[str, typing.List[typing.List[tuple]]]
 
-    def initialize_empty_matrix(self, name: str, matrix_width: int, matrix_height: int) -> None:
+    def __init__(self):
+        self._value_structures = {}  # type: typing.List[str]
+
+    def initialize_empty_matrix(
+        self,
+        name: str,
+        matrix_width: int,
+        matrix_height: int,
+        value_structure: typing.List[str],
+    ) -> None:
         self._matrixes[name] = []
+        self._value_structures[name] = value_structure
 
         for y in range(matrix_height):
             x_list = []
             for x in range(matrix_width):
-                x_list.append((0.0,))
+                x_list.append(tuple([0.0] * len(value_structure)))
             self._matrixes[name].append(x_list)
 
     def get_matrix(self, name: str) -> typing.List[typing.List[tuple]]:
@@ -73,9 +83,15 @@ class VisibilityMatrix(object):
             values.append(matrix[y][x])
         return values
 
+    def get_value(self, matrix_name: str, x: int, y: int, value_name: str) -> float:
+        matrix = self.get_matrix(matrix_name)
+        values = matrix[y][x]
+        value_position = self._value_structures[matrix_name].index(value_name)
+        return values[value_position]
+
 
 class Physics(object):
-    visibility_matrix = VisibilityMatrix
+    visibility_matrix = Matrixes
     move_cost_computer_class = MoveCostComputer
 
     def __init__(
