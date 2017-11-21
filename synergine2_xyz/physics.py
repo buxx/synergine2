@@ -8,6 +8,7 @@ from synergine2.config import Config
 from synergine2.share import shared
 from synergine2_xyz.map import TMXMap, XYZTile
 from synergine2_xyz.subjects import XYZSubject
+from synergine2_xyz.tmx_utils import fill_matrix
 from synergine2_xyz.utils import get_line_xy_path
 from synergine2_xyz.xyz import get_neighbor_positions
 
@@ -38,9 +39,7 @@ class MoveCostComputer(object):
 
 class Matrixes(object):
     _matrixes = shared.create('matrixes', value=lambda: {})  # type: typing.Dict[str, typing.List[typing.List[tuple]]]
-
-    def __init__(self):
-        self._value_structures = {}  # type: typing.List[str]
+    _value_structures = shared.create('value_structures', value=lambda: {})  # type: typing.List[str]
 
     def initialize_empty_matrix(
         self,
@@ -75,12 +74,25 @@ class Matrixes(object):
     ) -> typing.List[typing.Tuple[int, int]]:
         return get_line_xy_path(from_, to)
 
-    def get_values_for_path(self, name: str, path_positions: typing.List[typing.Tuple[int, int]]):
+    def get_values_for_path(
+        self,
+        name: str,
+        path_positions: typing.List[typing.Tuple[int, int]],
+        value_name: str=None,
+    ):
         values = []
+        value_name_position = None
+
+        if value_name:
+            value_name_position = self._value_structures[name].index(value_name)
+
         matrix = self.get_matrix(name)
         for path_position in path_positions:
             x, y = path_position
-            values.append(matrix[y][x])
+            if value_name_position is None:
+                values.append(matrix[y][x])
+            else:
+                values.append(matrix[y][x][value_name_position])
         return values
 
     def get_value(self, matrix_name: str, x: int, y: int, value_name: str) -> float:
@@ -129,6 +141,7 @@ class Physics(object):
 
 class TMXPhysics(Physics):
     tmx_map_class = TMXMap
+    matrixes_configuration = None  # type: typing.Dict[str, typing.List[str]]
 
     def __init__(
         self,
@@ -138,9 +151,11 @@ class TMXPhysics(Physics):
         super().__init__(config)
         self.map_file_path = map_file_path
         self.tmx_map = self.tmx_map_class(map_file_path)
+        self.matrixes = Matrixes()
 
     def load(self) -> None:
         self.load_graph_from_map(self.map_file_path)
+        self.load_matrixes_from_map()
 
     def load_graph_from_map(self, map_file_path: str) -> None:
         # TODO: tmx_map contient tout en cache, faire le dessous en exploitant tmx_map.
@@ -162,3 +177,16 @@ class TMXPhysics(Physics):
                     to_tile = self.tmx_map.layer_tiles('terrain')[neighbor]
                     # Note: Voir https://pypi.python.org/pypi/Dijkstar/2.2
                     self.graph.add_edge(position, neighbor, to_tile)
+
+    def load_matrixes_from_map(self) -> None:
+        if not self.matrixes_configuration:
+            return
+
+        for matrix_name, properties in self.matrixes_configuration.items():
+            self.matrixes.initialize_empty_matrix(
+                matrix_name,
+                matrix_width=self.tmx_map.width,
+                matrix_height=self.tmx_map.height,
+                value_structure=properties,
+            )
+            fill_matrix(self.tmx_map, self.matrixes, 'terrain', matrix_name, properties)

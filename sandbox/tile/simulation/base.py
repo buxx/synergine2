@@ -1,27 +1,11 @@
 # coding: utf-8
-import tmx
 
-from sandbox.tile.simulation.physics import TerrainTile
-from sandbox.tile.simulation.physics import TileMoveCostComputer
+from sandbox.tile.simulation.physics import TilePhysics
 from synergine2.config import Config
-from synergine2_xyz.map import TMXMap
 from synergine2_xyz.physics import Physics
-from synergine2_xyz.physics import TMXPhysics
 from synergine2_xyz.simulation import XYZSimulation
-from synergine2_xyz.subjects import XYZSubjects
 from synergine2_xyz.subjects import XYZSubject
-
-
-class TileMap(TMXMap):
-    xyz_tile_class = TerrainTile
-
-    def get_default_tileset(self) -> tmx.Tileset:
-        return self.tmx_tilesets['terrain']
-
-
-class TilePhysics(TMXPhysics):
-    tmx_map_class = TileMap
-    move_cost_computer_class = TileMoveCostComputer
+from synergine2_xyz.subjects import XYZSubjects
 
 
 class TileStrategySimulation(XYZSimulation):

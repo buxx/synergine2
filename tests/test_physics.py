@@ -45,6 +45,16 @@ class TestVisibilityMatrix(BaseTest):
         path_values = visibility.get_values_for_path('testing', path_positions=path_positions)
         assert [(0.7,), (0.0,), (0.5,)] == path_values
 
+    def test_get_path_value(self):
+        visibility = Matrixes()
+        visibility.initialize_empty_matrix('testing', matrix_width=3, matrix_height=2, value_structure=['opacity'])
+        visibility.update_matrix('testing', x=2, y=1, value=(0.5,))
+        visibility.update_matrix('testing', x=0, y=0, value=(0.7,))
+
+        path_positions = visibility.get_path_positions(from_=(0, 0), to=(2, 1))
+        path_values = visibility.get_values_for_path('testing', path_positions=path_positions, value_name='opacity')
+        assert [0.7, 0.0, 0.5] == path_values
+
     def test_get_value(self):
         visibility = Matrixes()
         visibility.initialize_empty_matrix('testing', matrix_width=3, matrix_height=2, value_structure=['opacity'])

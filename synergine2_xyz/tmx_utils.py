@@ -6,7 +6,9 @@ from tmx import Layer
 
 from synergine2.exceptions import ConfigurationError
 from synergine2_xyz.map import TMXMap
-from synergine2_xyz.physics import Matrixes
+
+if typing.TYPE_CHECKING:
+    from synergine2_xyz.physics import Matrixes
 
 
 def get_layer_by_name(map_: TileMap, layer_name: str) -> Layer:
@@ -19,7 +21,7 @@ def get_layer_by_name(map_: TileMap, layer_name: str) -> Layer:
 
 def fill_matrix(
     tmx_map: TMXMap,
-    matrixes: Matrixes,
+    matrixes: 'Matrixes',
     layer_name: str,
     matrix_name: str,
     properties: typing.List[str],

@@ -3,6 +3,7 @@
 from pyglet.window import key
 
 from cocos.actions import MoveTo as BaseMoveTo
+from sandbox.tile.simulation.physics import TilePhysics
 from sandbox.tile.user_action import UserAction
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
@@ -17,10 +18,19 @@ from synergine2_cocos2d.gui import TMXGui
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_xyz.move.simulation import FinishMoveEvent
 from synergine2_xyz.move.simulation import StartMoveEvent
+from synergine2_xyz.physics import Matrixes
 from synergine2_xyz.utils import get_angle
 
 
 class EditLayer(BaseEditLayer):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.matrixes = Matrixes()
+        self.physics = TilePhysics(
+            self.config,
+            map_file_path='sandbox/tile/maps/003/003.tmx',  # FIXME: HARDCODED
+        )
+
     def _on_key_press(self, k, m):
         if self.selection:
             if k == key.M:
@@ -29,6 +39,8 @@ class EditLayer(BaseEditLayer):
                 self.user_action_pending = UserAction.ORDER_MOVE_FAST
             if k == key.C:
                 self.user_action_pending = UserAction.ORDER_MOVE_CRAWL
+            if k == key.F:
+                self.user_action_pending = UserAction.ORDER_FIRE
 
 
 class TileLayerManager(LayerManager):
@@ -78,6 +90,7 @@ class Game(TMXGui):
         self.layer_manager.interaction_manager.register(MoveActorInteraction, self.layer_manager)
         self.layer_manager.interaction_manager.register(MoveFastActorInteraction, self.layer_manager)
         self.layer_manager.interaction_manager.register(MoveCrawlActorInteraction, self.layer_manager)
+        self.layer_manager.interaction_manager.register(FireActorInteraction, self.layer_manager)
 
     def set_subject_position(self, event: FinishMoveEvent):
         actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]

@@ -6,6 +6,8 @@
    <property name="name" type="str" value="Grass"/>
    <property name="traversable_by_man" type="bool" value="true"/>
    <property name="traversable_by_vehicle" type="bool" value="true"/>
+   <property name="opacity" type="float" value="0.0"/>
+   <property name="height" type="float" value="0.0"/>
   </properties>
  </tile>
  <tile id="1">
@@ -13,6 +15,8 @@
    <property name="name" type="str" value="Wood wall"/>
    <property name="traversable_by_man" type="bool" value="false"/>
    <property name="traversable_by_vehicle" type="bool" value="false"/>
+   <property name="opacity" type="float" value="100.0"/>
+   <property name="height" type="float" value="2.0"/>
   </properties>
  </tile>
 </tileset>

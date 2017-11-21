@@ -18,11 +18,15 @@ class MapMiddleware(object):
         self.map_dir_path = map_dir_path
         self.tmx = None
 
-    def init(self) -> None:
-        self.tmx = cocos.tiles.load(os.path.join(
+    def get_map_file_path(self) -> str:
+        return os.path.join(
             self.map_dir_path,
             '{}.tmx'.format(os.path.basename(self.map_dir_path)),
-        ))
+        )
+
+    def init(self) -> None:
+        map_file_path = self.get_map_file_path()
+        self.tmx = cocos.tiles.load(map_file_path)
 
     def get_background_sprite(self) -> cocos.sprite.Sprite:
         raise NotImplementedError()
