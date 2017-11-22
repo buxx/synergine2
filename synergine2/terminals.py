@@ -9,6 +9,7 @@ from queue import Empty
 import time
 
 from synergine2.base import BaseObject
+from synergine2.share import shared
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.simulation import Subject
@@ -112,6 +113,7 @@ class Terminal(BaseObject):
                 return True  # Finished to read Queue
 
     def receive(self, package: TerminalPackage):
+        shared.purge_data()
         self.update_with_package(package)
         # End of cycle management signal
         self.send(TerminalPackage(is_cycle=True))

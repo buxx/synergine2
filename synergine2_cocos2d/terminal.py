@@ -1,6 +1,6 @@
 # coding: utf-8
-from synergine2.share import shared
-from synergine2.terminals import Terminal, TerminalPackage
+from synergine2.terminals import Terminal
+from synergine2.terminals import TerminalPackage
 
 
 class GameTerminal(Terminal):
@@ -12,7 +12,6 @@ class GameTerminal(Terminal):
         self.gui.before_received(package)
         # TODO: pas d'event après le move: il faut subscribe je crois :p
         super().receive(package)
-        shared.purge_data()
         self.gui.after_received(package)
 
     def run(self):
