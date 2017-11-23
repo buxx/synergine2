@@ -8,3 +8,5 @@ game:
         walk_ref_time: 3
         run_ref_time: 1
         crawl_ref_time: 10
+global:
+    debug: true

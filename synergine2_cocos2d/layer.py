@@ -85,6 +85,7 @@ class LayerManager(object):
 
         from synergine2_cocos2d.gui import EditLayer
         self.edit_layer_class = self.edit_layer_class or EditLayer
+        self.debug = self.config.resolve('global.debug', False)
 
     def init(self) -> None:
         # TODO: cyclic import

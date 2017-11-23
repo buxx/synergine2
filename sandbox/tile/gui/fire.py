@@ -35,6 +35,29 @@ class BaseFireActorInteraction(BaseActorInteraction):
                 matrix_name='visibility',
                 opacity_property_name='opacity',
             )
+
+            # DEBUG
+            if self.layer_manager.debug:
+                grid_paths = self.layer_manager.edit_layer.matrixes.get_path_positions(
+                    from_=actor_grid_position,
+                    to=mouse_grid_position,
+                )
+                previous_grid_path = None
+                for grid_path in grid_paths:
+                    if previous_grid_path:
+                        previous_grid_path_pixel = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                            previous_grid_path,
+                        )
+                        current_grid_pixel = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                            grid_path,
+                        )
+                        draw_line(
+                            previous_grid_path_pixel,
+                            current_grid_pixel,
+                            (25, 125, 25),
+                        )
+                    previous_grid_path = grid_path
+
             if obstacle_grid_position:
                 obstacle_pixel = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
                     obstacle_grid_position,
