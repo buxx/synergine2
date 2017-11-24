@@ -6,7 +6,8 @@ from dijkstar import find_path
 
 from synergine2.config import Config
 from synergine2.share import shared
-from synergine2_xyz.map import TMXMap, XYZTile
+from synergine2_xyz.map import TMXMap
+from synergine2_xyz.map import XYZTile
 from synergine2_xyz.subjects import XYZSubject
 from synergine2_xyz.tmx_utils import fill_matrix
 from synergine2_xyz.utils import get_line_xy_path
@@ -147,11 +148,12 @@ class TMXPhysics(Physics):
         self,
         config: Config,
         map_file_path: str,
+        matrixes: Matrixes=None,
     ) -> None:
         super().__init__(config)
         self.map_file_path = map_file_path
         self.tmx_map = self.tmx_map_class(map_file_path)
-        self.matrixes = Matrixes()
+        self.matrixes = matrixes or Matrixes()
 
     def load(self) -> None:
         self.load_graph_from_map(self.map_file_path)
@@ -190,3 +192,6 @@ class TMXPhysics(Physics):
                 value_structure=properties,
             )
             fill_matrix(self.tmx_map, self.matrixes, 'terrain', matrix_name, properties)
+
+    def subject_see_subject(self, observer: XYZSubject, observed: XYZSubject) -> bool:
+        raise NotImplementedError()

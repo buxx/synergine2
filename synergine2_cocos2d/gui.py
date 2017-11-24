@@ -4,6 +4,7 @@ import weakref
 from math import floor
 
 import pyglet
+import time
 from pyglet.window import mouse
 
 import cocos
@@ -26,6 +27,7 @@ from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import MapMiddleware
 from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.user_action import UserAction
+from synergine2_xyz.physics import Physics
 from synergine2_xyz.xyz import XYZSubjectMixin
 
 
@@ -109,6 +111,31 @@ class MinMaxRect(cocos.cocosnode.CocosNode):
 
     def set_vertexes_from_minmax(self, minx, maxx, miny, maxy):
         self.vertexes = [(minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)]
+
+
+class FinishedCallback(Exception):
+    pass
+
+
+class Callback(object):
+    def __init__(
+        self,
+        func: typing.Callable[[], None],
+        duration: float,
+    ) -> None:
+        self.func = func
+        self.duration = duration
+        # Started timestamp
+        self.started = None  # type: float
+
+    def execute(self) -> None:
+        if self.started is None:
+            self.started = time.time()
+
+        if time.time() - self.started < self.duration:
+            self.func()
+        else:
+            raise FinishedCallback()
 
 
 class EditLayer(cocos.layer.Layer):
@@ -201,6 +228,14 @@ class EditLayer(cocos.layer.Layer):
 
         self.schedule(self.update)
         self.selectable_actors = []
+        # TODO: In top level class: to be available in all layers
+        self.callbacks = []  # type: typing.List[Callback]
+
+    def append_callback(self, callback: typing.Callable[[], None], duration: float) -> None:
+        self.callbacks.append(Callback(
+            callback,
+            duration,
+        ))
 
     def set_selectable(self, actor: Actor) -> None:
         self.selectable_actors.append(actor)
@@ -214,6 +249,14 @@ class EditLayer(cocos.layer.Layer):
         self.draw_update_cshapes()
         self.draw_selection()
         self.draw_interactions()
+        self.execute_callbacks()
+
+    def execute_callbacks(self) -> None:
+        for callback in self.callbacks[:]:
+            try:
+                callback.execute()
+            except FinishedCallback:
+                self.callbacks.remove(callback)
 
     def draw_update_cshapes(self) -> None:
         for actor in self.selectable_actors:
@@ -731,6 +774,7 @@ class TMXGui(Gui):
         config: Config,
         logger: SynergineLogger,
         terminal: Terminal,
+        physics: Physics,
         read_queue_interval: float = 1 / 60.0,
         map_dir_path: str=None,
     ):
@@ -742,6 +786,7 @@ class TMXGui(Gui):
             terminal,
             read_queue_interval,
         )
+        self.physics = physics
 
     def get_layer_middleware(self) -> MapMiddleware:
         return TMXMiddleware(

@@ -3,13 +3,13 @@ import typing
 
 from sandbox.tile.simulation.tmx import TileMap
 from sandbox.tile.simulation.tmx import TerrainTile
-from synergine2_xyz.physics import Matrixes
 from synergine2_xyz.physics import MoveCostComputer
 from synergine2_xyz.physics import TMXPhysics
 from synergine2_xyz.subjects import XYZSubject
 
-if False:
+if typing.TYPE_CHECKING:
     from sandbox.tile.simulation.base import BaseSubject
+    from sandbox.tile.simulation.subject import TileSubject
 
 
 class TileMoveCostComputer(MoveCostComputer):
@@ -44,7 +44,6 @@ class TilePhysics(TMXPhysics):
         self,
         subject: XYZSubject,
         to_position: typing.Tuple[int, int],
-        matrixes: Matrixes,
         matrix_name: str,
         opacity_property_name: str='opacity',
     ) -> typing.Union[None, typing.Tuple[int, int]]:
@@ -52,14 +51,13 @@ class TilePhysics(TMXPhysics):
         Return grid position obstacle if any between given subject and given to_position
         :param subject: Subject observer
         :param to_position: position to observe
-        :param matrixes: Matrixes instance
         :param matrix_name: matrix name to use
         :param opacity_property_name: name of property containing opacity property
         :return: obstacle grid position or None if not
         """
         from_x, from_y = subject.position
-        path_positions = matrixes.get_path_positions(from_=(from_x, from_y), to=to_position)
-        path_opacities = matrixes.get_values_for_path(
+        path_positions = self.matrixes.get_path_positions(from_=(from_x, from_y), to=to_position)
+        path_opacities = self.matrixes.get_values_for_path(
             matrix_name,
             path_positions=path_positions,
             value_name=opacity_property_name,
@@ -73,3 +71,10 @@ class TilePhysics(TMXPhysics):
                 return path_positions[i]
 
         return None
+
+    def subject_see_subject(self, observer: 'TileSubject', observed: 'TileSubject') -> bool:
+        return not bool(self.get_visibility_obstacle(
+            observer,
+            observed.position,
+            matrix_name='visibility',
+        ))

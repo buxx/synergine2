@@ -31,14 +31,13 @@ class BaseFireActorInteraction(BaseActorInteraction):
             obstacle_grid_position = self.layer_manager.edit_layer.physics.get_visibility_obstacle(
                 subject=actor.subject,
                 to_position=mouse_grid_position,
-                matrixes=self.layer_manager.edit_layer.matrixes,
                 matrix_name='visibility',
                 opacity_property_name='opacity',
             )
 
             # DEBUG
             if self.layer_manager.debug:
-                grid_paths = self.layer_manager.edit_layer.matrixes.get_path_positions(
+                grid_paths = self.layer_manager.edit_layer.physics.matrixes.get_path_positions(
                     from_=actor_grid_position,
                     to=mouse_grid_position,
                 )

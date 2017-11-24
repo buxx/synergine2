@@ -275,9 +275,6 @@ class SimulationMechanism(Mechanism):
 
 
 class Event(BaseObject):
-    def __init__(self, *args, **kwargs):
-        pass
-
     def repr_debug(self) -> str:
         return self.__class__.__name__
 

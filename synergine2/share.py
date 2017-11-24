@@ -98,6 +98,10 @@ class TrackedList(list):
         super().append(p_object)
         self.shared.set(self.shared_data.get_final_key(self.instance), list(self))
 
+    def remove(self, object_):
+        super().remove(object_)
+        self.shared.set(self.shared_data.get_final_key(self.instance), list(self))
+
     # TODO: Cover all methods
 
 

@@ -21,8 +21,10 @@ class XYZSimulation(BaseSimulation):
     def create_physics(self) -> Physics:
         return Physics(self.config)
 
+    # TODO: Move into physics
     def is_possible_subject_position(self, subject: XYZSubject, position: tuple) -> bool:
         return self.is_possible_position(position)
 
+    # TODO: Move into physics
     def is_possible_position(self, position: tuple) -> bool:
         return True

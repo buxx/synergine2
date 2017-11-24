@@ -1,35 +1,32 @@
 # coding: utf-8
+import typing
 
 from pyglet.window import key
 
 from cocos.actions import MoveTo as BaseMoveTo
-from sandbox.tile.simulation.physics import TilePhysics
 from sandbox.tile.user_action import UserAction
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.terminals import Terminal
 from synergine2_cocos2d.actions import MoveTo
-# TODO NOW: MOVE
 from synergine2_cocos2d.animation import ANIMATION_CRAWL
 from synergine2_cocos2d.animation import ANIMATION_WALK
 from synergine2_cocos2d.animation import Animate
+from synergine2_cocos2d.gl import draw_line
 from synergine2_cocos2d.gui import EditLayer as BaseEditLayer
 from synergine2_cocos2d.gui import TMXGui
 from synergine2_cocos2d.layer import LayerManager
 from synergine2_xyz.move.simulation import FinishMoveEvent
 from synergine2_xyz.move.simulation import StartMoveEvent
-from synergine2_xyz.physics import Matrixes
+from synergine2_xyz.physics import Physics
 from synergine2_xyz.utils import get_angle
+from sandbox.tile.simulation.event import NewVisibleOpponent
+from sandbox.tile.simulation.event import NoLongerVisibleOpponent
 
 
 class EditLayer(BaseEditLayer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.matrixes = Matrixes()
-        self.physics = TilePhysics(
-            self.config,
-            map_file_path='sandbox/tile/maps/003/003.tmx',  # FIXME: HARDCODED
-        )
 
     def _on_key_press(self, k, m):
         if self.selection:
@@ -55,6 +52,7 @@ class Game(TMXGui):
         config: Config,
         logger: SynergineLogger,
         terminal: Terminal,
+        physics: Physics,
         read_queue_interval: float = 1 / 60.0,
         map_dir_path: str=None,
     ):
@@ -62,8 +60,9 @@ class Game(TMXGui):
             config,
             logger,
             terminal,
-            read_queue_interval,
-            map_dir_path,
+            physics=physics,
+            read_queue_interval=read_queue_interval,
+            map_dir_path=map_dir_path,
         )
 
         self.terminal.register_event_handler(
@@ -74,6 +73,16 @@ class Game(TMXGui):
         self.terminal.register_event_handler(
             StartMoveEvent,
             self.start_move_subject,
+        )
+
+        self.terminal.register_event_handler(
+            NewVisibleOpponent,
+            self.new_visible_opponent,
+        )
+
+        self.terminal.register_event_handler(
+            NoLongerVisibleOpponent,
+            self.no_longer_visible_opponent,
         )
 
         # configs
@@ -122,3 +131,34 @@ class Game(TMXGui):
         actor.do(move_action)
         actor.do(Animate(animation, duration=move_duration, cycle_duration=cycle_duration))
         actor.rotation = get_angle(event.from_position, event.to_position)
+
+    def new_visible_opponent(self, event: NewVisibleOpponent):
+        self.visible_or_no_longer_visible_opponent(event, (153, 0, 153))
+
+    def no_longer_visible_opponent(self, event: NoLongerVisibleOpponent):
+        self.visible_or_no_longer_visible_opponent(event, (255, 102, 0))
+
+    def visible_or_no_longer_visible_opponent(
+        self,
+        event: typing.Union[NoLongerVisibleOpponent, NewVisibleOpponent],
+        line_color,
+    ) -> None:
+        if self.layer_manager.debug:
+            observer_actor = self.layer_manager.subject_layer.subjects_index[event.observer_subject_id]
+            observed_actor = self.layer_manager.subject_layer.subjects_index[event.observed_subject_id]
+
+            observer_pixel_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                observer_actor.subject.position,
+            )
+            observed_pixel_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                observed_actor.subject.position,
+            )
+
+            def draw_visible_opponent():
+                draw_line(
+                    observer_pixel_position,
+                    observed_pixel_position,
+                    line_color,
+                )
+
+            self.layer_manager.edit_layer.append_callback(draw_visible_opponent, 1.0)

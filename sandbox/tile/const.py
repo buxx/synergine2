@@ -6,5 +6,7 @@ FLAG = 'FLAG'
 FLAG_DE = 'DE'
 FLAG_URSS = 'URSS'
 
+SIDE = 'SIDE'
+
 DE_COLOR = (0, 81, 211)
 URSS_COLOR = (204, 0, 0)

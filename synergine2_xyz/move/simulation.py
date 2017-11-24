@@ -150,8 +150,8 @@ class StartMoveEvent(Event):
 
 
 class MoveToBehaviour(SubjectBehaviour):
-    use = [MoveToMechanism]
     move_to_mechanism = MoveToMechanism
+    use = [move_to_mechanism]
 
     def run(self, data):
         move_to_data = data[self.move_to_mechanism]

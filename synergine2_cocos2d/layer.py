@@ -50,7 +50,7 @@ class ScrollingManager(cocos.layer.ScrollingManager):
 class SubjectLayer(cocos.layer.ScrollableLayer):
     def __init__(self, parallax: int=1):
         super().__init__(parallax)
-        self.subjects_index = {}
+        self.subjects_index = {}  # type: typing.Dict[int, Actor]
 
     def add_subject(self, actor: 'Actor') -> None:
         self.add(actor)
