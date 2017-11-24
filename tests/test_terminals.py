@@ -110,7 +110,7 @@ class TestTerminals(BaseTest):
         )
         terminals_manager.start()
         terminals_manager.send(ValueTerminalPackage(value=42))
-        an_event = AnEvent(84)
+        an_event = AnEvent()
         terminals_manager.send(TerminalPackage(events=[an_event]))
 
         # We wait max 2s (see time.sleep) to consider
@@ -139,8 +139,8 @@ class TestTerminals(BaseTest):
         )
         terminals_manager.start()
         terminals_manager.send(ValueTerminalPackage(value=42))
-        an_event = AnEvent(84)
-        an_other_event = AnOtherEvent(168)
+        an_event = AnEvent()
+        an_other_event = AnOtherEvent()
         terminals_manager.send(TerminalPackage(events=[an_event, an_other_event]))
 
         # We wait max 10s (see time.sleep) to consider
