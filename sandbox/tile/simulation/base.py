@@ -1,7 +1,8 @@
 # coding: utf-8
-
+from sandbox.tile.const import COLLECTION_ALIVE
 from sandbox.tile.simulation.physics import TilePhysics
 from synergine2.config import Config
+from synergine2.simulation import SubjectBehaviour
 from synergine2_xyz.physics import Physics
 from synergine2_xyz.simulation import XYZSimulation
 from synergine2_xyz.subjects import XYZSubject
@@ -34,3 +35,8 @@ class TileStrategySubjects(XYZSubjects):
 
 class BaseSubject(XYZSubject):
     pass
+
+
+class AliveSubjectBehaviour(SubjectBehaviour):
+    def is_terminated(self) -> bool:
+        return COLLECTION_ALIVE not in self.subject.collections

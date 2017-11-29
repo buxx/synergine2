@@ -1,4 +1,5 @@
 # coding: utf-8
+import random
 import typing
 from multiprocessing import Process
 from multiprocessing.connection import Connection
@@ -41,12 +42,15 @@ class Worker(object):
             args=(
                 self.local_write_pipe,
                 self.process_read_pipe,
-            )
+            ),
+            kwargs={'seed': random.random()}
         )
-        self.db = None  # type: RedisDatabase
+        self.db = None  # TODO delete
         self.process.start()
 
     def work(self, *args, **kwargs):
+        seed_value = kwargs.pop('seed')
+        random.seed(seed_value)
         while True:
             args = self.process_read_pipe.recv()
             if args == STOP:

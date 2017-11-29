@@ -44,6 +44,13 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.current_image = image
         self.need_update_cshape = False
         self.properties = properties or {}
+        self._freeze = False
+
+    def freeze(self) -> None:
+        """
+        Set object to freeze mode: No visual modification can be done anymore
+        """
+        self._freeze = True
 
     def stop_actions(self, action_types: typing.Tuple[typing.Type[cocos.actions.Action], ...]) -> None:
         for action in self.actions:
@@ -59,6 +66,9 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.need_update_cshape = False
 
     def update_position(self, new_position: euclid.Vector2) -> None:
+        if self._freeze:
+            return
+
         self.position = new_position
         self.cshape.center = new_position  # Note: if remove: strange behaviour: drag change actor position with anomaly
 
@@ -79,5 +89,8 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         return self.current_image
 
     def update_image(self, new_image: pyglet.image.TextureRegion):
+        if self._freeze:
+            return
+
         self.image = new_image
         self.image_anchor = new_image.width // 2, new_image.height // 2

@@ -102,6 +102,10 @@ class TrackedList(list):
         super().remove(object_)
         self.shared.set(self.shared_data.get_final_key(self.instance), list(self))
 
+    def extend(self, iterable) -> None:
+        super().extend(iterable)
+        self.shared.set(self.shared_data.get_final_key(self.instance), list(self))
+
     # TODO: Cover all methods
 
 

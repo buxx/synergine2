@@ -26,8 +26,9 @@ from synergine2.cycle import CycleManager
 from synergine2.terminals import TerminalManager
 
 
-def main(map_dir_path: str, seed_value: int=42):
-    seed(seed_value)
+def main(map_dir_path: str, seed_value: int=None):
+    if seed_value is not None:
+        seed(seed_value)
 
     config = Config()
     config.load_yaml('sandbox/tile/config.yaml')
@@ -92,7 +93,7 @@ def main(map_dir_path: str, seed_value: int=42):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run TileStrategy')
     parser.add_argument('map_dir_path', help='map directory path')
-    parser.add_argument('--seed', dest='seed', default=42)
+    parser.add_argument('--seed', dest='seed', default=None)
 
     args = parser.parse_args()
 

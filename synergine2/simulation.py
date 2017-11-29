@@ -1,6 +1,8 @@
 # coding: utf-8
 import typing
 
+import time
+
 from synergine2.base import BaseObject
 from synergine2.base import IdentifiedObject
 from synergine2.config import Config
@@ -35,6 +37,7 @@ class Subject(IdentifiedObject):
     behaviours_classes = []
     behaviour_selector_class = None  # type: typing.Type[SubjectBehaviourSelector]
     intention_manager_class = None  # type: typing.Type[IntentionManager]
+    collections = shared.create_self('collections', lambda: [])
 
     def __init__(
         self,
@@ -50,7 +53,7 @@ class Subject(IdentifiedObject):
         """
         super().__init__()
         # FIXME: use shared data to permit dynamic start_collections
-        self.collections = self.start_collections[:]
+        self.collections.extend(self.start_collections[:])
 
         self.config = config
         self._id = id(self)  # We store object id because it's lost between process
@@ -183,7 +186,7 @@ class Simulation(BaseObject):
     behaviours_classes = []
 
     subject_classes = shared.create('subject_classes', {})
-    collections = shared.create('start_collections', {})
+    collections = shared.create('collections', {})
 
     def __init__(
         self,
@@ -285,7 +288,6 @@ class Behaviour(BaseObject):
 
 
 class SubjectBehaviour(Behaviour):
-    frequency = 1
     use = []  # type: typing.List[typing.Type[SubjectMechanism]]
 
     def __init__(
@@ -297,6 +299,33 @@ class SubjectBehaviour(Behaviour):
         self.config = config
         self.simulation = simulation
         self.subject = subject
+        self.last_execution_time = 0
+
+    @property
+    def cycle_frequency(self) -> typing.Optional[float]:
+        return None
+
+    @property
+    def seconds_frequency(self) -> typing.Optional[float]:
+        return None
+
+    def is_terminated(self) -> bool:
+        """
+        :return: True if behaviour will no longer exist (can be removed from simulation)
+        """
+        return False
+
+    def is_skip(self, cycle_number: int) -> bool:
+        """
+        :return: True if behaviour have to be skip this time
+        """
+        if self.cycle_frequency is not None:
+            return not bool(cycle_number % self.cycle_frequency)
+
+        if self.seconds_frequency is not None:
+            return time.time() - self.last_execution_time <= self.seconds_frequency
+
+        return False
 
     def run(self, data):
         """

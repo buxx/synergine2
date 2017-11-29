@@ -1,5 +1,7 @@
 # coding: utf-8
 from sandbox.tile.simulation.event import NewVisibleOpponent
+from sandbox.tile.simulation.event import FireEvent
+from sandbox.tile.simulation.event import DieEvent
 from sandbox.tile.simulation.event import NoLongerVisibleOpponent
 from sandbox.tile.simulation.physics import TilePhysics
 from sandbox.tile.simulation.subject import TileSubject as ManSubject
@@ -16,6 +18,8 @@ class CocosTerminal(GameTerminal):
         StartMoveEvent,
         NewVisibleOpponent,
         NoLongerVisibleOpponent,
+        FireEvent,
+        DieEvent,
     ]
 
     def __init__(self, *args, asynchronous: bool, map_dir_path: str, **kwargs):

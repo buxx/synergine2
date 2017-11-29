@@ -2,6 +2,8 @@
 import multiprocessing
 import typing
 
+import time
+
 from synergine2.base import BaseObject
 from synergine2.config import Config
 from synergine2.exceptions import SynergineException
@@ -291,23 +293,33 @@ class CycleManager(BaseObject):
                 str(len(subject_behaviours)),
             ))
 
-            for behaviour in subject_behaviours.values():
+            for behaviour_key, behaviour in list(subject_behaviours.items()):
                 self.logger.info('Subject {}: run {} behaviour'.format(
                     str(subject.id),
                     str(type(behaviour)),
                 ))
 
-                # We identify behaviour data with it's class to be able to intersect it after subprocess data collect
-                with time_it() as elapsed_time:
-                    behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
+                if behaviour.is_terminated():
+                    del subject.behaviours[behaviour_key]
 
-                if self.logger.is_debug:
-                    self.logger.debug('Subject {}: behaviour {} produce data: {} in {}s'.format(
-                        str(type(behaviour)),
+                # We identify behaviour data with it's class to be able to intersect it after subprocess data collect
+                if behaviour.is_skip(self.current_cycle):
+                    behaviour_data = False
+                    self.logger.debug('Subject {}: behaviour {} skip'.format(
                         str(subject.id),
-                        str(behaviour_data),
-                        elapsed_time.get_final_time(),
+                        str(type(behaviour)),
                     ))
+                else:
+                    with time_it() as elapsed_time:
+                        behaviour.last_execution_time = time.time()
+                        behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
+                        if self.logger.is_debug:
+                            self.logger.debug('Subject {}: behaviour {} produce data: {} in {}s'.format(
+                                str(type(behaviour)),
+                                str(subject.id),
+                                str(behaviour_data),
+                                elapsed_time.get_final_time(),
+                            ))
 
                 if behaviour_data:
                     behaviours_data[behaviour.__class__] = behaviour_data

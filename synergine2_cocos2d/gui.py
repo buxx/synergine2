@@ -10,6 +10,7 @@ from pyglet.window import mouse
 import cocos
 from cocos import collision_model
 from cocos import euclid
+from cocos.audio.pygame import mixer
 from cocos.layer import ScrollableLayer
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
@@ -122,18 +123,35 @@ class Callback(object):
         self,
         func: typing.Callable[[], None],
         duration: float,
+        delay: float=None,
     ) -> None:
         self.func = func
         self.duration = duration
         # Started timestamp
         self.started = None  # type: float
+        self.require_delay = False
+        self.delay = delay
+        if delay is not None:
+            self.require_delay = True
 
     def execute(self) -> None:
+        if self.require_delay and not self.started:
+            self.started = time.time()
+            return
+        elif self.require_delay and time.time() - self.started < self.delay:
+            return
+        elif self.require_delay:
+            self.started = None
+            self.require_delay = False
+
         if self.started is None:
             self.started = time.time()
 
-        if time.time() - self.started < self.duration:
+        if time.time() - self.started <= self.duration:
             self.func()
+        elif not self.duration:
+            self.func()
+            raise FinishedCallback()
         else:
             raise FinishedCallback()
 
@@ -231,10 +249,11 @@ class EditLayer(cocos.layer.Layer):
         # TODO: In top level class: to be available in all layers
         self.callbacks = []  # type: typing.List[Callback]
 
-    def append_callback(self, callback: typing.Callable[[], None], duration: float) -> None:
+    def append_callback(self, callback: typing.Callable[[], None], duration: float, delay: float=None) -> None:
         self.callbacks.append(Callback(
             callback,
             duration,
+            delay=delay,
         ))
 
     def set_selectable(self, actor: Actor) -> None:
@@ -719,6 +738,7 @@ class Gui(object):
             vsync=True,
             resizable=True,
         )
+        mixer.init()
 
         self.interaction_manager = InteractionManager(
             config=self.config,
