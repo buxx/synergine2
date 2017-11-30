@@ -318,7 +318,7 @@ class CycleManager(BaseObject):
                                 str(type(behaviour)),
                                 str(subject.id),
                                 str(behaviour_data),
-                                elapsed_time.get_final_time(),
+                                elapsed_time.get_time(),
                             ))
 
                 if behaviour_data:
