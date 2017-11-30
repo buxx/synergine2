@@ -738,7 +738,7 @@ class Gui(object):
             width=640,
             height=480,
             vsync=True,
-            resizable=True,
+            resizable=False
         )
         mixer.init()
 
