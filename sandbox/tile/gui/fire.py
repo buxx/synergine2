@@ -18,7 +18,7 @@ class BaseFireActorInteraction(BaseActorInteraction):
     def draw_pending(self) -> None:
         for actor in self.layer_manager.edit_layer.selection:
             actor_grid_position = self.layer_manager.grid_manager.get_grid_position(actor.position)
-            actor_pixel_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+            actor_pixel_position = self.layer_manager.grid_manager.get_world_position_of_grid_position(
                 actor_grid_position,
             )
             mouse_grid_position = self.layer_manager.grid_manager.get_grid_position(
@@ -28,7 +28,7 @@ class BaseFireActorInteraction(BaseActorInteraction):
             )
             draw_to_pixel = self.layer_manager.edit_layer.screen_mouse
 
-            obstacle_grid_position = self.layer_manager.edit_layer.physics.get_visibility_obstacle(
+            obstacle_grid_position = self.layer_manager.gui.physics.get_visibility_obstacle(
                 subject=actor.subject,
                 to_position=mouse_grid_position,
                 matrix_name='visibility',
@@ -37,34 +37,34 @@ class BaseFireActorInteraction(BaseActorInteraction):
 
             # DEBUG
             if self.layer_manager.debug:
-                grid_paths = self.layer_manager.edit_layer.physics.matrixes.get_path_positions(
+                grid_paths = self.layer_manager.gui.physics.matrixes.get_path_positions(
                     from_=actor_grid_position,
                     to=mouse_grid_position,
                 )
                 previous_grid_path = None
                 for grid_path in grid_paths:
                     if previous_grid_path:
-                        previous_grid_path_pixel = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                        previous_grid_path_pixel = self.layer_manager.grid_manager.get_world_position_of_grid_position(
                             previous_grid_path,
                         )
-                        current_grid_pixel = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                        current_grid_pixel = self.layer_manager.grid_manager.get_world_position_of_grid_position(
                             grid_path,
                         )
                         draw_line(
-                            previous_grid_path_pixel,
-                            current_grid_pixel,
+                            self.layer_manager.scrolling_manager.world_to_screen(*previous_grid_path_pixel),
+                            self.layer_manager.scrolling_manager.world_to_screen(*current_grid_pixel),
                             (25, 125, 25),
                         )
                     previous_grid_path = grid_path
 
             if obstacle_grid_position:
-                obstacle_pixel = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                obstacle_pixel = self.layer_manager.grid_manager.get_world_position_of_grid_position(
                     obstacle_grid_position,
                 )
-                draw_to_pixel = obstacle_pixel
+                draw_to_pixel = self.layer_manager.scrolling_manager.world_to_screen(*obstacle_pixel)
 
                 draw_line(
-                    obstacle_pixel,
+                    self.layer_manager.scrolling_manager.world_to_screen(*obstacle_pixel),
                     self.layer_manager.edit_layer.screen_mouse,
                     self.not_visible_color,
                 )

@@ -137,14 +137,14 @@ class Game(TMXGui):
 
     def set_subject_position(self, event: FinishMoveEvent):
         actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
-        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
+        new_world_position = self.layer_manager.grid_manager.get_world_position_of_grid_position(event.to_position)
 
         actor.stop_actions((BaseMoveTo,))
         actor.set_position(*new_world_position)
 
     def start_move_subject(self, event: StartMoveEvent):
         actor = self.layer_manager.subject_layer.subjects_index[event.subject_id]
-        new_world_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(event.to_position)
+        new_world_position = self.layer_manager.grid_manager.get_world_position_of_grid_position(event.to_position)
 
         if event.gui_action == UserAction.ORDER_MOVE:
             animation = ANIMATION_WALK
@@ -182,12 +182,12 @@ class Game(TMXGui):
             observed_actor = self.layer_manager.subject_layer.subjects_index[event.observed_subject_id]
 
             observer_pixel_position = self.layer_manager.scrolling_manager.world_to_screen(
-                *self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                *self.layer_manager.grid_manager.get_world_position_of_grid_position(
                     observer_actor.subject.position,
                 )
             )
             observed_pixel_position = self.layer_manager.scrolling_manager.world_to_screen(
-                *self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+                *self.layer_manager.grid_manager.get_world_position_of_grid_position(
                     observed_actor.subject.position,
                 )
             )
@@ -206,12 +206,12 @@ class Game(TMXGui):
         # TODO: Not in edit layer !
         shooter_actor = self.layer_manager.subject_layer.subjects_index[event.shooter_subject_id]
         shooter_pixel_position = self.layer_manager.scrolling_manager.world_to_screen(
-            *self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+            *self.layer_manager.grid_manager.get_world_position_of_grid_position(
                 shooter_actor.subject.position,
             )
         )
         fire_to_pixel_position = self.layer_manager.scrolling_manager.world_to_screen(
-            *self.layer_manager.grid_manager.get_pixel_position_of_grid_position(
+            *self.layer_manager.grid_manager.get_world_position_of_grid_position(
                 event.target_position,
             )
         )

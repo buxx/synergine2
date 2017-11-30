@@ -77,7 +77,7 @@ class BaseActorInteraction(Interaction):
     def draw_pending(self) -> None:
         for actor in self.layer_manager.edit_layer.selection:
             grid_position = self.layer_manager.grid_manager.get_grid_position(actor.position)
-            pixel_position = self.layer_manager.grid_manager.get_pixel_position_of_grid_position(grid_position)
+            pixel_position = self.layer_manager.grid_manager.get_world_position_of_grid_position(grid_position)
 
             draw_line(
                 self.layer_manager.scrolling_manager.world_to_screen(*pixel_position),

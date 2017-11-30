@@ -60,7 +60,7 @@ class GridManager(object):
 
         return cell_x, cell_y
 
-    def get_pixel_position_of_grid_position(self, grid_position: typing.Tuple[int, int]) -> typing.Tuple[int, int]:
+    def get_world_position_of_grid_position(self, grid_position: typing.Tuple[int, int]) -> typing.Tuple[int, int]:
         return grid_position[0] * self.cell_width + (self.cell_width // 2),\
                grid_position[1] * self.cell_height + (self.cell_height // 2)
 
@@ -355,7 +355,7 @@ class EditLayer(cocos.layer.Layer):
 
                 try:
                     grid_pos = self.grid_manager.get_grid_position(new_pos)
-                    grid_pixel_pos = self.grid_manager.get_pixel_position_of_grid_position(grid_pos)
+                    grid_pixel_pos = self.grid_manager.get_world_position_of_grid_position(grid_pos)
                     actor.update_position(grid_pixel_pos)
                 except OuterWorldPosition:
                     # don't update position
@@ -689,7 +689,7 @@ class SubjectMapper(object):
         layer_manager: LayerManager,
     ) -> None:
         actor = self.actor_class(subject)
-        pixel_position = layer_manager.grid_manager.get_pixel_position_of_grid_position(
+        pixel_position = layer_manager.grid_manager.get_world_position_of_grid_position(
             (subject.position[0], subject.position[1]),
         )
         actor.update_position(euclid.Vector2(*pixel_position))
@@ -724,10 +724,12 @@ class Gui(object):
             config: Config,
             logger: SynergineLogger,
             terminal: Terminal,
+            physics: Physics,
             read_queue_interval: float= 1/60.0,
     ):
         self.config = config
         self.logger = logger
+        self.physics = physics
         self._read_queue_interval = read_queue_interval
         self.terminal = terminal
         self.cycle_duration = self.config.resolve('core.cycle_duration')
@@ -750,6 +752,7 @@ class Gui(object):
             self.logger,
             middleware=self.get_layer_middleware(),
             interaction_manager=self.interaction_manager,
+            gui=self,
         )
         self.layer_manager.init()
         self.layer_manager.center()
@@ -804,7 +807,8 @@ class TMXGui(Gui):
             config,
             logger,
             terminal,
-            read_queue_interval,
+            physics=physics,
+            read_queue_interval=read_queue_interval,
         )
         self.physics = physics
 
