@@ -7,7 +7,7 @@ game:
     look_around:
         frequency: 1
     engage:
-        frequency: 2
+        frequency: 1
     move:
         walk_ref_time: 3
         run_ref_time: 1

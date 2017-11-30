@@ -39,7 +39,7 @@ def main(map_dir_path: str, seed_value: int=None):
     simulation = TileStrategySimulation(config, map_file_path=map_file_path)
     subjects = TileStrategySubjects(simulation=simulation)
 
-    for position in ((10, 2),):
+    for position in ((10, 2), (11, 3), (11, 4), (12, 5),):
         man = TileSubject(
             config=config,
             simulation=simulation,
@@ -52,7 +52,7 @@ def main(map_dir_path: str, seed_value: int=None):
         )
         subjects.append(man)
 
-    for position in ((30, 14),):
+    for position in ((30, 15), (31, 16), (32, 17), (33, 18),):
         man = TileSubject(
             config=config,
             simulation=simulation,

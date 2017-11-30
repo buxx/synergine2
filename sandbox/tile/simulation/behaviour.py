@@ -118,7 +118,8 @@ class EngageOpponent(AliveSubjectBehaviour):
         events = list()
         events.append(FireEvent(shooter_subject_id=self.subject.id, target_position=target_position))
 
-        if kill:
+        # Must be check if target is not already dead (killed same cycle)
+        if kill and COLLECTION_ALIVE in target_subject.collections:
             target_subject.collections.remove(COLLECTION_ALIVE)
             # FIXME: Must be automatic when manipulate subject collections !
             self.simulation.collections[COLLECTION_ALIVE].remove(target_subject_id)
