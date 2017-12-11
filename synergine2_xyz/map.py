@@ -104,8 +104,15 @@ class TMXMap(object):
     def tileset(self, name: str) -> tmx.Tileset:
         return self.tmx_tilesets[name]
 
-    def tile(self, gid: int) -> XYZTile:
-        return self.tmx_tiles[gid]
+    def tile(self, gid: int, allow_default_tile: bool=False, default_tile: tmx.LayerTile=None) -> XYZTile:
+        try:
+            return self.tmx_tiles[gid]
+        except KeyError:
+            if default_tile:
+                return default_tile
+            if allow_default_tile:
+                return self.get_default_tile()
+            raise
 
     def layer_tiles(self, name: str) -> typing.Dict[str, XYZTile]:
         return self.tmx_layer_tiles[name]
