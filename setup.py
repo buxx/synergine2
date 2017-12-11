@@ -23,7 +23,7 @@ tests_require = [
 
 setup(
     name='synergine2',
-    version='1.0',
+    version='1.0.1',
     description='Subject focus simulation framework',
     author='Bastien Sevajol',
     author_email='sevajol.bastien@gmail.com',
