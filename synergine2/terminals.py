@@ -2,10 +2,8 @@
 import collections
 from copy import copy
 from multiprocessing import Queue
-
 from multiprocessing import Process
 from queue import Empty
-
 import time
 
 from synergine2.base import BaseObject
@@ -101,15 +99,19 @@ class Terminal(BaseObject):
             pass
 
     def read(self):
+        self.logger.debug('Read package from core')
         while True:
             try:
                 package = self._input_queue.get(block=False, timeout=None)
                 if package == STOP_SIGNAL:
+                    self.logger.debug('Stop required')
                     self._stop_required = True
                     return False
 
+                self.logger.debug('Package received')
                 self.receive(package)
             except Empty:
+                self.logger.debug('No package')
                 return True  # Finished to read Queue
 
     def receive(self, package: TerminalPackage):
@@ -119,6 +121,7 @@ class Terminal(BaseObject):
         self.send(TerminalPackage(is_cycle=True))
 
     def send(self, package: TerminalPackage):
+        self.logger.debug('Send package to core')
         self._output_queue.put(package)
 
     def register_event_handler(self, event_class, func):
