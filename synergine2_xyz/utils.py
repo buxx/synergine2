@@ -180,6 +180,31 @@ def get_around_positions_of_positions(position, exclude_start_position=True) -> 
     return points
 
 
+def get_direct_around_positions_of_position(position, exclude_start_position=True) -> list:
+    """
+    TODO: compute with z (allow or disable with parameter)
+    Return positions around a point with distance of 1 on left/right top/bottom only.
+
+    :param position: (x, y, z) tuple
+    :param exclude_start_position: if True, given position will not be
+    added to result list
+    :return: list of (x, y, z) positions
+    :rtype: list
+    """
+    pz = position[2]
+    px = position[0]
+    py = position[1]
+    points = [
+        (px,   py-1, pz),
+        (px-1, py  , pz),
+        (px+1, py  , pz),
+        (px,   py+1, pz),
+    ]
+    if not exclude_start_position:
+        points.append(position)
+    return points
+
+
 def get_around_positions_of(
         position,
         distance=1,
