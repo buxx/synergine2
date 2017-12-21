@@ -27,3 +27,19 @@ To install tests packages:
 And run tests:
 
     pytest tests
+
+# Synergine 1 graphic usage examples
+
+
+Life game ([More about life game](http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life))
+
+[![Lifegame](https://raw.githubusercontent.com/buxx/synergine/master/doc/images/synergine_lifegame_plot.gif)](https://raw.githubusercontent.com/buxx/synergine/master/doc/images/synergine_lifegame_plot.gif) 
+
+Intelligine, Social bug simulation:
+
+Project github page [here](https://github.com/buxx/intelligine). 
+
+[![Intelligine: egg management](https://raw.githubusercontent.com/buxx/intelligine/master/doc/images/intelligine_eggs_20150421.gif)](https://raw.githubusercontent.com/buxx/intelligine/master/doc/images/intelligine_eggs_20150421.gif) 
+
+[![Intelligine: ressource exploration](https://raw.githubusercontent.com/buxx/intelligine/master/doc/images/intelligine_ressource_20150421_r.gif)](https://raw.githubusercontent.com/buxx/intelligine/master/doc/images/intelligine_ressource_20150421_r.gif) 
+
