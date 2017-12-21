@@ -1,4 +1,5 @@
 # coding: utf-8
+import sys
 from setuptools import setup
 from setuptools import find_packages
 
@@ -20,6 +21,9 @@ tests_require = [
     'freezegun',
 ] + cocos2d_require
 
+
+if sys.version_info.major == 3 and sys.version_info.major == 4:
+    install_requires.append('typing')
 
 setup(
     name='synergine2',
