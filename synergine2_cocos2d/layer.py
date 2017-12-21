@@ -146,17 +146,20 @@ class LayerManager(object):
         self.scrolling_manager.add(self.main_layer, z=0)
         self.main_scene.add(self.edit_layer)
 
+        self.interior_sprite = self.middleware.get_interior_sprite()
         self.background_sprite = self.middleware.get_background_sprite()
         self.ground_layer = self.middleware.get_ground_layer()
         self.subject_layer = SubjectLayer()
         self.top_layer = self.middleware.get_top_layer()
 
+        self.main_layer.add(self.interior_sprite)
         self.main_layer.add(self.background_sprite)
         self.main_layer.add(self.ground_layer)
         self.main_layer.add(self.subject_layer)
         self.main_layer.add(self.top_layer)
 
     def center(self):
+        self.interior_sprite.position = 0 + (self.interior_sprite.width/2), 0 + (self.interior_sprite.height/2)
         self.background_sprite.position = 0 + (self.background_sprite.width/2), 0 + (self.background_sprite.height/2)
         self.ground_layer.set_view(0, 0, self.ground_layer.px_width, self.ground_layer.px_height)
         self.subject_layer.position = 0, 0

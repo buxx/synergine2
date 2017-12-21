@@ -52,9 +52,17 @@ class MapMiddleware(object):
 
 class TMXMiddleware(MapMiddleware):
     def get_background_sprite(self) -> cocos.sprite.Sprite:
+        # TODO: Extract it from tmx
         return cocos.sprite.Sprite(os.path.join(
             self.map_dir_path,
             'background.png',
+        ))
+
+    def get_interior_sprite(self) -> cocos.sprite.Sprite:
+        # TODO: Extract it from tmx
+        return cocos.sprite.Sprite(os.path.join(
+            self.map_dir_path,
+            'background_interiors.png',
         ))
 
     def get_ground_layer(self) -> cocos.tiles.RectMapLayer:
