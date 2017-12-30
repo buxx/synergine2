@@ -7,6 +7,7 @@ from synergine2.config import Config
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
 from synergine2.log import SynergineLogger
+from synergine2.share import shared
 from synergine2.simulation import Event
 from synergine2.simulation import Simulation
 from synergine2.simulation import Subjects
@@ -165,6 +166,7 @@ class TestTerminals(BaseTest):
 
     @pytest.mark.skip(reason="Buggy ! Never terminate, all processes closed ?")
     def test_terminal_as_main_process(self):
+        shared.reset()
         config = Config()
         logger = SynergineLogger('test')
         simulation = Simulation(config)

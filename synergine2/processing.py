@@ -43,7 +43,8 @@ class Worker(object):
                 self.local_write_pipe,
                 self.process_read_pipe,
             ),
-            kwargs={'seed': random.random()}
+            kwargs={'seed': random.random()},
+            name='Worker',
         )
         self.db = None  # TODO delete
         self.process.start()

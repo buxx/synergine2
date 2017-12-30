@@ -109,7 +109,7 @@ class Terminal(BaseObject):
             from_terminal=self,
             from_terminal_input_queue=output_queue,
             from_terminal_output_queue=input_queue,
-        ))
+        ), name='Core')
         self.core_process.start()
 
         # Core is started, continue this terminal job
@@ -211,7 +211,7 @@ class TerminalManager(BaseObject):
             process = Process(target=terminal.start, kwargs=dict(
                 input_queue=output_queue,
                 output_queue=input_queue,
-            ))
+            ), name=terminal.__class__.__name__)
             process.start()
 
     def stop(self):
