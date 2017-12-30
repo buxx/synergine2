@@ -734,7 +734,8 @@ class Gui(object):
         self.terminal = terminal
         self.cycle_duration = self.config.resolve('core.cycle_duration')
 
-        cocos.director.director.init(
+        cocos.director.\
+            director.init(
             width=640,
             height=480,
             vsync=True,

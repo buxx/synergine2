@@ -1,5 +1,6 @@
 # coding: utf-8
 import collections
+import typing
 from copy import copy
 from multiprocessing import Queue
 from multiprocessing import Process
@@ -7,11 +8,15 @@ from queue import Empty
 import time
 
 from synergine2.base import BaseObject
+from synergine2.exceptions import SynergineException
 from synergine2.share import shared
 from synergine2.config import Config
 from synergine2.log import SynergineLogger
 from synergine2.simulation import Subject
 from synergine2.simulation import Event
+
+if typing.TYPE_CHECKING:
+    from synergine2.core import Core
 
 STOP_SIGNAL = '__STOP_SIGNAL__'
 
@@ -60,6 +65,8 @@ class Terminal(BaseObject):
     # List of subscribed Event classes. Terminal will not receive events
     # who are not instance of listed classes
     subscribed_events = [Event]
+    # Permit to execute terminal in main process, only one terminal can use this
+    main_process = False
 
     def __init__(
         self,
@@ -76,6 +83,7 @@ class Terminal(BaseObject):
         self.cycle_events = []
         self.event_handlers = collections.defaultdict(list)
         self.asynchronous = asynchronous
+        self.core_process = None  # type: Process
 
     def accept_event(self, event: Event) -> bool:
         for event_class in self.subscribed_events:
@@ -87,6 +95,26 @@ class Terminal(BaseObject):
         self._input_queue = input_queue
         self._output_queue = output_queue
         self.run()
+
+    def execute_as_main_process(self, core: 'Core') -> None:
+        """
+        This method is called when the terminal have to be the main process. It will
+        create a process with the run of core and make it's job here.
+        """
+        output_queue = Queue()
+        input_queue = Queue()
+
+        self.logger.info('Start core in a process')
+        self.core_process = Process(target=core.run, kwargs=dict(
+            from_terminal=self,
+            from_terminal_input_queue=output_queue,
+            from_terminal_output_queue=input_queue,
+        ))
+        self.core_process.start()
+
+        # Core is started, continue this terminal job
+        self.logger.info('Core started, continue terminal job')
+        self.start(input_queue=input_queue, output_queue=output_queue)
 
     def run(self):
         """
@@ -161,10 +189,19 @@ class TerminalManager(BaseObject):
         self.outputs_queues = {}
         self.inputs_queues = {}
 
+    def get_main_process_terminal(self) -> typing.Optional[Terminal]:
+        main_process_terminals = [t for t in self.terminals if t.main_process]
+        if main_process_terminals:
+            if len(main_process_terminals) > 1:
+                raise SynergineException('There is more one main process terminal !')
+            return main_process_terminals[0]
+        return None
+
     def start(self) -> None:
         self.logger.info('Start terminals')
-        for terminal in self.terminals:
-            # TODO: logs
+        # We exclude here terminal who is run from main process
+        terminals = [t for t in self.terminals if not t.main_process]
+        for terminal in terminals:
             output_queue = Queue()
             self.outputs_queues[terminal] = output_queue
 

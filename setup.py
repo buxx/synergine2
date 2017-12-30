@@ -27,7 +27,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 4:
 
 setup(
     name='synergine2',
-    version='1.0.1',
+    version='1.0.2',
     description='Subject focus simulation framework',
     author='Bastien Sevajol',
     author_email='sevajol.bastien@gmail.com',

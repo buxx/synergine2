@@ -1,12 +1,15 @@
 # coding: utf-8
 import time
 
+from multiprocessing import Queue
+
 from synergine2.base import BaseObject
 from synergine2.config import Config
 from synergine2.cycle import CycleManager
 from synergine2.log import SynergineLogger
 from synergine2.simulation import Simulation
 from synergine2.terminals import TerminalManager
+from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2.utils import time_it
 
@@ -28,10 +31,38 @@ class Core(BaseObject):
         self.terminal_manager = terminal_manager or TerminalManager(config, logger, [])
         self._loop_delta = 1./cycles_per_seconds
         self._current_cycle_start_time = None
+        self._continue = True
+        self.main_process_terminal = None  # type: Terminal
 
-    def run(self):
+    def run(
+        self,
+        from_terminal: Terminal=None,
+        from_terminal_input_queue: Queue=None,
+        from_terminal_output_queue: Queue=None,
+    ):
         self.logger.info('Run core')
         try:
+            # Execute terminal in main process if needed
+            if not from_terminal:
+                self.main_process_terminal \
+                    = self.terminal_manager.get_main_process_terminal()
+                if self.main_process_terminal:
+                    self.logger.info(
+                        'The "{}" terminal have to be the main process'
+                        ', start it now'.format(
+                            self.main_process_terminal.__class__.__name__,
+                        ),
+                    )
+                    self.main_process_terminal.execute_as_main_process(self)
+                    return
+            else:
+                # A terminal is main process, so we have to add it's queues to terminal
+                # manager
+                self.terminal_manager.inputs_queues[from_terminal] \
+                    = from_terminal_input_queue
+                self.terminal_manager.outputs_queues[from_terminal] \
+                    = from_terminal_output_queue
+
             self.terminal_manager.start()
 
             start_package = TerminalPackage(
@@ -40,7 +71,7 @@ class Core(BaseObject):
             self.logger.info('Send start package to terminals')
             self.terminal_manager.send(start_package)
 
-            while True:
+            while self._continue:
                 self._start_cycle()
 
                 events = []

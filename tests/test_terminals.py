@@ -1,9 +1,15 @@
 # coding: utf-8
 import time
 
+import pytest
+
 from synergine2.config import Config
+from synergine2.core import Core
+from synergine2.cycle import CycleManager
 from synergine2.log import SynergineLogger
 from synergine2.simulation import Event
+from synergine2.simulation import Simulation
+from synergine2.simulation import Subjects
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2.terminals import TerminalManager
@@ -156,3 +162,41 @@ class TestTerminals(BaseTest):
         assert AnOtherEvent == type(packages[1].events[0])
 
         terminals_manager.stop()  # TODO pytest must execute this if have fail
+
+    @pytest.mark.skip(reason="Buggy ! Never terminate, all processes closed ?")
+    def test_terminal_as_main_process(self):
+        config = Config()
+        logger = SynergineLogger('test')
+        simulation = Simulation(config)
+        simulation.subjects = Subjects(simulation=simulation)
+        cycle_manager = CycleManager(
+            config=config,
+            logger=logger,
+            simulation=simulation,
+        )
+
+        class MyMainTerminal(Terminal):
+            main_process = True
+
+        terminal = MyMainTerminal(config, logger)
+
+        class Terminated(Exception):
+            pass
+
+        class MyCore(Core):
+            def _end_cycle(self):
+                self._continue = False
+
+        core = MyCore(
+            config=config,
+            logger=logger,
+            simulation=simulation,
+            cycle_manager=cycle_manager,
+            terminal_manager=TerminalManager(
+                config=config,
+                logger=logger,
+                terminals=[terminal],
+            ),
+        )
+        core.run()
+        pass
