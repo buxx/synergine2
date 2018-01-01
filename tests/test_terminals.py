@@ -179,10 +179,10 @@ class TestTerminals(BaseTest):
             simulation=simulation,
         )
 
-        terminal_pid = 0
-        core_pid = 0
         global terminal_pid
         global core_pid
+        terminal_pid = 0
+        core_pid = 0
 
         class MyMainTerminal(Terminal):
             main_process = True
