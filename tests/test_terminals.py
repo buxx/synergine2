@@ -164,7 +164,6 @@ class TestTerminals(BaseTest):
 
         terminals_manager.stop()  # TODO pytest must execute this if have fail
 
-    @pytest.mark.skip(reason="Buggy ! Never terminate, all processes closed ?")
     def test_terminal_as_main_process(self):
         shared.reset()
         config = Config()
@@ -201,4 +200,4 @@ class TestTerminals(BaseTest):
             ),
         )
         core.run()
-        pass
+        core.cycle_manager.process_manager.terminate()
