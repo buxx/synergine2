@@ -1,6 +1,7 @@
 # coding: utf-8
 import time
 
+import os
 import pytest
 
 from synergine2.config import Config
@@ -176,17 +177,25 @@ class TestTerminals(BaseTest):
             simulation=simulation,
         )
 
+        terminal_pid = 0
+        core_pid = 0
+        global terminal_pid
+        global core_pid
+
         class MyMainTerminal(Terminal):
             main_process = True
 
-        terminal = MyMainTerminal(config, logger)
+            def run(self):
+                global terminal_pid
+                terminal_pid = os.getpid()
 
-        class Terminated(Exception):
-            pass
+        terminal = MyMainTerminal(config, logger)
 
         class MyCore(Core):
             def _end_cycle(self):
                 self._continue = False
+                global core_pid
+                core_pid = os.getpid()
 
         core = MyCore(
             config=config,
@@ -201,3 +210,6 @@ class TestTerminals(BaseTest):
         )
         core.run()
         core.cycle_manager.process_manager.terminate()
+
+        assert terminal_pid == os.getpid()
+        assert core_pid == 0  # because changed in other process
