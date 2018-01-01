@@ -165,8 +165,6 @@ class TestTerminals(BaseTest):
 
         terminals_manager.stop()  # TODO pytest must execute this if have fail
 
-    @pytest.mark.skip(reason="Bug: globals fail in python 3.6 "
-                             "and still one process when not in debug ...")
     def test_terminal_as_main_process(self):
         shared.reset()
         config = Config()
@@ -211,7 +209,8 @@ class TestTerminals(BaseTest):
             ),
         )
         core.run()
-        core.cycle_manager.process_manager.terminate()
+        core.main_process_terminal.core_process.terminate()
+        cycle_manager.stop()
 
         assert terminal_pid == os.getpid()
         assert core_pid == 0  # because changed in other process
