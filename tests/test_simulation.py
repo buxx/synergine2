@@ -153,19 +153,15 @@ class TestBehaviours(BaseTest):
             process_manager=do_nothing_process_manager,
         )
 
-        # Cycle 0: behaviour NOT executed
+        # Cycle 0: behaviour IS executed
         cycle_manager.current_cycle = 0
         results_by_subjects = cycle_manager._job_subjects(worker_id=0, process_count=1)
         assert results_by_subjects
-        assert id(my_subject) in results_by_subjects
-        assert not results_by_subjects[id(my_subject)]
 
-        # Cycle 1: behaviour executed
+        # Cycle 1: behaviour IS NOT executed
         cycle_manager.current_cycle = 1
         results_by_subjects = cycle_manager._job_subjects(worker_id=0, process_count=1)
-        assert results_by_subjects
-        assert id(my_subject) in results_by_subjects
-        assert results_by_subjects[id(my_subject)]
+        assert not results_by_subjects
 
     def test_subject_behaviour_seconds_frequency(
         self,
@@ -199,23 +195,17 @@ class TestBehaviours(BaseTest):
         # Less second after: NOT executed
         with freeze_time(datetime.datetime(2000, 12, 1, 0, 0, 0, 500000)):
             data = cycle_manager._job_subjects(worker_id=0, process_count=1)
-            assert data
-            assert id(my_subject) in data
-            assert not data[id(my_subject)]
+            assert not data
 
         # Less second after: NOT executed
         with freeze_time(datetime.datetime(2000, 12, 1, 0, 0, 0, 700000)):
             data = cycle_manager._job_subjects(worker_id=0, process_count=1)
-            assert data
-            assert id(my_subject) in data
-            assert not data[id(my_subject)]
+            assert not data
 
-        # Less second after: NOT executed
+        # Less second after: IS executed
         with freeze_time(datetime.datetime(2000, 12, 1, 0, 0, 1, 500000)):
             data = cycle_manager._job_subjects(worker_id=0, process_count=1)
             assert data
-            assert id(my_subject) in data
-            assert data[id(my_subject)]
 
     def test_simulation_behaviour_cycle_frequency(
         self,
@@ -237,15 +227,15 @@ class TestBehaviours(BaseTest):
             process_manager=do_nothing_process_manager,
         )
 
-        # Cycle 0: behaviour NOT executed
+        # Cycle 0: behaviour IS executed
         cycle_manager.current_cycle = 0
         data = cycle_manager._job_simulation(worker_id=0, process_count=1)
-        assert not data
+        assert data
 
-        # Cycle 1: behaviour executed
+        # Cycle 1: behaviour IS NOT executed
         cycle_manager.current_cycle = 1
         data = cycle_manager._job_simulation(worker_id=0, process_count=1)
-        assert data
+        assert not data
 
     def test_simulation_behaviour_seconds_frequency(
         self,
@@ -468,12 +458,82 @@ class TestMechanisms(BaseTest):
         cycle_manager._job_simulation(worker_id=0, process_count=1)
         assert called == 0
 
-    def test_mechanism_not_called_if_subject_behavior_timebase_not_active_yet(self):
+    def test_mechanism_not_called_if_subject_behavior_cycled_not_active_yet(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
+        shared.reset()
+        called = 0
+        global called
+
+        class MySubjectMechanism(SubjectMechanism):
+            def run(self):
+                global called
+                called += 1
+                return {'foo': 42}
+
+        class MySubjectBehaviour1(SubjectBehaviour):
+            use = [MySubjectMechanism]
+
+            @property
+            def cycle_frequency(self):
+                return 2
+
+            def run(self, data):
+                return {'bar': data[MySubjectMechanism]['foo'] + 100}
+
+        class MySubject(Subject):
+            behaviours_classes = [MySubjectBehaviour1]
+
+        simulation = Simulation(config)
+        my_subject = MySubject(config, simulation)
+        subjects = Subjects(simulation=simulation)
+        subjects.append(my_subject)
+        simulation.subjects = subjects
+
+        cycle_manager = CycleManager(
+            config,
+            logger,
+            simulation=simulation,
+            process_manager=do_nothing_process_manager,
+        )
+
+        cycle_manager.current_cycle = 0
+        cycle_manager._job_subjects(worker_id=0, process_count=1)
+        assert called == 1
+
+        cycle_manager.current_cycle = 1
+        cycle_manager._job_subjects(worker_id=0, process_count=1)
+        assert called == 1
+
+        cycle_manager.current_cycle = 2
+        cycle_manager._job_subjects(worker_id=0, process_count=1)
+        assert called == 2
+
+        cycle_manager.current_cycle = 3
+        cycle_manager._job_subjects(worker_id=0, process_count=1)
+        assert called == 2
+
+    def test_mechanism_not_called_if_simulation_behavior_cycled_not_active_yet(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
         shared.reset()
 
         pass
 
-    def test_mechanism_not_called_if_simulation_behavior_timebase_not_active_yet(self):
+    def test_mechanism_not_called_if_subject_behavior_timebase_not_active_yet(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
+        shared.reset()
+
+        pass
+
+    def test_mechanism_not_called_if_simulation_behavior_timebase_not_active_yet(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
         shared.reset()
 
         pass

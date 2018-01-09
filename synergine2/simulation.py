@@ -158,7 +158,7 @@ class Subjects(list):
         super().remove(value)
         # Remove from start_collections
         for collection_name in value.collections:
-            self.simulation.collections[collection_name].remove(value)
+            self.simulation.collections[collection_name].remove(value.id)
         # Add to removed listing
         if self.track_changes:
             self.removes.append(value)
@@ -309,11 +309,11 @@ class Behaviour(BaseObject):
         """
         cycle_frequency = self.cycle_frequency
         if cycle_frequency is not None:
-            return not bool(cycle_number % cycle_frequency)
+            return bool(cycle_number % cycle_frequency)
 
         seconds_frequency = self.seconds_frequency
         if seconds_frequency is not None:
-            return time.time() - self.last_execution_time <= seconds_frequency
+            return float(time.time() - self.last_execution_time) <= seconds_frequency
 
         return False
 

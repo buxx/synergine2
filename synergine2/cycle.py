@@ -254,8 +254,11 @@ class CycleManager(BaseObject):
         self.logger.info('Subjects computing: {} subjects to compute'.format(str(len(subjects))))
 
         for subject in subjects:
-            mechanisms = subject.mechanisms.values()
+            subject_behaviours = self.get_active_subject_behaviors(subject)
+            if not subject_behaviours:
+                break
 
+            mechanisms = self.get_mechanisms_from_behaviors(subject_behaviours, subject)
             if mechanisms:
                 self.logger.info('Subject {}: {} mechanisms'.format(
                     str(subject.id),
@@ -291,16 +294,14 @@ class CycleManager(BaseObject):
                         str(mechanisms_data),
                     ))
 
-            subject_behaviours = subject.behaviours
-            if not subject_behaviours:
-                break
-
             self.logger.info('Subject {}: have {} behaviours'.format(
                 str(subject.id),
                 str(len(subject_behaviours)),
             ))
 
-            for behaviour_key, behaviour in list(subject_behaviours.items()):
+            for behaviour in subject_behaviours:
+                behaviour_key = type(behaviour)
+
                 self.logger.info('Subject {}: run {} behaviour'.format(
                     str(subject.id),
                     str(type(behaviour)),
@@ -411,3 +412,31 @@ class CycleManager(BaseObject):
 
     def stop(self) -> None:
         self.process_manager.terminate()
+
+    def get_active_subject_behaviors(
+        self,
+        subject: Subject,
+    ) -> typing.List[SubjectBehaviour]:
+        behaviours = []
+        for behaviour in subject.behaviours.values():
+            if behaviour.is_skip(self.current_cycle):
+                self.logger.debug('Simulation: behaviour {} skip'.format(
+                    str(type(behaviour)),
+                ))
+            else:
+                behaviours.append(behaviour)
+        return behaviours
+
+    def get_mechanisms_from_behaviors(
+        self,
+        subject_behaviours: typing.List[SubjectBehaviour],
+        subject: Subject,
+    ) -> typing.List[SubjectMechanism]:
+        # TODO BS 20180109: Not very optimized ... could be enhanced
+        mechanisms = set()
+        for subject_mechanism in subject.mechanisms.values():
+            for subject_behaviour in subject_behaviours:
+                for behaviour_mechanism_class in subject_behaviour.use:
+                    if isinstance(subject_mechanism, behaviour_mechanism_class):
+                        mechanisms.add(subject_mechanism)
+        return list(mechanisms)
