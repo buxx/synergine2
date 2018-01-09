@@ -315,8 +315,8 @@ class TestMechanisms(BaseTest):
         do_nothing_process_manager: ProcessManager,
     ):
         shared.reset()
-        called = 0
         global called
+        called = 0
 
         class MySubjectMechanism(SubjectMechanism):
             def run(self):
@@ -359,8 +359,8 @@ class TestMechanisms(BaseTest):
         do_nothing_process_manager: ProcessManager,
     ):
         shared.reset()
-        called = 0
         global called
+        called = 0
 
         class MySimulationMechanism(SimulationMechanism):
             def run(self, process_number: int = None, process_count: int = None):
@@ -401,8 +401,8 @@ class TestMechanisms(BaseTest):
         do_nothing_process_manager: ProcessManager,
     ):
         shared.reset()
-        called = 0
         global called
+        called = 0
 
         class MySubjectMechanism(SubjectMechanism):
             def run(self):
@@ -433,8 +433,8 @@ class TestMechanisms(BaseTest):
         do_nothing_process_manager: ProcessManager,
     ):
         shared.reset()
-        called = 0
         global called
+        called = 0
 
         class MySimulationMechanism(SimulationMechanism):
             def run(self, process_number: int = None, process_count: int = None):
@@ -463,8 +463,8 @@ class TestMechanisms(BaseTest):
         do_nothing_process_manager: ProcessManager,
     ):
         shared.reset()
-        called = 0
         global called
+        called = 0
 
         class MySubjectMechanism(SubjectMechanism):
             def run(self):
