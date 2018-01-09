@@ -316,25 +316,153 @@ class TestBehaviours(BaseTest):
 
 
 class TestMechanisms(BaseTest):
-    def test_mechanism_called_once_for_multiple_subject_behaviors(self):
+    def test_mechanism_called_once_for_multiple_subject_behaviors(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
         shared.reset()
+        called = 0
+        global called
 
-        pass
+        class MySubjectMechanism(SubjectMechanism):
+            def run(self):
+                global called
+                called += 1
+                return {'foo': 42}
 
-    def test_mechanism_called_once_for_multiple_simulation_behaviors(self):
+        class MySubjectBehaviour1(SubjectBehaviour):
+            use = [MySubjectMechanism]
+
+            def run(self, data):
+                return {'bar': data[MySubjectMechanism]['foo'] + 100}
+
+        class MySubjectBehaviour2(SubjectBehaviour):
+            use = [MySubjectMechanism]
+
+            def run(self, data):
+                return {'bar': data[MySubjectMechanism]['foo'] + 100}
+
+        class MySubject(Subject):
+            behaviours_classes = [MySubjectBehaviour1, MySubjectBehaviour2]
+
+        simulation = Simulation(config)
+        my_subject = MySubject(config, simulation)
+        subjects = Subjects(simulation=simulation)
+        subjects.append(my_subject)
+        simulation.subjects = subjects
+
+        cycle_manager = CycleManager(
+            config,
+            logger,
+            simulation=simulation,
+            process_manager=do_nothing_process_manager,
+        )
+        cycle_manager._job_subjects(worker_id=0, process_count=1)
+        assert called == 1
+
+    def test_mechanism_called_once_for_multiple_simulation_behaviors(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
         shared.reset()
+        called = 0
+        global called
 
-        pass
+        class MySimulationMechanism(SimulationMechanism):
+            def run(self, process_number: int = None, process_count: int = None):
+                global called
+                called += 1
+                return {'foo': 42}
 
-    def test_mechanism_not_called_if_no_subject_behavior(self):
+        class MySimulationBehaviour1(SimulationBehaviour):
+            use = [MySimulationMechanism]
+
+            def run(self, data):
+                return {'bar': data[MySimulationMechanism]['foo'] + 100}
+
+        class MySimulationBehaviour2(SimulationBehaviour):
+            use = [MySimulationMechanism]
+
+            def run(self, data):
+                return {'bar': data[MySimulationMechanism]['foo'] + 100}
+
+        class MySimulation(Simulation):
+            behaviours_classes = [MySimulationBehaviour1, MySimulationBehaviour2]
+
+        simulation = MySimulation(config)
+        subjects = Subjects(simulation=simulation)
+        simulation.subjects = subjects
+
+        cycle_manager = CycleManager(
+            config,
+            logger,
+            simulation=simulation,
+            process_manager=do_nothing_process_manager,
+        )
+        cycle_manager._job_simulation(worker_id=0, process_count=1)
+        assert called == 1
+
+    def test_mechanism_not_called_if_no_subject_behavior(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
         shared.reset()
+        called = 0
+        global called
 
-        pass
+        class MySubjectMechanism(SubjectMechanism):
+            def run(self):
+                global called
+                called += 1
+                return {'foo': 42}
 
-    def test_mechanism_not_called_if_no_simulation_behavior(self):
+        class MySubject(Subject):
+            behaviours_classes = []
+
+        simulation = Simulation(config)
+        my_subject = MySubject(config, simulation)
+        subjects = Subjects(simulation=simulation)
+        subjects.append(my_subject)
+        simulation.subjects = subjects
+
+        cycle_manager = CycleManager(
+            config,
+            logger,
+            simulation=simulation,
+            process_manager=do_nothing_process_manager,
+        )
+        cycle_manager._job_subjects(worker_id=0, process_count=1)
+        assert called == 0
+
+    def test_mechanism_not_called_if_no_simulation_behavior(
+        self,
+        do_nothing_process_manager: ProcessManager,
+    ):
         shared.reset()
+        called = 0
+        global called
 
-        pass
+        class MySimulationMechanism(SimulationMechanism):
+            def run(self, process_number: int = None, process_count: int = None):
+                global called
+                called += 1
+                return {'foo': 42}
+
+        class MySimulation(Simulation):
+            pass
+
+        simulation = MySimulation(config)
+        subjects = Subjects(simulation=simulation)
+        simulation.subjects = subjects
+
+        cycle_manager = CycleManager(
+            config,
+            logger,
+            simulation=simulation,
+            process_manager=do_nothing_process_manager,
+        )
+        cycle_manager._job_simulation(worker_id=0, process_count=1)
+        assert called == 0
 
     def test_mechanism_not_called_if_subject_behavior_timebase_not_active_yet(self):
         shared.reset()
