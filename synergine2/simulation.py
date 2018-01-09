@@ -183,7 +183,7 @@ class Subjects(list):
 
 class Simulation(BaseObject):
     accepted_subject_class = Subjects
-    behaviours_classes = []
+    behaviours_classes = []  # type: typing.List[typing.Type[SimulationBehaviour]]
 
     subject_classes = shared.create('subject_classes', {})
     collections = shared.create('collections', {})
@@ -254,7 +254,7 @@ class SubjectMechanism(Mechanism):
         self.simulation = simulation
         self.subject = subject
 
-    def run(self):
+    def run(self) -> dict:
         raise NotImplementedError()
 
 
@@ -283,8 +283,39 @@ class Event(BaseObject):
 
 
 class Behaviour(BaseObject):
+    def __init__(self):
+        self.last_execution_time = 0
+
+    @property
+    def cycle_frequency(self) -> typing.Optional[float]:
+        return None
+
+    @property
+    def seconds_frequency(self) -> typing.Optional[float]:
+        """
+        If this behaviour is time based, return here the waiting time between two
+        executions. IMPORTANT: your behaviour have to update it's
+        self.last_execution_time attribute when executed (in `run` method)!
+        :return: float number of period in seconds
+        """
+        return None
+
     def run(self, data):
         raise NotImplementedError()
+
+    def is_skip(self, cycle_number: int) -> bool:
+        """
+        :return: True if behaviour have to be skip this time
+        """
+        cycle_frequency = self.cycle_frequency
+        if cycle_frequency is not None:
+            return not bool(cycle_number % cycle_frequency)
+
+        seconds_frequency = self.seconds_frequency
+        if seconds_frequency is not None:
+            return time.time() - self.last_execution_time <= seconds_frequency
+
+        return False
 
 
 class SubjectBehaviour(Behaviour):
@@ -296,18 +327,10 @@ class SubjectBehaviour(Behaviour):
             simulation: Simulation,
             subject: Subject,
     ):
+        super().__init__()
         self.config = config
         self.simulation = simulation
         self.subject = subject
-        self.last_execution_time = 0
-
-    @property
-    def cycle_frequency(self) -> typing.Optional[float]:
-        return None
-
-    @property
-    def seconds_frequency(self) -> typing.Optional[float]:
-        return None
 
     def is_terminated(self) -> bool:
         """
@@ -315,19 +338,7 @@ class SubjectBehaviour(Behaviour):
         """
         return False
 
-    def is_skip(self, cycle_number: int) -> bool:
-        """
-        :return: True if behaviour have to be skip this time
-        """
-        if self.cycle_frequency is not None:
-            return not bool(cycle_number % self.cycle_frequency)
-
-        if self.seconds_frequency is not None:
-            return time.time() - self.last_execution_time <= self.seconds_frequency
-
-        return False
-
-    def run(self, data):
+    def run(self, data) -> object:
         """
         Method called in subprocess.
         If return equivalent to False, behaviour produce nothing.
@@ -347,14 +358,14 @@ class SubjectBehaviour(Behaviour):
 
 
 class SimulationBehaviour(Behaviour):
-    frequency = 1
-    use = []
+    use = []  # type: typing.List[typing.Type[SimulationMechanism]]
 
     def __init__(
             self,
             config: Config,
             simulation: Simulation,
     ):
+        super().__init__()
         self.config = config
         self.simulation = simulation
 

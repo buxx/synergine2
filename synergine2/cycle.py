@@ -117,12 +117,19 @@ class CycleManager(BaseObject):
             ))
 
         for behaviour in behaviours:
-            behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
-            if self.logger.is_debug:
-                self.logger.debug('{} behaviour produce data: {}'.format(
-                    type(behaviour).__name__,
-                    behaviour_data,
+            if behaviour.is_skip(self.current_cycle):
+                behaviour_data = False
+                self.logger.debug('Simulation: behaviour {} skip'.format(
+                    str(type(behaviour)),
                 ))
+            else:
+                # TODO: Behaviours dependencies
+                behaviour_data = behaviour.run(mechanisms_data)
+                if self.logger.is_debug:
+                    self.logger.debug('{} behaviour produce data: {}'.format(
+                        type(behaviour).__name__,
+                        behaviour_data,
+                    ))
 
             if behaviour_data:
                 behaviours_data[behaviour.__class__] = behaviour_data
@@ -302,7 +309,8 @@ class CycleManager(BaseObject):
                 if behaviour.is_terminated():
                     del subject.behaviours[behaviour_key]
 
-                # We identify behaviour data with it's class to be able to intersect it after subprocess data collect
+                # We identify behaviour data with it's class to be able to intersect
+                # it after subprocess data collect
                 if behaviour.is_skip(self.current_cycle):
                     behaviour_data = False
                     self.logger.debug('Subject {}: behaviour {} skip'.format(
@@ -312,14 +320,18 @@ class CycleManager(BaseObject):
                 else:
                     with time_it() as elapsed_time:
                         behaviour.last_execution_time = time.time()
-                        behaviour_data = behaviour.run(mechanisms_data)  # TODO: Behaviours dependencies
+                        # TODO: Behaviours dependencies
+                        behaviour_data = behaviour.run(mechanisms_data)
                         if self.logger.is_debug:
-                            self.logger.debug('Subject {}: behaviour {} produce data: {} in {}s'.format(
-                                str(type(behaviour)),
-                                str(subject.id),
-                                str(behaviour_data),
-                                elapsed_time.get_time(),
-                            ))
+                            self.logger.debug(
+                                'Subject {}: behaviour {} produce '
+                                'data: {} in {}s'.format(
+                                    str(type(behaviour)),
+                                    str(subject.id),
+                                    str(behaviour_data),
+                                    elapsed_time.get_time(),
+                                )
+                            )
 
                 if behaviour_data:
                     behaviours_data[behaviour.__class__] = behaviour_data
