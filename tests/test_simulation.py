@@ -49,6 +49,38 @@ class MySimulation(Simulation):
     behaviours_classes = [MySimulationBehaviour]
 
 
+class MyCycledSubjectBehaviour(MySubjectBehaviour):
+    @property
+    def cycle_frequency(self):
+        return 2
+
+
+class MyCycledSimulationBehaviour(MySimulationBehaviour):
+    @property
+    def cycle_frequency(self):
+        return 2
+
+
+class MyTimedSubjectBehaviour(MySubjectBehaviour):
+    @property
+    def seconds_frequency(self):
+        return 1.0
+
+    def run(self, data):
+        self.last_execution_time = time.time()
+        return super().run(data)
+
+
+class MyTimedSimulationBehaviour(MySimulationBehaviour):
+    @property
+    def seconds_frequency(self):
+        return 1.0
+
+    def run(self, data):
+        self.last_execution_time = time.time()
+        return super().run(data)
+
+
 class TestBehaviours(BaseTest):
     def test_subject_behaviour_produce_data(
         self,
@@ -105,11 +137,6 @@ class TestBehaviours(BaseTest):
     ):
         shared.reset()
 
-        class MyCycledSubjectBehaviour(MySubjectBehaviour):
-            @property
-            def cycle_frequency(self):
-                return 2
-
         class MySubject(Subject):
             behaviours_classes = [MyCycledSubjectBehaviour]
 
@@ -145,15 +172,6 @@ class TestBehaviours(BaseTest):
         do_nothing_process_manager: ProcessManager,
     ):
         shared.reset()
-
-        class MyTimedSubjectBehaviour(MySubjectBehaviour):
-            @property
-            def seconds_frequency(self):
-                return 1.0
-
-            def run(self, data):
-                self.last_execution_time = time.time()
-                return super().run(data)
 
         class MySubject(Subject):
             behaviours_classes = [MyTimedSubjectBehaviour]
@@ -205,11 +223,6 @@ class TestBehaviours(BaseTest):
     ):
         shared.reset()
 
-        class MyCycledSimulationBehaviour(MySimulationBehaviour):
-            @property
-            def cycle_frequency(self):
-                return 2
-
         class MyCycledSimulation(Simulation):
             behaviours_classes = [MyCycledSimulationBehaviour]
 
@@ -239,15 +252,6 @@ class TestBehaviours(BaseTest):
         do_nothing_process_manager: ProcessManager,
     ):
         shared.reset()
-
-        class MyTimedSimulationBehaviour(MySimulationBehaviour):
-            @property
-            def seconds_frequency(self):
-                return 1.0
-
-            def run(self, data):
-                self.last_execution_time = time.time()
-                return super().run(data)
 
         class MyTimedSimulation(Simulation):
             behaviours_classes = [MyTimedSimulationBehaviour]
