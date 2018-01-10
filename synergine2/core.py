@@ -6,7 +6,7 @@ from multiprocessing import Queue
 from synergine2.base import BaseObject
 from synergine2.config import Config
 from synergine2.cycle import CycleManager
-from synergine2.log import SynergineLogger
+from synergine2.log import get_logger
 from synergine2.simulation import Simulation
 from synergine2.terminals import TerminalManager
 from synergine2.terminals import Terminal
@@ -18,17 +18,16 @@ class Core(BaseObject):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         simulation: Simulation,
         cycle_manager: CycleManager,
         terminal_manager: TerminalManager=None,
         cycles_per_seconds: float=1.0,
     ):
         self.config = config
-        self.logger = logger
+        self.logger = get_logger('Core', config)
         self.simulation = simulation
         self.cycle_manager = cycle_manager
-        self.terminal_manager = terminal_manager or TerminalManager(config, logger, [])
+        self.terminal_manager = terminal_manager or TerminalManager(config, [])
         self._loop_delta = 1./cycles_per_seconds
         self._current_cycle_start_time = None
         self._continue = True

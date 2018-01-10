@@ -71,7 +71,6 @@ class TestCycle(BaseTest):
     def test_subjects_cycle(self):
         shared.reset()
         config = Config({'core': {'use_x_cores': 2}})
-        logger = SynergineLogger(name='test')
 
         simulation = Simulation(config)
         subjects = MySubjects(simulation=simulation)
@@ -82,7 +81,6 @@ class TestCycle(BaseTest):
 
         cycle_manager = CycleManager(
             config=config,
-            logger=logger,
             simulation=simulation,
         )
 
@@ -96,7 +94,6 @@ class TestCycle(BaseTest):
     def test_new_subject(self):
         shared.reset()
         config = Config({'core': {'use_x_cores': 1}})
-        logger = SynergineLogger(name='test')
 
         simulation = Simulation(config)
         subjects = MySubjects(simulation=simulation)
@@ -107,7 +104,6 @@ class TestCycle(BaseTest):
 
         cycle_manager = CycleManager(
             config=config,
-            logger=logger,
             simulation=simulation,
         )
 
@@ -128,16 +124,13 @@ class TestCycle(BaseTest):
     def test_simulation_events(self):
         shared.reset()
         config = Config({'core': {'use_x_cores': 2}})
-        logger = SynergineLogger(name='test')
 
         simulation = MySimulation(config)
-
         subjects = MySubjects(simulation=simulation)
         simulation.subjects = subjects
 
         cycle_manager = CycleManager(
             config=config,
-            logger=logger,
             simulation=simulation,
         )
 

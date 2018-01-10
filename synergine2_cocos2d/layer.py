@@ -6,7 +6,7 @@ from pyglet.window import key
 import cocos
 
 from synergine2.config import Config
-from synergine2.log import SynergineLogger
+from synergine2.log import SynergineLogger, get_logger
 from synergine2_cocos2d.middleware import MapMiddleware
 
 if False:
@@ -64,13 +64,12 @@ class LayerManager(object):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         middleware: MapMiddleware,
         interaction_manager: 'InteractionManager',
         gui: 'Gui',
     ) -> None:
         self.config = config
-        self.logger = logger
+        self.logger = get_logger('LayerManager', config)
         self.middleware = middleware
         self.interaction_manager = interaction_manager
         self.gui = gui
@@ -117,7 +116,6 @@ class LayerManager(object):
         )
         self.edit_layer = self.edit_layer_class(
             self.config,
-            self.logger,
             self,
             self.grid_manager,
             self.main_layer,

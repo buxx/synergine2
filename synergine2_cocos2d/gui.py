@@ -13,7 +13,7 @@ from cocos import euclid
 from cocos.audio.pygame import mixer
 from cocos.layer import ScrollableLayer
 from synergine2.config import Config
-from synergine2.log import SynergineLogger
+from synergine2.log import get_logger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
 from synergine2_cocos2d.actor import Actor
@@ -162,7 +162,6 @@ class EditLayer(cocos.layer.Layer):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         layer_manager: LayerManager,
         grid_manager: GridManager,
         worldview,
@@ -181,7 +180,7 @@ class EditLayer(cocos.layer.Layer):
         super().__init__()
 
         self.config = config
-        self.logger = logger
+        self.logger = get_logger('EditLayer', config)
         self.layer_manager = layer_manager
         self.grid_manager = grid_manager
 
@@ -722,13 +721,12 @@ class Gui(object):
     def __init__(
             self,
             config: Config,
-            logger: SynergineLogger,
             terminal: Terminal,
             physics: Physics,
             read_queue_interval: float= 1/60.0,
     ):
         self.config = config
-        self.logger = logger
+        self.logger = get_logger('Gui', config)
         self.physics = physics
         self._read_queue_interval = read_queue_interval
         self.terminal = terminal
@@ -745,12 +743,10 @@ class Gui(object):
 
         self.interaction_manager = InteractionManager(
             config=self.config,
-            logger=self.logger,
             terminal=self.terminal,
         )
         self.layer_manager = self.layer_manager_class(
             self.config,
-            self.logger,
             middleware=self.get_layer_middleware(),
             interaction_manager=self.interaction_manager,
             gui=self,
@@ -796,7 +792,6 @@ class TMXGui(Gui):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         terminal: Terminal,
         physics: Physics,
         read_queue_interval: float = 1 / 60.0,
@@ -806,7 +801,6 @@ class TMXGui(Gui):
         self.map_dir_path = map_dir_path
         super(TMXGui, self).__init__(
             config,
-            logger,
             terminal,
             physics=physics,
             read_queue_interval=read_queue_interval,
@@ -816,7 +810,6 @@ class TMXGui(Gui):
     def get_layer_middleware(self) -> MapMiddleware:
         return TMXMiddleware(
             self.config,
-            self.logger,
             self.map_dir_path,
         )
 

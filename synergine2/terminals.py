@@ -11,7 +11,7 @@ from synergine2.base import BaseObject
 from synergine2.exceptions import SynergineException
 from synergine2.share import shared
 from synergine2.config import Config
-from synergine2.log import SynergineLogger
+from synergine2.log import get_logger
 from synergine2.simulation import Subject
 from synergine2.simulation import Event
 
@@ -71,11 +71,10 @@ class Terminal(BaseObject):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         asynchronous: bool=True,
     ):
         self.config = config
-        self.logger = logger
+        self.logger = get_logger(self.__class__.__name__, config)
         self._input_queue = None
         self._output_queue = None
         self._stop_required = False
@@ -180,11 +179,10 @@ class TerminalManager(BaseObject):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         terminals: [Terminal]
     ):
         self.config = config
-        self.logger = logger
+        self.logger = get_logger('TerminalManager', config)
         self.terminals = terminals
         self.outputs_queues = {}
         self.inputs_queues = {}

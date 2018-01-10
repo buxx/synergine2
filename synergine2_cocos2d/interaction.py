@@ -2,7 +2,7 @@
 import typing
 
 from synergine2.config import Config
-from synergine2.log import SynergineLogger
+from synergine2.log import get_logger
 from synergine2.simulation import SimulationBehaviour
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
@@ -17,11 +17,10 @@ class InteractionManager(object):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         terminal: Terminal,
     ) -> None:
         self.config = config
-        self.logger = logger
+        self.logger = get_logger(InteractionManager, config)
         self.terminal = terminal
         self.interactions = []
 
@@ -32,7 +31,6 @@ class InteractionManager(object):
     ) -> None:
         self.interactions.append(interaction_class(
             self.config,
-            self.logger,
             terminal=self.terminal,
             layer_manager=layer_manager,
         ))
@@ -50,12 +48,11 @@ class Interaction(object):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         terminal: Terminal,
         layer_manager: LayerManager,
     ) -> None:
         self.config = config
-        self.logger = logger
+        self.logger = get_logger(self.__class__.__name__, config)
         self.terminal = terminal
         self.layer_manager = layer_manager
 

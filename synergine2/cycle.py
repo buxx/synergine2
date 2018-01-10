@@ -7,7 +7,7 @@ import time
 from synergine2.base import BaseObject
 from synergine2.config import Config
 from synergine2.exceptions import SynergineException
-from synergine2.log import SynergineLogger
+from synergine2.log import get_logger
 from synergine2.processing import ProcessManager
 from synergine2.share import shared
 from synergine2.simulation import Subject
@@ -28,13 +28,12 @@ class CycleManager(BaseObject):
     def __init__(
             self,
             config: Config,
-            logger: SynergineLogger,
             simulation: Simulation,
             process_manager: ProcessManager=None,
     ):
         # TODO: reproduire le mechanisme d'index de behaviour/etc pour simulation
         self.config = config
-        self.logger = logger
+        self.logger = get_logger('Cycle', config)
         self.simulation = simulation
         self.current_cycle = -1
         self.first_cycle = True

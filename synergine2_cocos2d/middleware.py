@@ -3,18 +3,17 @@ import os
 
 import cocos
 from synergine2.config import Config
-from synergine2.log import SynergineLogger
+from synergine2.log import get_logger
 
 
 class MapMiddleware(object):
     def __init__(
         self,
         config: Config,
-        logger: SynergineLogger,
         map_dir_path: str,
     ) -> None:
         self.config = config
-        self.logger = logger
+        self.logger = get_logger(self.__class__.__name__, config)
         self.map_dir_path = map_dir_path
         self.tmx = None
 

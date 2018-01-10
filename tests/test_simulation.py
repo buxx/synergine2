@@ -3,7 +3,6 @@ import time
 
 from synergine2.config import Config
 from synergine2.cycle import CycleManager
-from synergine2.log import SynergineLogger
 from synergine2.processing import ProcessManager
 from synergine2.share import shared
 from synergine2.simulation import Simulation
@@ -18,7 +17,6 @@ from tests import BaseTest
 from freezegun import freeze_time
 
 config = Config()
-logger = SynergineLogger('test')
 
 
 class MySubjectMechanism(SubjectMechanism):
@@ -99,7 +97,6 @@ class TestBehaviours(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -121,7 +118,6 @@ class TestBehaviours(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -148,7 +144,6 @@ class TestBehaviours(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -180,7 +175,6 @@ class TestBehaviours(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -222,7 +216,6 @@ class TestBehaviours(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -252,7 +245,6 @@ class TestBehaviours(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -294,7 +286,6 @@ class TestBehaviours(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -347,7 +338,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -389,7 +379,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -421,7 +410,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -451,7 +439,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -493,7 +480,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -547,7 +533,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -604,7 +589,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )
@@ -660,7 +644,6 @@ class TestMechanisms(BaseTest):
 
         cycle_manager = CycleManager(
             config,
-            logger,
             simulation=simulation,
             process_manager=do_nothing_process_manager,
         )

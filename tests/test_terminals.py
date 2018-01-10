@@ -7,7 +7,6 @@ import pytest
 from synergine2.config import Config
 from synergine2.core import Core
 from synergine2.cycle import CycleManager
-from synergine2.log import SynergineLogger
 from synergine2.share import shared
 from synergine2.simulation import Event
 from synergine2.simulation import Simulation
@@ -53,9 +52,8 @@ class TestTerminals(BaseTest):
     def test_terminal_communications(self):
         terminals_manager = TerminalManager(
             Config(),
-            SynergineLogger('test'),
             terminals=[
-                MultiplyTerminal(Config(), SynergineLogger('test')),
+                MultiplyTerminal(Config()),
             ]
         )
         terminals_manager.start()
@@ -80,10 +78,9 @@ class TestTerminals(BaseTest):
     def test_terminals_communications(self):
         terminals_manager = TerminalManager(
             Config(),
-            SynergineLogger('test'),
             terminals=[
-                MultiplyTerminal(Config(), SynergineLogger('test')),
-                DivideTerminal(Config(), SynergineLogger('test')),
+                MultiplyTerminal(Config()),
+                DivideTerminal(Config()),
             ]
         )
         terminals_manager.start()
@@ -113,8 +110,7 @@ class TestTerminals(BaseTest):
 
         terminals_manager = TerminalManager(
             Config(),
-            SynergineLogger('test'),
-            terminals=[ListenEverythingTerminal(Config(), SynergineLogger('test'))]
+            terminals=[ListenEverythingTerminal(Config())]
         )
         terminals_manager.start()
         terminals_manager.send(ValueTerminalPackage(value=42))
@@ -142,8 +138,7 @@ class TestTerminals(BaseTest):
 
         terminals_manager = TerminalManager(
             Config(),
-            SynergineLogger('test'),
-            terminals=[ListenAnEventTerminal(Config(), SynergineLogger('test'))]
+            terminals=[ListenAnEventTerminal(Config())]
         )
         terminals_manager.start()
         terminals_manager.send(ValueTerminalPackage(value=42))
@@ -168,12 +163,10 @@ class TestTerminals(BaseTest):
     def test_terminal_as_main_process(self):
         shared.reset()
         config = Config()
-        logger = SynergineLogger('test')
         simulation = Simulation(config)
         simulation.subjects = Subjects(simulation=simulation)
         cycle_manager = CycleManager(
             config=config,
-            logger=logger,
             simulation=simulation,
         )
 
@@ -189,7 +182,7 @@ class TestTerminals(BaseTest):
                 global terminal_pid
                 terminal_pid = os.getpid()
 
-        terminal = MyMainTerminal(config, logger)
+        terminal = MyMainTerminal(config)
 
         class MyCore(Core):
             def _end_cycle(self):
@@ -199,12 +192,10 @@ class TestTerminals(BaseTest):
 
         core = MyCore(
             config=config,
-            logger=logger,
             simulation=simulation,
             cycle_manager=cycle_manager,
             terminal_manager=TerminalManager(
                 config=config,
-                logger=logger,
                 terminals=[terminal],
             ),
         )
