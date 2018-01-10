@@ -13,7 +13,9 @@ from synergine2.share import shared
 from synergine2.simulation import Subject
 from synergine2.simulation import Simulation
 from synergine2.simulation import SubjectBehaviour
+from synergine2.simulation import SimulationBehaviour
 from synergine2.simulation import SubjectMechanism
+from synergine2.simulation import SimulationMechanism
 from synergine2.simulation import Event
 from synergine2.utils import time_it
 
@@ -84,7 +86,8 @@ class CycleManager(BaseObject):
     def _job_simulation(self, worker_id: int, process_count: int) -> typing.Dict[int, typing.Dict[str, typing.Any]]:
         self.logger.info('Simulation computing (worker {})'.format(worker_id))
 
-        mechanisms = self.simulation.mechanisms.values()
+        behaviours = self.get_simulation_active_behaviours()
+        mechanisms = self.get_mechanisms_from_behaviours(behaviours)
         mechanisms_data = {}
         behaviours_data = {}
 
@@ -420,7 +423,8 @@ class CycleManager(BaseObject):
         behaviours = []
         for behaviour in subject.behaviours.values():
             if behaviour.is_skip(self.current_cycle):
-                self.logger.debug('Simulation: behaviour {} skip'.format(
+                self.logger.debug('Subject {}: behaviour {} skip'.format(
+                    str(subject.id),
                     str(type(behaviour)),
                 ))
             else:
@@ -439,4 +443,28 @@ class CycleManager(BaseObject):
                 for behaviour_mechanism_class in subject_behaviour.use:
                     if isinstance(subject_mechanism, behaviour_mechanism_class):
                         mechanisms.add(subject_mechanism)
+        return list(mechanisms)
+
+    def get_simulation_active_behaviours(self) -> typing.List[SimulationBehaviour]:
+        behaviours = []
+        for behaviour in self.simulation.behaviours.values():
+            if behaviour.is_skip(self.current_cycle):
+                self.logger.debug('Simulation: behaviour {} skip'.format(
+                    str(type(behaviour)),
+                ))
+            else:
+                behaviours.append(behaviour)
+        return behaviours
+
+    def get_mechanisms_from_behaviours(
+        self,
+        behaviours: typing.List[SimulationBehaviour],
+    ) -> typing.List[SimulationMechanism]:
+        # TODO BS 20180109: Not very optimized ... could be enhanced
+        mechanisms = set()
+        for simulation_mechanism in self.simulation.mechanisms.values():
+            for simulation_behaviour in behaviours:
+                for simulation_mechanism_class in simulation_behaviour.use:
+                    if isinstance(simulation_mechanism, simulation_mechanism_class):
+                        mechanisms.add(simulation_mechanism)
         return list(mechanisms)
