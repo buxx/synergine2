@@ -4,12 +4,6 @@ import typing
 import pyglet
 import cocos
 
-if False:
-    from synergine2_cocos2d.actor import Actor
-
-ANIMATION_WALK = 'WALK'
-ANIMATION_CRAWL = 'CRAWL'
-
 
 class AnimatedInterface(object):
     def get_images_for_animation(self, animation_name: str) -> typing.List[pyglet.image.TextureRegion]:

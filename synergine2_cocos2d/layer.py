@@ -6,7 +6,7 @@ from pyglet.window import key
 import cocos
 
 from synergine2.config import Config
-from synergine2.log import SynergineLogger, get_logger
+from synergine2.log import get_logger
 from synergine2_cocos2d.middleware import MapMiddleware
 
 if False:
@@ -79,11 +79,7 @@ class LayerManager(object):
         self.main_scene = None  # type: cocos.scene.Scene
         self.main_layer = None  # type: cocos.layer.Layer
         self.edit_layer = None  # TODO type
-
-        self.background_sprite = None  # type: cocos.sprite.Sprite
-        self.ground_layer = None  # type: cocos.tiles.RectMapLayer
         self.subject_layer = None  # type: SubjectLayer
-        self.top_layer = None  # type: cocos.tiles.RectMapLayer
 
         from synergine2_cocos2d.gui import EditLayer
         self.edit_layer_class = self.edit_layer_class or EditLayer
@@ -109,6 +105,7 @@ class LayerManager(object):
         self.main_layer = MainLayer(
             self,
             self.grid_manager,
+            # TODO: Hardcoded values
             **{
                 'width': 1200,  # Note: world size
                 'height': 1000,  # Note: world size
@@ -143,25 +140,13 @@ class LayerManager(object):
         self.main_scene.add(self.scrolling_manager)
         self.scrolling_manager.add(self.main_layer, z=0)
         self.main_scene.add(self.edit_layer)
-
-        self.interior_sprite = self.middleware.get_interior_sprite()
-        self.background_sprite = self.middleware.get_background_sprite()
-        self.ground_layer = self.middleware.get_ground_layer()
         self.subject_layer = SubjectLayer()
-        self.top_layer = self.middleware.get_top_layer()
 
-        self.main_layer.add(self.interior_sprite)
-        self.main_layer.add(self.background_sprite)
-        self.main_layer.add(self.ground_layer)
+    def connect_layers(self) -> None:
         self.main_layer.add(self.subject_layer)
-        self.main_layer.add(self.top_layer)
 
-    def center(self):
-        self.interior_sprite.position = 0 + (self.interior_sprite.width/2), 0 + (self.interior_sprite.height/2)
-        self.background_sprite.position = 0 + (self.background_sprite.width/2), 0 + (self.background_sprite.height/2)
-        self.ground_layer.set_view(0, 0, self.ground_layer.px_width, self.ground_layer.px_height)
+    def center(self) -> None:
         self.subject_layer.position = 0, 0
-        self.top_layer.set_view(0, 0, self.top_layer.px_width, self.top_layer.px_height)
 
     def add_subject(self, subject: 'Actor') -> None:
         self.subject_layer.add_subject(subject)

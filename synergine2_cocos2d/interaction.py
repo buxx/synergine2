@@ -20,7 +20,7 @@ class InteractionManager(object):
         terminal: Terminal,
     ) -> None:
         self.config = config
-        self.logger = get_logger(InteractionManager, config)
+        self.logger = get_logger('InteractionManager', config)
         self.terminal = terminal
         self.interactions = []
 

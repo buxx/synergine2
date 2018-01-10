@@ -477,7 +477,7 @@ class EditLayer(cocos.layer.Layer):
 
     def on_mouse_press(self, x, y, buttons, modifiers):
         rx, ry = self.layer_manager.scrolling_manager.screen_to_world(x, y)
-        self.logger.info(
+        self.logger.debug(
             'GUI click: x: {}, y: {}, rx: {}, ry: {} ({}|{})'.format(x, y, rx, ry, buttons, modifiers)
         )
 
@@ -732,8 +732,7 @@ class Gui(object):
         self.terminal = terminal
         self.cycle_duration = self.config.resolve('core.cycle_duration')
 
-        cocos.director.\
-            director.init(
+        cocos.director.director.init(
             width=640,
             height=480,
             vsync=True,
@@ -752,6 +751,7 @@ class Gui(object):
             gui=self,
         )
         self.layer_manager.init()
+        self.layer_manager.connect_layers()
         self.layer_manager.center()
 
         # Enable blending
