@@ -50,6 +50,6 @@ def get_default_logger(
 
 def get_logger(name: str, config: Config) -> SynergineLogger:
     global_logging_level = config.resolve('global.logging_level', 'ERROR')
-    logger_level_str = config.resolve('global.logging.{}.level', global_logging_level)
+    logger_level_str = config.resolve('global.logger.{}.level', global_logging_level)
     logger_level = logging.getLevelName(logger_level_str)
     return get_default_logger('synergine-{}'.format(name), logger_level)
