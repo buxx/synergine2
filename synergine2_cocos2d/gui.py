@@ -245,7 +245,6 @@ class EditLayer(cocos.layer.Layer):
 
         self.schedule(self.update)
         self.selectable_actors = []
-        # TODO: In top level class: to be available in all layers
         self.callbacks = []  # type: typing.List[Callback]
 
     def append_callback(self, callback: typing.Callable[[], None], duration: float, delay: float=None) -> None:
