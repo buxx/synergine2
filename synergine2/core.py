@@ -76,6 +76,10 @@ class Core(BaseObject):
                 events = []
                 packages = self.terminal_manager.receive()
                 for package in packages:
+                    if package.sigterm:
+                        self.logger.info('SIGTERM received from terminal package')
+                        self._continue = False
+
                     events.extend(self.cycle_manager.apply_actions(
                         simulation_actions=package.simulation_actions,
                         subject_actions=package.subject_actions,
@@ -102,7 +106,11 @@ class Core(BaseObject):
                 self._end_cycle()
         except KeyboardInterrupt:
             pass  # Just stop while
+
+        self.logger.info('Getting out of loop. Terminating.')
         self.terminal_manager.stop()
+        self.cycle_manager.stop()
+        self.logger.info('Terminated')
 
     def _start_cycle(self):
         time_ = time.time()

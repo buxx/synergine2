@@ -58,6 +58,10 @@ class SubjectLayer(cocos.layer.ScrollableLayer):
         self.subjects_index[actor.subject.id] = actor
 
 
+class MainScene(cocos.scene.Scene):
+    pass
+
+
 class LayerManager(object):
     edit_layer_class = None  # type: typing.Type['EditLayer']
 
@@ -99,7 +103,7 @@ class LayerManager(object):
             self.middleware.get_world_height(),
         )
 
-        self.main_scene = cocos.scene.Scene()
+        self.main_scene = MainScene()
         self.scrolling_manager = ScrollingManager()
 
         self.main_layer = MainLayer(

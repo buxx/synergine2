@@ -34,6 +34,7 @@ class TerminalPackage(BaseObject):
             simulation_actions: [tuple]=None,
             subject_actions: [tuple]=None,
             is_cycle: bool=False,
+            sigterm: bool=False,
             *args,
             **kwargs
     ):
@@ -44,6 +45,7 @@ class TerminalPackage(BaseObject):
         self.simulation_actions = simulation_actions or []
         self.subject_actions = subject_actions or []
         self.is_cycle = is_cycle
+        self.sigterm = sigterm
 
     def repr_debug(self) -> str:
         subjects = self.subjects or []
@@ -55,6 +57,7 @@ class TerminalPackage(BaseObject):
             simulation_actions=['{}: {}'.format(a.__class__.__name__, p) for a, p in self.simulation_actions],
             subject_actions=['{}: {}'.format(a.__class__.__name__, p) for a, p in self.subject_actions],
             is_cycle=self.is_cycle,
+            sigterm=self.sigterm,
         ))
 
 
@@ -266,6 +269,8 @@ class TerminalManager(BaseObject):
                         ))
 
                     packages.append(package)
+                    if package.sigterm:
+                        return packages
             else:
                 try:
                     while True:
