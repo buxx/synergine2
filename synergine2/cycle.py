@@ -140,6 +140,7 @@ class CycleManager(BaseObject):
 
     def next(self) -> [Event]:
         if self.first_cycle:
+            self.process_manager.start_workers()
             # To dispatch subjects add/removes, enable track on them
             self.simulation.subjects.track_changes = True
             self.first_cycle = False

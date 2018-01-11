@@ -71,12 +71,16 @@ class ProcessManager(BaseObject):
         self.config = config
         self._process_count = process_count
         self.workers = []
-        self.start_workers(process_count, job)
+        self.job = job
 
-    def start_workers(self, worker_count: int, job: typing.Callable[..., typing.Any]) -> None:
+    @property
+    def process_count(self) -> int:
+        return self._process_count
+
+    def start_workers(self) -> None:
         assert not self.workers
-        for i in range(worker_count):
-            self.workers.append(Worker(self.config, job))
+        for i in range(self._process_count):
+            self.workers.append(Worker(self.config, self.job))
 
     def make_them_work(self, message: typing.Any) -> 'TODO':
         responses = []
