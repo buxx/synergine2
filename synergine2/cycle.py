@@ -263,7 +263,7 @@ class CycleManager(BaseObject):
         for subject in subjects:
             subject_behaviours = self.get_active_subject_behaviors(subject)
             if not subject_behaviours:
-                break
+                continue
 
             mechanisms = self.get_mechanisms_from_behaviors(subject_behaviours, subject)
             if mechanisms:
