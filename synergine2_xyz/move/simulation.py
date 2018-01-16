@@ -94,7 +94,9 @@ class MoveToMechanism(SubjectMechanism):
             }
 
         except IndexError:  # TODO: Specialize ? No movement left
-            return None
+            return {
+                'finished': True,
+            }
         except KeyError:  # TODO: Specialize ? No MoveIntention
             return None
 
@@ -156,6 +158,8 @@ class MoveToBehaviour(SubjectBehaviour):
     def run(self, data):
         move_to_data = data[self.move_to_mechanism]
         if move_to_data:
+            if move_to_data.get('finished'):
+                return move_to_data
 
             if self._can_move_to_next_step(move_to_data):
                 move_to_data['reach_next'] = True
@@ -174,11 +178,18 @@ class MoveToBehaviour(SubjectBehaviour):
         return move_to_data['just_reach'] or move_to_data['initial']
 
     def action(self, data) -> [Event]:
-        new_path = data['new_path']
         # TODO: MoveToIntention doit être configurable
-        move = self.subject.intentions.get(MoveToIntention)
-        move = typing.cast(MoveToIntention, move)
+        try:
+            if data.get('finished'):
+                self.subject.intentions.remove(MoveToIntention)
+                return []
+            move = self.subject.intentions.get(MoveToIntention)
+        except KeyError:  # TODO: Specialize exception
+            # Action don't exist anymore
+            return []
 
+        move = typing.cast(MoveToIntention, move)
+        new_path = data['new_path']
         if new_path:
             move.path = new_path
             move.path_progression = -1

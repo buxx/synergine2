@@ -31,6 +31,14 @@ class IntentionManager(object):
         # TODO: Raise specialised exception if KeyError
         return self.intentions[intention_type]
 
+    def remove(self, intention_type: typing.Type[Intention]) -> None:
+        intentions = self.intentions
+        del self.intentions[intention_type]
+        self.intentions = intentions
+
+    def remove_all(self) -> None:
+        self.intentions = {}
+
 
 class Subject(IdentifiedObject):
     start_collections = []
