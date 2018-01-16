@@ -155,11 +155,15 @@ class CycleManager(BaseObject):
         # TODO: Proposer des ordres d'execution
         with time_it() as elapsed_time:
             events.extend(self._get_subjects_events())
-        print('Cycle subjects events duration: {}s'.format(elapsed_time.get_final_time()))
+        self.logger.debug('Cycle subjects events duration: {}s'.format(
+            elapsed_time.get_final_time()),
+        )
 
         with time_it() as elapsed_time:
             events.extend(self._get_simulation_events())
-        print('Cycle simulation events duration: {}s'.format(elapsed_time.get_final_time()))
+        self.logger.debug('Cycle simulation events duration: {}s'.format(
+            elapsed_time.get_final_time()),
+        )
 
         self.logger.info('Cycle {} generate {} events'.format(
             str(self.current_cycle),
