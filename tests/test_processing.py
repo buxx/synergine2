@@ -1,10 +1,5 @@
 # coding: utf-8
-import ctypes
-import multiprocessing
 import psutil
-from multiprocessing import Manager
-from multiprocessing import Array
-
 import pytest
 
 from synergine2.config import Config
