@@ -43,6 +43,7 @@ class TestProcessing(BaseTest):
             process_count=available_cores,
             job=self.make_job_with_scalar,
         )
+        process_manager.start_workers()
 
         data = list(range(100))
 
@@ -59,6 +60,7 @@ class TestProcessing(BaseTest):
             process_count=1,
             job=self.make_job_with_scalar,
         )
+        process_manager.start_workers()
 
         data = list(range(100))
         results = process_manager.make_them_work(data)
@@ -75,6 +77,7 @@ class TestProcessing(BaseTest):
             process_count=available_cores,
             job=self.make_job_with_object,
         )
+        process_manager.start_workers()
 
         data = [MyFakeClass(v) for v in range(100)]
         final_result = 0
@@ -103,6 +106,7 @@ class TestProcessing(BaseTest):
             process_count=available_cores,
             job=job,
         )
+        process_manager.start_workers()
 
         results = process_manager.make_them_work(None)
         process_manager.terminate()
@@ -126,6 +130,7 @@ class TestProcessing(BaseTest):
             process_count=available_cores,
             job=job,
         )
+        process_manager.start_workers()
 
         foo = Foo()
         foo.counter = 42
@@ -158,6 +163,7 @@ class TestProcessing(BaseTest):
             process_count=available_cores,
             job=job,
         )
+        process_manager.start_workers()
 
         shared.set('foo_1', 42)
         shared.commit()
