@@ -1,4 +1,5 @@
 # coding: utf-8
+from synergine2.exceptions import SynergineException
 
 
 class WorldException(Exception):
@@ -14,4 +15,12 @@ class OuterWorldPosition(PositionException):
 
 
 class InteractionNotFound(Exception):
+    pass
+
+
+class MediaException(SynergineException):
+    pass
+
+
+class FileNotFound(SynergineException):
     pass

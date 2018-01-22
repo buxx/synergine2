@@ -1,5 +1,11 @@
 # coding: utf-8
+import os
+
+import pytest
+
 from synergine2.utils import ChunkManager
+from synergine2_cocos2d.exception import FileNotFound
+from synergine2_cocos2d.util import PathManager
 from tests import BaseTest
 
 
@@ -26,3 +32,15 @@ class TestUtils(BaseTest):
                 assert len(chunk) == 26
             else:
                 assert len(chunk) == 25
+
+    def test_path_manager(self):
+        path_manager = PathManager(['tests/fixtures/some_media'])
+        # file in thirst dir found
+        assert 'tests/fixtures/some_media/foo.txt' == path_manager.path('foo.txt')
+        # a non existing file is not found
+        with pytest.raises(FileNotFound):
+            path_manager.path('UNKNOWN')
+        # if add a folder to path manager paths
+        path_manager.add_included_path('tests/fixtures/some_media2')
+        # it is prior on path finding
+        assert 'tests/fixtures/some_media2/foo.txt' == path_manager.path('foo.txt')

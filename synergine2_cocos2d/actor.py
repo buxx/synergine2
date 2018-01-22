@@ -6,17 +6,19 @@ import pyglet
 import cocos
 from cocos import collision_model
 from cocos import euclid
+
+from synergine2.config import Config
 from synergine2.simulation import Subject
 from synergine2_cocos2d.animation import AnimatedInterface
+from synergine2_cocos2d.util import PathManager
 
 
 class Actor(AnimatedInterface, cocos.sprite.Sprite):
     animation_image_paths = {}  # type: typing.Dict[str, typing.List[str]]
-    animation_images = {}  # type: typing.Dict[str, typing.List[pyglet.image.TextureRegion]]
 
     def __init__(
         self,
-        image: pyglet.image.TextureRegion,
+        image_path: str,
         subject: Subject,
         position=(0, 0),
         rotation=0,
@@ -25,8 +27,14 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         color=(255, 255, 255),
         anchor=None,
         properties: dict=None,
+        config: Config=None,
         **kwargs
     ):
+        # Note: Parameter required, but we want to modify little as possible parent init
+        assert config, "Config is a required parameter"
+        self.path_manager = PathManager(config.resolve('global.include_path.graphics'))
+        image = pyglet.resource.image(self.path_manager.path(image_path))
+        self.animation_images = {}  # type: typing.Dict[str, typing.List[pyglet.image.TextureRegion]]  # nopep8
         super().__init__(
             image,
             position,
@@ -80,7 +88,12 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         for animation_name, animation_image_paths in self.animation_image_paths.items():
             self.animation_images[animation_name] = []
             for animation_image_path in animation_image_paths:
-                self.animation_images[animation_name].append(pyglet.resource.image(animation_image_path))
+                final_image_path = self.path_manager.path(animation_image_path)
+                self.animation_images[animation_name].append(
+                    pyglet.resource.image(
+                        final_image_path,
+                    )
+                )
 
     def get_images_for_animation(self, animation_name: str) -> typing.List[pyglet.image.TextureRegion]:
         return self.animation_images.get(animation_name)

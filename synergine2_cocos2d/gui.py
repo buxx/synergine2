@@ -677,8 +677,10 @@ class MainLayer(ScrollableLayer):
 class SubjectMapper(object):
     def __init__(
         self,
+        config: Config,
         actor_class: typing.Type[Actor],
     ) -> None:
+        self.config = config
         self.actor_class = actor_class
 
     def append(
@@ -686,7 +688,7 @@ class SubjectMapper(object):
         subject: XYZSubjectMixin,
         layer_manager: LayerManager,
     ) -> None:
-        actor = self.actor_class(subject)
+        actor = self.actor_class(self.config, subject)
         pixel_position = layer_manager.grid_manager.get_world_position_of_grid_position(
             (subject.position[0], subject.position[1]),
         )
