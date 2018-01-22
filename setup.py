@@ -19,6 +19,7 @@ cocos2d_require = [
 tests_require = [
     'pytest',
     'freezegun',
+    'pytest-mock',
 ] + cocos2d_require
 
 
