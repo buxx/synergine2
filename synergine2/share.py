@@ -144,6 +144,7 @@ class SharedDataManager(object):
         self._data = {}
 
     def set(self, key: str, value: typing.Any) -> None:
+        # FIXME: Called tout le temps !
         self._data[key] = value
         self._modified_keys.add(key)
 

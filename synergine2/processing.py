@@ -52,13 +52,16 @@ class Worker(object):
     def work(self, *args, **kwargs):
         seed_value = kwargs.pop('seed')
         random.seed(seed_value)
-        while True:
-            args = self.process_read_pipe.recv()
-            if args == STOP:
-                return
+        try:
+            while True:
+                args = self.process_read_pipe.recv()
+                if args == STOP:
+                    return
 
-            result = self.real_job(*args)
-            self.local_write_pipe.send(result)
+                result = self.real_job(*args)
+                self.local_write_pipe.send(result)
+        except KeyboardInterrupt:
+            return
 
 
 class ProcessManager(BaseObject):
