@@ -87,9 +87,10 @@ class Core(BaseObject):
 
                 with time_it() as elapsed_time:
                     events.extend(self.cycle_manager.next())
-                # TODO: There is a problem with logger: when "pickled" we remove it's handler
-                self.logger.info('Cycle duration: {}s'.format(elapsed_time.get_final_time()))
-                print('Cycle duration: {}s'.format(elapsed_time.get_final_time()))
+
+                self.logger.info('Cycle duration: {}s'.format(
+                    elapsed_time.get_final_time(),
+                ))
 
                 cycle_package = TerminalPackage(
                     events=events,
@@ -105,7 +106,10 @@ class Core(BaseObject):
 
                 self._end_cycle()
         except KeyboardInterrupt:
+            self.logger.info('KeyboardInterrupt: stop the loop')
             pass  # Just stop while
+        except Exception as exc:
+            self.logger.exception('Fatal error during simulation')
 
         self.logger.info('Getting out of loop. Terminating.')
         self.terminal_manager.stop()
