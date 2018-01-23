@@ -31,7 +31,8 @@ class SharedDataIndex(object):
 
 class SharedData(object):
     def __init__(
-        self, key: str,
+        self,
+        key: str,
         self_type: bool=False,
         default: typing.Any=None,
     ) -> None:
@@ -44,6 +45,7 @@ class SharedData(object):
         self.self_type = self_type
         self._default = default
         self.is_special_type = isinstance(self.default_value, (list, dict))
+        self.type = type(self.default_value)
         if self.is_special_type:
             if isinstance(self.default_value, list):
                 self.special_type = TrackedList
@@ -227,7 +229,10 @@ class SharedDataManager(object):
             except UnknownSharedData:
                 pass  # If no shared data, no previous value to remove
 
-            self.set(final_key, value_)
+            if not shared_data.is_special_type:
+                self.set(final_key, value_)
+            else:
+                self.set(final_key, shared_data.type(value_))
 
             for index in indexes:
                 index.add(value_)
