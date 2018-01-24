@@ -120,6 +120,13 @@ class Subject(IdentifiedObject):
         for collection in self.collections:
             self.simulation.collections.setdefault(collection, []).append(self.id)
 
+    def remove_collection(self, collection_name: str) -> None:
+        self.collections.remove(collection_name)
+        # Manipulate as shared property
+        simulation_collection = self.simulation.collections[collection_name]
+        simulation_collection.remove(self.id)
+        self.simulation.collections[collection_name] = simulation_collection
+
     def __str__(self):
         return self.__repr__()
 
