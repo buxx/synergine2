@@ -1,5 +1,8 @@
 # coding: utf-8
+import io
+import os
 import typing
+import ntpath
 
 import pyglet
 
@@ -32,8 +35,13 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
     ):
         # Note: Parameter required, but we want to modify little as possible parent init
         assert config, "Config is a required parameter"
+        self.config = config
         self.path_manager = PathManager(config.resolve('global.include_path.graphics'))
-        image = pyglet.resource.image(self.path_manager.path(image_path))
+        default_image_path = self.build_default_image(
+            subject.id,
+            self.path_manager.path(image_path),
+        )
+        image = pyglet.image.load(os.path.abspath(default_image_path))
         self.animation_images = {}  # type: typing.Dict[str, typing.List[pyglet.image.TextureRegion]]  # nopep8
         super().__init__(
             image,
@@ -53,6 +61,20 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.need_update_cshape = False
         self.properties = properties or {}
         self._freeze = False
+
+    def build_default_image(self, subject_id: int, base_image_path: str) -> str:
+        cache_dir = self.config.resolve('global.cache_dir_path')
+        with open(base_image_path, 'rb') as base_image_file:
+
+            final_name = '_'.join([
+                str(subject_id),
+                ntpath.basename(base_image_path),
+            ])
+            final_path = os.path.join(cache_dir, final_name)
+            with open(final_path, 'wb+') as built_image_file:
+                built_image_file.write(base_image_file.read())
+
+        return final_path
 
     def freeze(self) -> None:
         """
