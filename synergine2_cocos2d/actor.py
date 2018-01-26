@@ -5,7 +5,7 @@ import typing
 import ntpath
 
 import pyglet
-
+from PIL import Image
 import cocos
 from cocos import collision_model
 from cocos import euclid
@@ -65,16 +65,26 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
     def build_default_image(self, subject_id: int, base_image_path: str) -> str:
         cache_dir = self.config.resolve('global.cache_dir_path')
         with open(base_image_path, 'rb') as base_image_file:
+            base_image = Image.open(base_image_file)
+
+            for default_appliable_image in self.get_default_appliable_images():
+                base_image.paste(
+                    default_appliable_image,
+                    (0, 0),
+                    default_appliable_image,
+                )
 
             final_name = '_'.join([
                 str(subject_id),
                 ntpath.basename(base_image_path),
             ])
             final_path = os.path.join(cache_dir, final_name)
-            with open(final_path, 'wb+') as built_image_file:
-                built_image_file.write(base_image_file.read())
+            base_image.save(final_path)
 
         return final_path
+
+    def get_default_appliable_images(self) -> typing.List[Image.Image]:
+        return []
 
     def freeze(self) -> None:
         """

@@ -15,6 +15,7 @@ xyz_require = [
 ]
 cocos2d_require = [
     'cocos2d',
+    'Pillow',
 ] + xyz_require
 tests_require = [
     'pytest',
