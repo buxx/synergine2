@@ -108,6 +108,7 @@ class FinishMoveEvent(Event):
         from_position: typing.Tuple[int, int],
         to_position: typing.Tuple[int, int],
         gui_action: typing.Any,
+        move_duration: float=0.0,
         *args,
         **kwargs
     ):
@@ -116,6 +117,7 @@ class FinishMoveEvent(Event):
         self.from_position = from_position
         self.to_position = to_position
         self.gui_action = gui_action
+        self.move_duration = move_duration
 
     def repr_debug(self) -> str:
         return '{}: subject_id:{}, from_position:{} to_position: {}'.format(
@@ -133,6 +135,7 @@ class StartMoveEvent(Event):
         from_position: typing.Tuple[int, int],
         to_position: typing.Tuple[int, int],
         gui_action: typing.Any,
+        move_duration: float=0.0,
         *args,
         **kwargs
     ):
@@ -141,6 +144,7 @@ class StartMoveEvent(Event):
         self.from_position = from_position
         self.to_position = to_position
         self.gui_action = gui_action
+        self.move_duration = move_duration
 
     def repr_debug(self) -> str:
         return '{}: subject_id:{}, from_position:{} to_position: {}'.format(
@@ -176,6 +180,9 @@ class MoveToBehaviour(SubjectBehaviour):
 
     def _is_fresh_new_step(self, move_to_data: dict) -> bool:
         return move_to_data['just_reach'] or move_to_data['initial']
+
+    def finalize_event(self, move_to_data: dict, event: Event) -> None:
+        pass
 
     def action(self, data) -> [Event]:
         # TODO: MoveToIntention doit être configurable
@@ -221,5 +228,6 @@ class MoveToBehaviour(SubjectBehaviour):
         move.initial = False
         # Note: Need to explicitly set to update shared data
         self.subject.intentions.set(move)
+        self.finalize_event(data, event)
 
         return [event]
