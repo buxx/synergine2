@@ -63,7 +63,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self._freeze = False
 
     def build_default_image(self, subject_id: int, base_image_path: str) -> str:
-        cache_dir = self.config.resolve('global.cache_dir_path')
+        cache_dir = self.config.resolve('global.cache_dir_path', '/tmp')
         with open(base_image_path, 'rb') as base_image_file:
 
             final_name = '_'.join([
