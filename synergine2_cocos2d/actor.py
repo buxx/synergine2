@@ -56,7 +56,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.subject = subject
         self.cshape = None  # type: collision_model.AARectShape
         self.update_cshape()
-        self.build_animation_images()
+        self.build_animation_images(subject.id)
         self.current_image = image
         self.need_update_cshape = False
         self.properties = properties or {}
@@ -74,6 +74,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
                     default_appliable_image,
                 )
 
+            # FIXME NOW: nom des image utilise au dessus
             final_name = '_'.join([
                 str(subject_id),
                 ntpath.basename(base_image_path),
@@ -84,6 +85,13 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         return final_path
 
     def get_default_appliable_images(self) -> typing.List[Image.Image]:
+        return []
+
+    def get_animation_appliable_images(
+        self,
+        animation_name: str,
+        animation_position: int,
+    ) -> typing.List[Image.Image]:
         return []
 
     def freeze(self) -> None:
@@ -112,18 +120,41 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.position = new_position
         self.cshape.center = new_position  # Note: if remove: strange behaviour: drag change actor position with anomaly
 
-    def build_animation_images(self) -> None:
+    def build_animation_images(self, subject_id: int) -> None:
         """
         Fill self.animation_images with self.animation_image_paths
         :return: None
         """
+        cache_dir = self.config.resolve('global.cache_dir_path')
         for animation_name, animation_image_paths in self.animation_image_paths.items():
             self.animation_images[animation_name] = []
-            for animation_image_path in animation_image_paths:
+            for i, animation_image_path in enumerate(animation_image_paths):
                 final_image_path = self.path_manager.path(animation_image_path)
+                final_image = Image.open(final_image_path)
+
+                # NOW: recup les image a paste en fonction du mode et de la weapon
+                for appliable_image in self.get_animation_appliable_images(
+                    animation_name,
+                    i,
+                ):
+                    final_image.paste(
+                        appliable_image,
+                        (0, 0),
+                        appliable_image,
+                    )
+
+                # FIXME NOW: nom des image utilise au dessus
+                final_name = '_'.join([
+                    str(subject_id),
+                    ntpath.basename(final_image_path),
+                ])
+                final_path = os.path.join(cache_dir, final_name)
+
+                final_image.save(final_path)
+
                 self.animation_images[animation_name].append(
-                    pyglet.resource.image(
-                        final_image_path,
+                    pyglet.image.load(
+                        final_path,
                     )
                 )
 
