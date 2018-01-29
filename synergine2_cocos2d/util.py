@@ -2,6 +2,8 @@
 import os
 import typing
 from os import path
+import shutil
+from pathlib import Path
 
 from synergine2_cocos2d.exception import FileNotFound
 
@@ -47,3 +49,16 @@ class PathManager(object):
             file_path,
             self._include_paths,
         ))
+
+
+def ensure_dir_exist(dir_path, clear_dir: bool=False) -> None:
+    """
+    Create directories if no exists
+    :param dir_path: path of wanted directory to exist
+    :param clear_dir: Remove content of given dir
+    """
+    path_ = Path(dir_path)
+    path_.mkdir(parents=True)
+    if clear_dir:
+        shutil.rmtree(dir_path)
+        path_.mkdir(parents=True)

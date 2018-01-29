@@ -13,6 +13,7 @@ from cocos import euclid
 from cocos.audio.pygame import mixer
 from cocos.layer import ScrollableLayer
 from synergine2.config import Config
+from synergine2.exceptions import SynergineException
 from synergine2.log import get_logger
 from synergine2.terminals import Terminal
 from synergine2.terminals import TerminalPackage
@@ -28,6 +29,7 @@ from synergine2_cocos2d.layer import LayerManager
 from synergine2_cocos2d.middleware import MapMiddleware
 from synergine2_cocos2d.middleware import TMXMiddleware
 from synergine2_cocos2d.user_action import UserAction
+from synergine2_cocos2d.util import ensure_dir_exist
 from synergine2_xyz.physics import Physics
 from synergine2_xyz.xyz import XYZSubjectMixin
 
@@ -732,6 +734,15 @@ class Gui(object):
         self._read_queue_interval = read_queue_interval
         self.terminal = terminal
         self.cycle_duration = self.config.resolve('core.cycle_duration')
+
+        # Manager cache directory
+        cache_dir_path = self.config.resolve('global.cache_dir_path')
+        if not cache_dir_path:
+            raise SynergineException(
+                'This code require the "global.cache_dir_path" config',
+            )
+
+        ensure_dir_exist(cache_dir_path)
 
         cocos.director.director.init(
             width=640,
