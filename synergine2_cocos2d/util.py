@@ -58,7 +58,7 @@ def ensure_dir_exist(dir_path, clear_dir: bool=False) -> None:
     :param clear_dir: Remove content of given dir
     """
     path_ = Path(dir_path)
-    path_.mkdir(parents=True)
+    path_.mkdir(parents=False, exist_ok=True)
     if clear_dir:
         shutil.rmtree(dir_path)
-        path_.mkdir(parents=True)
+        path_.mkdir(parents=False, exist_ok=True)
