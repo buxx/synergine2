@@ -10,7 +10,8 @@ from synergine2_cocos2d.exception import FileNotFound
 
 def get_map_file_path_from_dir(map_dir_path: str) -> str:
     # TODO: path is temp here
-    return '{}.tmx'.format(os.path.join(map_dir_path, os.path.basename(map_dir_path)))
+    return '{}.tmx'.format(os.path.join(map_dir_path,
+        os.path.basename(map_dir_path.rstrip('/'))))
 
 
 class PathManager(object):
