@@ -4,6 +4,7 @@ import os
 import cocos
 from synergine2.config import Config
 from synergine2.log import get_logger
+from synergine2_cocos2d.util import get_map_file_path_from_dir
 
 
 class MapMiddleware(object):
@@ -18,10 +19,7 @@ class MapMiddleware(object):
         self.tmx = None
 
     def get_map_file_path(self) -> str:
-        return os.path.join(
-            self.map_dir_path,
-            '{}.tmx'.format(os.path.basename(self.map_dir_path)),
-        )
+        return get_map_file_path_from_dir(self.map_dir_path)
 
     def init(self) -> None:
         map_file_path = self.get_map_file_path()
