@@ -1,6 +1,6 @@
 # synergine2
 
-[![Build Status](https://travis-ci.org/buxx/synergine2.svg?branch=master)](https://travis-ci.org/buxx/synergine2) [![Coverage Status](https://coveralls.io/repos/github/buxx/synergine2/badge.svg?branch=master)](https://coveralls.io/github/buxx/synergine2?branch=master)
+[![Build Status](https://travis-ci.org/buxx/synergine2.svg?branch=master)](https://travis-ci.org/buxx/synergine2) [![Coverage Status](https://coveralls.io/repos/github/buxx/synergine2/badge.svg?branch=master)](https://coveralls.io/github/buxx/synergine2?branch=master) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3ebc962adf294ebdb5f6ac052ad5300e)](https://www.codacy.com/app/sevajol.bastien/synergine2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=buxx/synergine2&amp;utm_campaign=Badge_Grade)
 
 A framework to build simulation with subject focused.
 
