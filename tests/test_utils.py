@@ -5,7 +5,8 @@ import pytest
 
 from synergine2.utils import ChunkManager
 from synergine2_cocos2d.exception import FileNotFound
-from synergine2_cocos2d.util import PathManager,get_map_file_path_from_dir
+from synergine2_cocos2d.util import PathManager
+from synergine2_cocos2d.util import get_map_file_path_from_dir
 from tests import BaseTest
 
 
