@@ -132,7 +132,6 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
                 final_image_path = self.path_manager.path(animation_image_path)
                 final_image = Image.open(final_image_path)
 
-                # NOW: recup les image a paste en fonction du mode et de la weapon
                 for appliable_image in self.get_animation_appliable_images(
                     animation_name,
                     i,

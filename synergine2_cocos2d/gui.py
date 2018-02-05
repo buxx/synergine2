@@ -126,6 +126,8 @@ class Callback(object):
         func: typing.Callable[[], None],
         duration: float,
         delay: float=None,
+        end_callback: typing.Callable[[], None]=None,
+        start_callback: typing.Callable[[], None]=None,
     ) -> None:
         self.func = func
         self.duration = duration
@@ -135,8 +137,13 @@ class Callback(object):
         self.delay = delay
         if delay is not None:
             self.require_delay = True
+        self.end_callback = end_callback
+        self.start_callback = start_callback
 
     def execute(self) -> None:
+        if self.started is None and self.start_callback:
+            self.start_callback()
+
         if self.require_delay and not self.started:
             self.started = time.time()
             return
@@ -153,8 +160,15 @@ class Callback(object):
             self.func()
         elif not self.duration:
             self.func()
+
+            if self.end_callback is not None:
+                self.end_callback()
+
             raise FinishedCallback()
         else:
+            if self.end_callback is not None:
+                self.end_callback()
+
             raise FinishedCallback()
 
 
@@ -249,11 +263,20 @@ class EditLayer(cocos.layer.Layer):
         self.selectable_actors = []
         self.callbacks = []  # type: typing.List[Callback]
 
-    def append_callback(self, callback: typing.Callable[[], None], duration: float, delay: float=None) -> None:
+    def append_callback(
+        self,
+        callback: typing.Callable[[], None],
+        duration: float,
+        delay: float=None,
+        start_callback: typing.Callable[[], None]=None,
+        end_callback: typing.Callable[[], None]=None,
+    ) -> None:
         self.callbacks.append(Callback(
             callback,
             duration,
             delay=delay,
+            start_callback=start_callback,
+            end_callback=end_callback,
         ))
 
     def set_selectable(self, actor: Actor) -> None:
