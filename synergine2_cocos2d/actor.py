@@ -11,6 +11,7 @@ from cocos import collision_model
 from cocos import euclid
 
 from synergine2.config import Config
+from synergine2.log import get_logger
 from synergine2.simulation import Subject
 from synergine2_cocos2d.animation import AnimatedInterface
 from synergine2_cocos2d.util import PathManager
@@ -38,14 +39,11 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         assert config, "Config is a required parameter"
         self.config = config
         self.path_manager = PathManager(config.resolve('global.include_path.graphics'))
-        default_image_path = self.build_default_image(
-            subject.id,
-            self.path_manager.path(image_path),
-        )
-        image = pyglet.image.load(os.path.abspath(default_image_path))
         self.animation_images = {}  # type: typing.Dict[str, typing.List[pyglet.image.TextureRegion]]  # nopep8
+
+        default_texture = self._get_default_image_texture()
         super().__init__(
-            image,
+            default_texture,
             position,
             rotation,
             scale,
@@ -54,45 +52,56 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
             anchor,
             **kwargs
         )
+
+        self.logger = get_logger('Actor', config)
+
         self.subject = subject
         self.cshape = None  # type: collision_model.AARectShape
         self.update_cshape()
-        self.build_animation_images(subject.id)
-        self.current_image = image
+        self.default_texture = default_texture
         self.need_update_cshape = False
         self.properties = properties or {}
         self._freeze = False
 
+        self.animation_textures_cache = {}  # type: typing.Dict[str, typing.List[pyglet.image.TextureRegion]]  # nopep8
+        self.mode_texture_cache = {}  # type: typing.Dict[str, pyglet.image.TextureRegion]  # nopep8
+
         self.default_image_path = image_path
-        self.image_cache = self.get_image_cache_manager()
-        self.image_cache.build()
+        self.image_cache_manager = self.get_image_cache_manager()
+        self.image_cache_manager.build()
+
+        self.build_textures_cache()
 
     def get_image_cache_manager(self) -> ImageCacheManager:
         return ImageCacheManager(self, self.config)
 
-    def build_default_image(self, subject_id: int, base_image_path: str) -> str:
+    def _get_default_image_texture(self) -> pyglet.image.AbstractImage:
+        """
+        Build and return teh default actor image texture.
+        :return: default actor image texture
+        """
         cache_dir = self.config.resolve('global.cache_dir_path')
-        with open(base_image_path, 'rb') as base_image_file:
-            base_image = Image.open(base_image_file)
+        mode = self.get_default_mode()
+        image_path = self.get_mode_image_path(mode)
+        final_image_path = self.path_manager.path(image_path)
 
-            for default_appliable_image in self.get_default_appliable_images():
-                base_image.paste(
-                    default_appliable_image,
-                    (0, 0),
-                    default_appliable_image,
-                )
+        image = Image.open(final_image_path)
+        image_path = '{}_default_image.png'
+        final_image_path = os.path.join(cache_dir, image_path)
+        image.save(final_image_path)
 
-            # FIXME NOW: nom des image utilise au dessus
-            final_name = '_'.join([
-                str(subject_id),
-                ntpath.basename(base_image_path),
-            ])
-            final_path = os.path.join(cache_dir, final_name)
-            base_image.save(final_path)
+        return pyglet.image.load(final_image_path)
 
-        return final_path
+    def get_default_mode(self) -> str:
+        raise NotImplementedError()
 
-    def get_default_appliable_images(self) -> typing.List[Image.Image]:
+    def get_mode_image_path(self, mode: str) -> str:
+        raise NotImplementedError()
+
+    def get_modes(self) -> typing.List[str]:
+        raise NotImplementedError()
+
+    def get_mode_appliable_images(self, mode: str) -> typing.List[Image.Image]:
         return []
 
     def get_animation_appliable_images(
@@ -128,48 +137,59 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.position = new_position
         self.cshape.center = new_position  # Note: if remove: strange behaviour: drag change actor position with anomaly
 
-    def build_animation_images(self, subject_id: int) -> None:
-        """
-        Fill self.animation_images with self.animation_image_paths
-        :return: None
-        """
-        cache_dir = self.config.resolve('global.cache_dir_path')
-        for animation_name, animation_image_paths in self.animation_image_paths.items():
-            self.animation_images[animation_name] = []
-            for i, animation_image_path in enumerate(animation_image_paths):
-                final_image_path = self.path_manager.path(animation_image_path)
-                final_image = Image.open(final_image_path)
+    def build_textures_cache(self) -> None:
+        self.build_modes_texture_cache()
+        self.build_animation_textures_cache()
 
-                for appliable_image in self.get_animation_appliable_images(
+    def build_modes_texture_cache(self) -> None:
+        cache_dir = self.config.resolve('global.cache_dir_path')
+        for mode in self.get_modes():
+            mode_image_path = self.path_manager.path(self.get_mode_image_path(mode))
+            with open(mode_image_path, 'rb') as base_image_file:
+                base_image = Image.open(base_image_file)
+
+                for default_appliable_image in self.get_mode_appliable_images(mode):
+                    base_image.paste(
+                        default_appliable_image,
+                        (0, 0),
+                        default_appliable_image,
+                    )
+
+                final_name = '{}_mode_{}.png'.format(
+                    str(self.subject.id),
+                    mode,
+                )
+                final_path = os.path.join(cache_dir, final_name)
+                base_image.save(final_path)
+                self.mode_texture_cache[mode] = pyglet.image.load(final_path)
+
+    def build_animation_textures_cache(self) -> None:
+        cache_dir = self.config.resolve('global.cache_dir_path')
+        for animation_name in self.animation_image_paths.keys():
+            texture_regions = []
+            animation_images = \
+                self.image_cache_manager.animation_cache.get_animation_images(
+                    animation_name)
+
+            for i, animation_image in enumerate(animation_images):
+                cache_image_name = '{}_animation_{}_{}.png'.format(
+                    self.subject.id,
                     animation_name,
                     i,
-                ):
-                    final_image.paste(
-                        appliable_image,
-                        (0, 0),
-                        appliable_image,
-                    )
-
-                # FIXME NOW: nom des image utilise au dessus
-                final_name = '_'.join([
-                    str(subject_id),
-                    ntpath.basename(final_image_path),
-                ])
-                final_path = os.path.join(cache_dir, final_name)
-
-                final_image.save(final_path)
-
-                self.animation_images[animation_name].append(
-                    pyglet.image.load(
-                        final_path,
-                    )
                 )
+                cache_image_path = os.path.join(cache_dir, cache_image_name)
+                animation_image.save(cache_image_path)
+                self.animation_textures_cache.setdefault(animation_name, [])\
+                    .append(pyglet.image.load(cache_image_path))
 
-    def get_images_for_animation(self, animation_name: str) -> typing.List[pyglet.image.TextureRegion]:
-        return self.animation_images.get(animation_name)
+    def get_images_for_animation(
+        self,
+        animation_name: str,
+    ) -> typing.List[pyglet.image.TextureRegion]:
+        return self.animation_textures_cache[animation_name]
 
     def get_inanimate_image(self) -> pyglet.image.TextureRegion:
-        return self.current_image
+        return self.default_texture
 
     def update_image(self, new_image: pyglet.image.TextureRegion):
         if self._freeze:
