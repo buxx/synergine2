@@ -1,9 +1,13 @@
 # coding: utf-8
 import os
+import typing
 
-import cocos
 from synergine2.config import Config
 from synergine2.log import get_logger
+from synergine2_cocos2d.util import get_map_file_path_from_dir
+
+if typing.TYPE_CHECKING:
+    import cocos
 
 
 class MapMiddleware(object):
@@ -18,22 +22,23 @@ class MapMiddleware(object):
         self.tmx = None
 
     def get_map_file_path(self) -> str:
-        return os.path.join(
-            self.map_dir_path,
-            '{}.tmx'.format(os.path.basename(self.map_dir_path)),
-        )
+        return get_map_file_path_from_dir(self.map_dir_path)
 
     def init(self) -> None:
+        # import cocos here for prevent test crash when no X server is
+        # present
+        import cocos
+
         map_file_path = self.get_map_file_path()
         self.tmx = cocos.tiles.load(map_file_path)
 
-    def get_background_sprite(self) -> cocos.sprite.Sprite:
+    def get_background_sprite(self) -> 'cocos.sprite.Sprite':
         raise NotImplementedError()
 
-    def get_ground_layer(self) -> cocos.tiles.RectMapLayer:
+    def get_ground_layer(self) -> 'cocos.tiles.RectMapLayer':
         raise NotImplementedError()
 
-    def get_top_layer(self) -> cocos.tiles.RectMapLayer:
+    def get_top_layer(self) -> 'cocos.tiles.RectMapLayer':
         raise NotImplementedError()
 
     def get_world_height(self) -> int:
@@ -50,25 +55,25 @@ class MapMiddleware(object):
 
 
 class TMXMiddleware(MapMiddleware):
-    def get_background_sprite(self) -> cocos.sprite.Sprite:
+    def get_background_sprite(self) -> 'cocos.sprite.Sprite':
         # TODO: Extract it from tmx
         return cocos.sprite.Sprite(os.path.join(
             self.map_dir_path,
             'background.png',
         ))
 
-    def get_interior_sprite(self) -> cocos.sprite.Sprite:
+    def get_interior_sprite(self) -> 'cocos.sprite.Sprite':
         # TODO: Extract it from tmx
         return cocos.sprite.Sprite(os.path.join(
             self.map_dir_path,
             'background_interiors.png',
         ))
 
-    def get_ground_layer(self) -> cocos.tiles.RectMapLayer:
+    def get_ground_layer(self) -> 'cocos.tiles.RectMapLayer':
         assert self.tmx
         return self.tmx['ground']
 
-    def get_top_layer(self) -> cocos.tiles.RectMapLayer:
+    def get_top_layer(self) -> 'cocos.tiles.RectMapLayer':
         assert self.tmx
         return self.tmx['top']
 

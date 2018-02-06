@@ -6,6 +6,7 @@ import pytest
 from synergine2.utils import ChunkManager
 from synergine2_cocos2d.exception import FileNotFound
 from synergine2_cocos2d.util import PathManager
+from synergine2_cocos2d.util import get_map_file_path_from_dir
 from tests import BaseTest
 
 
@@ -44,3 +45,7 @@ class TestUtils(BaseTest):
         path_manager.add_included_path('tests/fixtures/some_media2')
         # it is prior on path finding
         assert 'tests/fixtures/some_media2/foo.txt' == path_manager.path('foo.txt')
+
+    def test_get_map_file_path_from_dir(self):
+        assert get_map_file_path_from_dir('map/003') == 'map/003/003.tmx'
+        assert get_map_file_path_from_dir('map/003/') == 'map/003/003.tmx'
