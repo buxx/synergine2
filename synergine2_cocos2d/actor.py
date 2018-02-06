@@ -14,6 +14,7 @@ from synergine2.config import Config
 from synergine2.simulation import Subject
 from synergine2_cocos2d.animation import AnimatedInterface
 from synergine2_cocos2d.util import PathManager
+from synergine2_xyz.image import ImageCacheManager
 
 
 class Actor(AnimatedInterface, cocos.sprite.Sprite):
@@ -61,6 +62,13 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         self.need_update_cshape = False
         self.properties = properties or {}
         self._freeze = False
+
+        self.default_image_path = image_path
+        self.image_cache = self.get_image_cache_manager()
+        self.image_cache.build()
+
+    def get_image_cache_manager(self) -> ImageCacheManager:
+        return ImageCacheManager(self, self.config)
 
     def build_default_image(self, subject_id: int, base_image_path: str) -> str:
         cache_dir = self.config.resolve('global.cache_dir_path')
