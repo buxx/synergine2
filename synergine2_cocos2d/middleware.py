@@ -57,6 +57,7 @@ class MapMiddleware(object):
 class TMXMiddleware(MapMiddleware):
     def get_background_sprite(self) -> 'cocos.sprite.Sprite':
         # TODO: Extract it from tmx
+        import cocos
         return cocos.sprite.Sprite(os.path.join(
             self.map_dir_path,
             'background.png',
@@ -64,6 +65,7 @@ class TMXMiddleware(MapMiddleware):
 
     def get_interior_sprite(self) -> 'cocos.sprite.Sprite':
         # TODO: Extract it from tmx
+        import cocos
         return cocos.sprite.Sprite(os.path.join(
             self.map_dir_path,
             'background_interiors.png',
