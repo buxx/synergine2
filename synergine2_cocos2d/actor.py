@@ -210,7 +210,7 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
 
         self.image = self.get_current_mode_texture()
 
-    def update_image(self, new_image: pyglet.image.TextureRegion):
+    def update_image(self, new_image: pyglet.image.AbstractImage):
         if self._freeze:
             return
 
