@@ -189,7 +189,26 @@ class Actor(AnimatedInterface, cocos.sprite.Sprite):
         return self.animation_textures_cache[animation_name]
 
     def get_inanimate_image(self) -> pyglet.image.TextureRegion:
-        return self.default_texture
+        return self.get_current_mode_texture()
+
+    def get_current_mode_texture(self) -> pyglet.image.TextureRegion:
+        try:
+            return self.mode_texture_cache[self.mode]
+        except KeyError:
+            self.logger.debug(
+                'No texture for mode "{}" for actor "{}", available: ({})'.format(
+                    self.mode,
+                    self.__class__.__name__,
+                    ', '.join(self.mode_texture_cache.keys()),
+                ),
+            )
+            return self.mode_texture_cache[self.get_default_mode()]
+
+    def reset_default_texture(self) -> None:
+        if self._freeze:
+            return
+
+        self.image = self.get_current_mode_texture()
 
     def update_image(self, new_image: pyglet.image.TextureRegion):
         if self._freeze:
