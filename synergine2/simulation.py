@@ -6,6 +6,7 @@ import time
 from synergine2.base import BaseObject
 from synergine2.base import IdentifiedObject
 from synergine2.config import Config
+from synergine2.exceptions import ConfigurationError
 from synergine2.share import shared
 from synergine2.utils import get_mechanisms_classes
 
@@ -412,3 +413,41 @@ class SubjectBehaviourSelector(BaseObject):
         behaviours: typing.Dict[typing.Type[SubjectBehaviour], object],
     ) -> typing.Dict[typing.Type[SubjectBehaviour], object]:
         return behaviours
+
+
+class BehaviourStep(object):
+    def proceed(self) -> typing.Optional['BehaviourStep']:
+        raise NotImplementedError()
+
+    def get_events(self) -> typing.List[Event]:
+        raise NotImplementedError()
+
+
+class SubjectComposedBehaviour(SubjectBehaviour):
+    step_class = None  # type: typing.Type[BehaviourStep]
+
+    def __init__(
+        self,
+        config: Config,
+        simulation: Simulation,
+        subject: Subject,
+    ) -> None:
+        super().__init__(config, simulation, subject)
+        if self.step_class is None:
+            raise ConfigurationError(
+                '{}: you must set step_class class attribute',
+            )
+
+    def get_step(self, data) -> BehaviourStep:
+        return self.step_class(**data)
+
+    def run(self, data):
+        # TODO: move to behaviour donne les données de l'intention (a -> b) tant qu'elle
+        # existe
+        step = self.get_step(data)
+        next_step = step.proceed()
+        return next_step.generate_data()
+
+    def action(self, data):
+        step = self.get_step(data)
+        return step.get_events()
