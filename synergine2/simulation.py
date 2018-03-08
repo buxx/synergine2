@@ -416,7 +416,10 @@ class SubjectBehaviourSelector(BaseObject):
 
 
 class BehaviourStep(object):
-    def proceed(self) -> typing.Optional['BehaviourStep']:
+    def proceed(self) -> 'BehaviourStep':
+        raise NotImplementedError()
+
+    def generate_data(self) -> typing.Any:
         raise NotImplementedError()
 
     def get_events(self) -> typing.List[Event]:
@@ -424,7 +427,14 @@ class BehaviourStep(object):
 
 
 class SubjectComposedBehaviour(SubjectBehaviour):
-    step_class = None  # type: typing.Type[BehaviourStep]
+    """
+    SubjectComposedBehaviour receive data in run (and will will it's step with it).
+    These data can be the first data of behaviour, or last behaviour subject data
+    produced in action.
+    SubjectComposedBehaviour produce data in run only if something happen and must be
+    given in future run.
+    """
+    step_classes = None  # type: typing.List[typing.Tuple[typing.Type[BehaviourStep], typing.Callable[[typing.Any], bool]]]  # nopep8
 
     def __init__(
         self,
@@ -433,17 +443,26 @@ class SubjectComposedBehaviour(SubjectBehaviour):
         subject: Subject,
     ) -> None:
         super().__init__(config, simulation, subject)
-        if self.step_class is None:
+        if self.step_classes is None:
             raise ConfigurationError(
-                '{}: you must set step_class class attribute',
+                '{}: you must set step_classes class attribute'.format(
+                    self.__class__.__name__,
+                ),
             )
 
     def get_step(self, data) -> BehaviourStep:
-        return self.step_class(**data)
+        for step_class, step_test_callable in self.step_classes:
+            if step_test_callable(data):
+                return step_class(**data)
+
+        raise ConfigurationError(
+            '{}: No step choose for following data: {}'.format(
+                self.__class__.__name__,
+                data,
+            ),
+        )
 
     def run(self, data):
-        # TODO: move to behaviour donne les données de l'intention (a -> b) tant qu'elle
-        # existe
         step = self.get_step(data)
         next_step = step.proceed()
         return next_step.generate_data()
