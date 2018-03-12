@@ -1,7 +1,7 @@
 attrs==17.4.0
 cocos2d==0.6.5
 Dijkstar==2.4.0
-freezegun==0.3.9
+freezegun==0.3.10
 future==0.16.0
 numpy==1.14.1
 pluggy==0.6.0
