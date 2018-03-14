@@ -34,7 +34,7 @@ class IntentionManager(object):
 
     def remove(self, intention_type: typing.Type[Intention]) -> None:
         intentions = self.intentions
-        del self.intentions[intention_type]
+        del intentions[intention_type]
         self.intentions = intentions
 
     def remove_all(self) -> None:
