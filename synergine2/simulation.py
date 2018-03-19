@@ -6,6 +6,7 @@ import time
 from synergine2.base import BaseObject
 from synergine2.base import IdentifiedObject
 from synergine2.config import Config
+from synergine2.exceptions import ConfigurationError
 from synergine2.share import shared
 from synergine2.utils import get_mechanisms_classes
 
@@ -33,7 +34,7 @@ class IntentionManager(object):
 
     def remove(self, intention_type: typing.Type[Intention]) -> None:
         intentions = self.intentions
-        del self.intentions[intention_type]
+        del intentions[intention_type]
         self.intentions = intentions
 
     def remove_all(self) -> None:
@@ -412,3 +413,60 @@ class SubjectBehaviourSelector(BaseObject):
         behaviours: typing.Dict[typing.Type[SubjectBehaviour], object],
     ) -> typing.Dict[typing.Type[SubjectBehaviour], object]:
         return behaviours
+
+
+class BehaviourStep(object):
+    def proceed(self) -> 'BehaviourStep':
+        raise NotImplementedError()
+
+    def generate_data(self) -> typing.Any:
+        raise NotImplementedError()
+
+    def get_events(self) -> typing.List[Event]:
+        raise NotImplementedError()
+
+
+class SubjectComposedBehaviour(SubjectBehaviour):
+    """
+    SubjectComposedBehaviour receive data in run (and will will it's step with it).
+    These data can be the first data of behaviour, or last behaviour subject data
+    produced in action.
+    SubjectComposedBehaviour produce data in run only if something happen and must be
+    given in future run.
+    """
+    step_classes = None  # type: typing.List[typing.Tuple[typing.Type[BehaviourStep], typing.Callable[[typing.Any], bool]]]  # nopep8
+
+    def __init__(
+        self,
+        config: Config,
+        simulation: Simulation,
+        subject: Subject,
+    ) -> None:
+        super().__init__(config, simulation, subject)
+        if self.step_classes is None:
+            raise ConfigurationError(
+                '{}: you must set step_classes class attribute'.format(
+                    self.__class__.__name__,
+                ),
+            )
+
+    def get_step(self, data) -> BehaviourStep:
+        for step_class, step_test_callable in self.step_classes:
+            if step_test_callable(data):
+                return step_class(**data)
+
+        raise ConfigurationError(
+            '{}: No step choose for following data: {}'.format(
+                self.__class__.__name__,
+                data,
+            ),
+        )
+
+    def run(self, data):
+        step = self.get_step(data)
+        next_step = step.proceed()
+        return next_step.generate_data()
+
+    def action(self, data):
+        step = self.get_step(data)
+        return step.get_events()

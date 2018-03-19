@@ -7,14 +7,16 @@ from synergine2.simulation import Intention
 class MoveToIntention(Intention):
     def __init__(
         self,
-        move_to: typing.Tuple[int, int],
-        start_time: float,
+        to: typing.Tuple[int, int],
         gui_action: typing.Any,
     ) -> None:
-        self.move_to = move_to
-        self.path = []  # type: typing.List[typing.Tuple[int, int]]
-        self.path_progression = -1  # type: int
-        self.last_intention_time = start_time
-        self.just_reach = False
-        self.initial = True
+        self.to = to
         self.gui_action = gui_action
+        self.path = None  # type: typing.List[typing.Tuple[int, int]]
+
+    def get_data(self) -> dict:
+        return {
+            'to': self.to,
+            'gui_action': self.gui_action,
+            'path': self.path,
+        }
