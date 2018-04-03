@@ -172,6 +172,13 @@ class Terminal(BaseObject):
 
     def execute_event_handlers(self, events: [Event]):
         for event in events:
+            self.logger.debug(
+                'Event "{}" received with data: {}'.format(
+                    event.__class__.__name__,
+                    event.repr_debug()
+                ),
+            )
+
             for event_class, handlers in self.event_handlers.items():
                 if isinstance(event, event_class):
                     for handler in handlers:

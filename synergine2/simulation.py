@@ -295,7 +295,7 @@ class SimulationMechanism(Mechanism):
 
 class Event(BaseObject):
     def repr_debug(self) -> str:
-        return self.__class__.__name__
+        return self.__dict__
 
 
 class Behaviour(BaseObject):
