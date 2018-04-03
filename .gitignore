@@ -91,3 +91,4 @@ DEADJOE
 .idea
 *~
 /venv*
+.pytest_cache
