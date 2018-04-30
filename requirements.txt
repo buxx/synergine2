@@ -8,7 +8,7 @@ pluggy==0.6.0
 psutil==5.4.4
 py==1.5.3
 pyglet==1.3.2
-pytest==3.5.0
+pytest==3.5.1
 python-dateutil==2.7.2
 PyYAML==3.12
 redis==2.10.6
