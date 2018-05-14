@@ -14,5 +14,5 @@ PyYAML==3.12
 redis==2.10.6
 six==1.11.0
 tmx==1.9.1
-pytest-mock==1.9.0
+pytest-mock==1.10.0
 Pillow==5.1.0
