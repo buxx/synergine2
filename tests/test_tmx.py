@@ -57,4 +57,4 @@ class TestLoadMap(BaseTest):
         tileset_content = loader.get_sanitized_tileset_content(
             'tests/fixtures/terrain.tsx',
         )
-        assert 'source="tests/fixtures/terrain.png"' in
+        assert 'source="tests/fixtures/terrain.png"' in tileset_content
