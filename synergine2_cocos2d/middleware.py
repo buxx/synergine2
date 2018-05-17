@@ -1,6 +1,11 @@
 # coding: utf-8
 import os
+import tempfile
 import typing
+from xml.etree import ElementTree
+from xml.etree.ElementTree import Element
+
+from cocos.tiles import Resource
 
 from synergine2.config import Config
 from synergine2.log import get_logger
@@ -8,6 +13,82 @@ from synergine2_cocos2d.util import get_map_file_path_from_dir
 
 if typing.TYPE_CHECKING:
     import cocos
+
+
+class MapLoader(object):
+    def load(self, map_file_path: str) -> Resource:
+        # import cocos here for prevent test crash when no X server is
+        # present
+        import cocos
+
+        tree = ElementTree.parse(map_file_path)
+        map_element = tree.getroot()
+
+        final_map_content = self.get_sanitized_map_content(map_element, map_file_path)
+        new_file = tempfile.NamedTemporaryFile(mode='w+', suffix='.tmx', delete=False)
+        new_file.write(final_map_content)
+        new_file.seek(0)
+
+        # return the map
+        return cocos.tiles.load(new_file.name)
+
+    def get_sanitized_map_content(
+        self,
+        map_element: Element,
+        map_file_path: str,
+    ) -> str:
+        # Parse tileset to modify path if required
+        for tileset_tag in map_element.findall('tileset'):
+            if 'source' in tileset_tag.attrib:
+                tileset_path = tileset_tag.attrib['source']
+
+                if not os.path.exists(tileset_path):
+                    # try with map file relative path
+                    map_dir = os.path.dirname(map_file_path)
+                    new_path = os.path.join(map_dir, tileset_path)
+                    if os.path.exists(new_path):
+                        # It is the correct path, update it
+                        tileset_new_content = self.get_sanitized_tileset_content(
+                            new_path,
+                        )
+
+                        new_file = tempfile.NamedTemporaryFile(
+                            mode='w+',
+                            suffix='.tsx',
+                            delete=False,
+                        )
+                        new_file.write(tileset_new_content)
+                        new_file.seek(0)
+
+                        tileset_tag.attrib['source'] = new_file.name
+
+        # Write new file in temporary dir
+        map_xml_str = ElementTree.tostring(
+            map_element,
+            encoding='utf8',
+            method='xml',
+        )
+        return map_xml_str.decode('utf-8')
+
+    def get_sanitized_tileset_content(
+        self,
+        tileset_path: str,
+    ) -> str:
+        tileset_dir = os.path.dirname(tileset_path)
+        tree = ElementTree.parse(tileset_path)
+        tileset_element = tree.getroot()
+
+        image_node = tileset_element.find('image')
+        image_path = image_node.attrib['source']
+
+        final_image_path = os.path.join(tileset_dir, image_path)
+        image_node.attrib['source'] = final_image_path
+        tileset_xml_str = ElementTree.tostring(
+            tileset_element,
+            encoding='utf8',
+            method='xml',
+        )
+        return tileset_xml_str.decode('utf-8')
 
 
 class MapMiddleware(object):
@@ -30,7 +111,8 @@ class MapMiddleware(object):
         import cocos
 
         map_file_path = self.get_map_file_path()
-        self.tmx = cocos.tiles.load(map_file_path)
+        loader = MapLoader()
+        self.tmx = loader.load(map_file_path)
 
     def get_background_sprite(self) -> 'cocos.sprite.Sprite':
         raise NotImplementedError()

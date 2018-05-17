@@ -1,4 +1,7 @@
 # coding: utf-8
+from xml.etree import ElementTree
+
+from synergine2_cocos2d.middleware import MapLoader
 from synergine2_xyz.map import TMXMap
 from synergine2_xyz.physics import Matrixes
 from synergine2_xyz.tmx_utils import fill_matrix
@@ -35,3 +38,23 @@ class TestVisibilityMatrix(BaseTest):
             [(0.0, 0.0), (2.0, 100.0), (2.0, 100.0), (2.0, 100.0), (0.0, 0.0), ],
             [(0.0, 0.0), (0.0, 0.0),   (0.0, 0.0),   (0.0, 0.0),   (0.0, 0.0), ],
         ] == matrixes.get_matrix('visibility')
+
+
+class TestLoadMap(BaseTest):
+    def test_get_sanitized_map_content(self):
+        loader = MapLoader()
+        tree = ElementTree.parse('tests/fixtures/light.tmx')
+        map_element = tree.getroot()
+
+        map_content = loader.get_sanitized_map_content(
+            map_element,
+            'tests/fixtures/light.tmx',
+        )
+        assert '<tileset firstgid="1" source="/tmp/' in map_content
+
+    def test_get_sanitized_tileset_content(self):
+        loader = MapLoader()
+        tileset_content = loader.get_sanitized_tileset_content(
+            'tests/fixtures/terrain.tsx',
+        )
+        assert 'source="tests/fixtures/terrain.png"' in tileset_content
