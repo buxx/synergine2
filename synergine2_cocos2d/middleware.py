@@ -5,18 +5,17 @@ import typing
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
-from cocos.tiles import Resource
-
 from synergine2.config import Config
 from synergine2.log import get_logger
 from synergine2_cocos2d.util import get_map_file_path_from_dir
 
 if typing.TYPE_CHECKING:
     import cocos
+    from cocos.tiles import Resource
 
 
 class MapLoader(object):
-    def load(self, map_file_path: str) -> Resource:
+    def load(self, map_file_path: str) -> 'Resource':
         # import cocos here for prevent test crash when no X server is
         # present
         import cocos
