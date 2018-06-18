@@ -399,7 +399,7 @@ class SimulationBehaviour(Behaviour):
         """
         raise NotImplementedError()
 
-    def action(self, data) -> [Event]:
+    def action(self, data) -> typing.List[Event]:
         """
         Method called in main process
         Return events will be give to terminals
@@ -470,3 +470,24 @@ class SubjectComposedBehaviour(SubjectBehaviour):
     def action(self, data):
         step = self.get_step(data)
         return step.get_events()
+
+
+def disable_when(
+    predicate: typing.Callable[[Config, Simulation], bool],
+):
+    def decorator(func) -> typing.Any:
+        def wrapper(self, *args, **kwargs):
+            if predicate(self.config, self.simulation):
+                return False
+            return func(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def config_value(parameter_to_resolve: str):
+    def predicate(
+        config: Config,
+        simulation: Simulation,
+    ):
+        return bool(config.resolve(parameter_to_resolve, False))
+    return predicate

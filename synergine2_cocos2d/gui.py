@@ -5,6 +5,8 @@ from math import floor
 
 import pyglet
 import time
+
+from cocos.collision_model import AARectShape
 from pyglet.window import mouse
 
 import cocos
@@ -235,7 +237,7 @@ class EditLayer(cocos.layer.Layer):
         self.wdrag_start_point = (0, 0)
         self.elastic_box = None  # type: MinMaxRect
         self.elastic_box_wminmax = 0, 0, 0, 0
-        self.selection = {}  # type: typing.List[Actor]
+        self.selection = {}  # type: typing.Dict[Actor, AARectShape]
         self.screen_mouse = (0, 0)
         self.world_mouse = (0, 0)
         self.sleft = None
@@ -615,7 +617,7 @@ class EditLayer(cocos.layer.Layer):
             print("begin drag selection: drag_selecting, drag_moving",
                   self.drag_selecting, self.drag_moving)
 
-        else:
+        elif self.can_move(under_mouse_unique):
             # want drag move
             if under_mouse_unique in self.selection:
                 # want to move current selection
@@ -625,6 +627,9 @@ class EditLayer(cocos.layer.Layer):
                 self.selection.clear()
                 self.selection_add(under_mouse_unique)
             self.begin_drag_move()
+    
+    def can_move(self, selected) -> bool:
+        return True
 
     def begin_drag_move(self):
         # begin drag move
