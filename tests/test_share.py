@@ -71,7 +71,7 @@ class TestShare(BaseTest):
 
     def test_position_index(self):
         class ListIndex(share.SharedDataIndex):
-            def add(self, value):
+            def add(self, subject, value):
                 try:
                     values = self.shared_data_manager.get(self.key)
                 except UnknownSharedData:
@@ -80,7 +80,7 @@ class TestShare(BaseTest):
                 values.append(value)
                 self.shared_data_manager.set(self.key, values)
 
-            def remove(self, value):
+            def remove(self, subject, value):
                 values = self.shared_data_manager.get(self.key)
                 values.remove(value)
                 self.shared_data_manager.set(self.key, values)

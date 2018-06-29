@@ -8,6 +8,9 @@ from synergine2.base import IdentifiedObject
 from synergine2.exceptions import SynergineException
 from synergine2.exceptions import UnknownSharedData
 
+if typing.TYPE_CHECKING:
+    from synergine2.simulation import Subject
+
 
 class NoSharedDataInstance(SynergineException):
     pass
@@ -22,11 +25,14 @@ class SharedDataIndex(object):
         self.shared_data_manager = shared_data_manager
         self.key = key
 
-    def add(self, value: typing.Any) -> None:
+    def add(self, subject: 'Subject', value: typing.Any) -> None:
         raise NotImplementedError()
 
-    def remove(self, value: typing.Any) -> None:
+    def remove(self, subject: 'Subject', value: typing.Any) -> None:
         raise NotImplementedError()
+
+    def get_final_key(self, subject: 'Subject', value: typing.Any) -> str:
+        return self.key.format(shared_key=value, subject_id=subject.id)
 
 
 class SharedData(object):
@@ -226,7 +232,7 @@ class SharedDataManager(object):
             try:
                 previous_value = self.get(final_key)
                 for index in indexes:
-                    index.remove(previous_value)
+                    index.remove(instance, previous_value)
             except UnknownSharedData:
                 pass  # If no shared data, no previous value to remove
 
@@ -236,7 +242,7 @@ class SharedDataManager(object):
                 self.set(final_key, shared_data.type(value_))
 
             for index in indexes:
-                index.add(value_)
+                index.add(instance, value_)
 
         def fdel(self_):
             raise SynergineException('You cannot delete a shared data: not implemented yet')
@@ -258,8 +264,26 @@ class SharedDataManager(object):
 shared = SharedDataManager()
 
 
+class SubjectListIndex(SharedDataIndex):
+    def add(self, subject: 'Subject', value):
+        final_key = self.get_final_key(subject, value)
+        try:
+            values = self.shared_data_manager.get(final_key)
+        except UnknownSharedData:
+            values = []
+
+        values.append(subject.id)
+        self.shared_data_manager.set(final_key, values)
+
+    def remove(self, subject: 'Subject', value):
+        final_key = self.get_final_key(subject, value)
+        values = self.shared_data_manager.get(final_key)
+        values.remove(subject.id)
+        self.shared_data_manager.set(final_key, values)
+
+
 class ListIndex(SharedDataIndex):
-    def add(self, value):
+    def add(self, subject: 'Subject', value):
         try:
             values = self.shared_data_manager.get(self.key)
         except UnknownSharedData:
@@ -268,7 +292,7 @@ class ListIndex(SharedDataIndex):
         values.append(value)
         self.shared_data_manager.set(self.key, values)
 
-    def remove(self, value):
+    def remove(self, subject: 'Subject', value):
         values = self.shared_data_manager.get(self.key)
         values.remove(value)
         self.shared_data_manager.set(self.key, values)
