@@ -96,6 +96,20 @@ class Matrixes(object):
                 values.append(matrix[y][x][value_name_position])
         return values
 
+    def get_values_for_path_as_dict(
+        self,
+        name: str,
+        path_positions: typing.List[typing.Tuple[int, int]],
+        value_name: str=None,
+    ) -> typing.Dict[int, typing.Dict[int, typing.Any]]:
+        values_as_dict = {}  # type: typing.Dict[int, typing.Dict[int, typing.Any]]
+        values = self.get_values_for_path(name, path_positions, value_name)
+
+        for position, value in zip(path_positions, values):
+            values_as_dict.setdefault(position[0], {})[position[1]] = value
+
+        return values_as_dict
+
     def get_value(self, matrix_name: str, x: int, y: int, value_name: str) -> float:
         matrix = self.get_matrix(matrix_name)
         values = matrix[y][x]
