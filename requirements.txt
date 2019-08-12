@@ -3,7 +3,7 @@ cocos2d==0.6.5
 Dijkstar==2.4.0
 freezegun==0.3.12
 future==0.17.1
-numpy==1.16.2
+numpy==1.17.0
 pluggy==0.9.0
 psutil==5.5.1
 py==1.8.0
