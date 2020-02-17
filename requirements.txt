@@ -9,7 +9,7 @@ psutil==5.6.7
 py==1.8.1
 pyglet==1.4.10
 pytest==5.3.5
-python-dateutil==2.8.0
+python-dateutil==2.8.1
 PyYAML==3.13
 redis==3.2.0
 six==1.12.0
