@@ -15,4 +15,4 @@ redis==3.5.2
 six==1.15.0
 tmx==1.10
 pytest-mock==3.1.0
-Pillow==5.4.1
+Pillow==7.1.2
