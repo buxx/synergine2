@@ -1,4 +1,4 @@
-attrs==19.1.0
+attrs==20.1.0
 cocos2d==0.6.5
 Dijkstar==2.4.0
 freezegun==0.3.11
